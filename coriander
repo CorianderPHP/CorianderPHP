@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Coriander CLI Entry Point
+ * 
+ * This script is the main entry for the CorianderPHP framework's CLI. It processes
+ * commands and their arguments to perform various tasks, like creating controllers
+ * or running migrations.
+ * 
+ * Usage:
+ *  php coriander <command> [arguments]
+ */
+
+require_once 'settings/settings.php';
+
+// Check if CorianderCore's autoloader exists and include it
+if (file_exists(PROJECT_ROOT . '/CorianderCore/autoload.php')) {
+    require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
+}
+
+// Check if Composer's autoloader exists and include it
+if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
+    require_once PROJECT_ROOT . '/vendor/autoload.php';
+}
+
+use CorianderCore\Console\CommandHandler;
+
+/**
+ * @var array $argv Global array of command-line arguments passed to the script.
+ */
+$argv = $_SERVER['argv'];
+
+/**
+ * @var string $command The command to be executed, e.g., 'make:controller'.
+ */
+$command = $argv[1] ?? 'help';
+
+/**
+ * @var array $args Array of additional arguments passed to the command.
+ */
+$args = array_slice($argv, 2);
+
+try {
+    // Initialize and execute the command handler
+    $handler = new CommandHandler();
+    $handler->handle($command, $args);
+} catch (Exception $e) {
+    // Handle any errors by outputting the message
+    echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    exit(1);
+}
