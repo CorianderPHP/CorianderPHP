@@ -1,0 +1,43 @@
+RewriteEngine On
+
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+
+RewriteCond %{HTTP:VIA}                 !^$ [OR]
+RewriteCond %{HTTP:FORWARDED}           !^$ [OR]
+RewriteCond %{HTTP:USERAGENT_VIA}       !^$ [OR]
+RewriteCond %{HTTP:X_FORWARDED_FOR}     !^$ [OR]
+RewriteCond %{HTTP:PROXY_CONNECTION}    !^$ [OR]
+RewriteCond %{HTTP:XPROXY_CONNECTION}   !^$ [OR]
+RewriteCond %{HTTP:HTTP_PC_REMOTE_ADDR} !^$ [OR]
+RewriteCond %{HTTP:HTTP_CLIENT_IP}      !^$
+RewriteRule ^(.*)$ - [F]
+
+RewriteCond %{HTTP_HOST}@@%{HTTP_REFERER} !^([^@]*)@@https?://\1/.*
+Options -Indexes
+
+RewriteRule ^pagenotfound$ index.php?page=error [L]
+RewriteRule ^home$ index.php [L]
+
+RewriteRule ^composer.json /pagenotfound [L]
+RewriteRule ^composer.lock /pagenotfound [L]
+
+ErrorDocument 404 /pagenotfound
+ErrorDocument 403 /pagenotfound
+
+# Excluding direct PHP file access and directory listing block for root and specific files
+RewriteCond %{THE_REQUEST} \s/index\.php\s [NC,OR]
+RewriteCond %{THE_REQUEST} \s/+\s [NC]
+RewriteRule ^ - [L]
+
+RewriteCond %{THE_REQUEST} \.php [NC]
+RewriteRule ^(.*?)\.php$ /pagenotfound [NC,L,R=301]
+
+# Redirect directory access to pagenotfound
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_URI} !^/$
+RewriteRule ^ /pagenotfound [R=301,L]
+
+# Prevent direct access to .sqlite files
+<FilesMatch "\.sqlite$">
+    Require all denied
+</FilesMatch>
