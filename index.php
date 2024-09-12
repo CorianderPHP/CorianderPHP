@@ -3,7 +3,7 @@ ob_start();
 date_default_timezone_set("Europe/Paris");
 session_start();
 
-require('settings/settings.php');
+require_once 'settings/settings.php';
 
 // GET actions are handled in the controller folder
 // e.g.:
