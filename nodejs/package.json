@@ -1,0 +1,22 @@
+{
+  "name": "typescript_node",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "watch-ts": "tsc --watch",
+    "build-ts": "tsc",
+    "watch-js": "node build.watch.js",
+    "build-js": "node build.js",
+    "watch-tailwind": "npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --watch --minify",
+    "build-tailwind": "npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify",
+    "build-all": "node build.js && npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify",
+    "build-prod": "node build.min.js && npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify"
+  },
+  "author": "Dancuo Lohan",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.19.8",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.2"
+  }
+}
