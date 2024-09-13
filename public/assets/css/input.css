@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: "Poppins";
+    src:
+        url("../fonts/Poppins.woff2") format("woff2"),
+        url("../fonts/Poppins.ttf") format("ttf");
+}
+
+@font-face {
+    font-family: "ConcertOne";
+    src:
+        url("../fonts/ConcertOne.woff2") format("woff2"),
+        url("../fonts/ConcertOne.ttf") format("ttf");
+}
