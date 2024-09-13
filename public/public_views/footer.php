@@ -15,3 +15,5 @@ if (file_exists(PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/inde
 }
 ?>
 </body>
+
+</html>
