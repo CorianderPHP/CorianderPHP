@@ -23,7 +23,7 @@ $router = new Router();
 // Custom 404 handler
 $router->setNotFound(function () {
     $notFoundView = "notfound";
-    
+
     $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
 
     // If a metadata.php file exists, include it to override defaults
@@ -31,9 +31,9 @@ $router->setNotFound(function () {
         include $metaDataFile;
     }
 
-    require_once  PROJECT_ROOT . '/public/public_views/header.php';
+    require_once PROJECT_ROOT . '/public/public_views/header.php';
     require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
-    require_once  PROJECT_ROOT . '/public/public_views/footer.php';
+    require_once PROJECT_ROOT . '/public/public_views/footer.php';
 });
 
 // Dispatch the request to the correct view or controller
