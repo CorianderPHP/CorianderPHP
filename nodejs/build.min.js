@@ -4,7 +4,7 @@ import path from 'path';
 
 // Directories containing folders to bundle and the output
 const srcDirectory = path.join('src');
-const outputBase = path.join('../assets/js');
+const outputBase = path.join('../public/assets/js');
 
 // Function to get all index.ts files in a directory recursively
 function getAllIndexTsFiles(dir, fileList = []) {
