@@ -38,4 +38,4 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
 
     - name: Run tests with PHPUnit
-      run: ./vendor/bin/phpunit --testdox
+      run: composer test
