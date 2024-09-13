@@ -15,7 +15,7 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": false,
-        "outDir": "../assets/js/", // Directory for compiled JS files
+        "outDir": "../public/assets/js/", // Directory for compiled JS files
         "rootDir": "./src", // Directory for TS files
         /* Linting */
         "strict": true,
