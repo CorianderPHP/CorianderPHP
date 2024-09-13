@@ -1,5 +1,35 @@
 {
+    "name": "corianderphp/corianderphp",
+    "description": "A lightweight, performance-focused PHP framework.",
+    "type": "project",
+    "keywords": ["php", "framework", "eco-design", "performance"],
+    "homepage": "https://github.com/CorianderPHP/CorianderPHP",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lohan Dancuo",
+            "homepage": "https://lohan.dancuo.fr/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
     "require-dev": {
         "phpunit/phpunit": "^11.3"
-    }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CorianderCore\\Tests\\": "CorianderCore/tests/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --testdox"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
