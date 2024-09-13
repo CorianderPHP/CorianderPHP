@@ -7,10 +7,10 @@
     "build-ts": "tsc",
     "watch-js": "node build.watch.js",
     "build-js": "node build.js",
-    "watch-tailwind": "npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --watch --minify",
-    "build-tailwind": "npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify",
-    "build-all": "node build.js && npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify",
-    "build-prod": "node build.min.js && npx tailwindcss -i ../assets/css/input.css -o ../assets/css/output.css --minify"
+    "watch-tailwind": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch --minify",
+    "build-tailwind": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
+    "build-all": "node build.js && npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
+    "build-prod": "node build.min.js && npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
   },
   "author": "Dancuo Lohan",
   "license": "ISC",
