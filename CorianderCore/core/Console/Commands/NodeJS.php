@@ -5,48 +5,56 @@ namespace CorianderCore\Console\Commands;
 class NodeJS
 {
     /**
-     * Executes the nodejs command with any user-provided command.
+     * Executes the provided Node.js (npm) command.
      *
-     * @param array $args The arguments passed to the nodejs command.
+     * This method takes any arguments passed to the 'nodejs' command, builds
+     * a full npm command, and executes it within the Node.js project directory.
+     * It captures and outputs the real-time stdout and stderr from the npm process.
+     *
+     * @param array $args The arguments passed to the 'nodejs' command (e.g., 'install', 'run build').
      */
     public function execute(array $args)
     {
-        // Check if any argument was passed
+        // Check if any arguments were passed; if not, request a command.
         if (empty($args)) {
             echo "Please provide a Node.js command to run." . PHP_EOL;
             return;
         }
 
-        // Build the full npm command from the provided arguments
+        // Build the full npm command by joining the arguments (e.g., 'npm install', 'npm run build')
         $npmCommand = 'npm ' . implode(' ', $args);
 
-        // Change to the Node directory
+        // Change the current working directory to the Node.js runtime folder
         $nodeDir = PROJECT_ROOT . '/nodejs';
         chdir($nodeDir);
 
-        // Execute the npm command using proc_open to capture real-time output
+        // Set up process descriptors to handle stdin, stdout, and stderr
         $descriptors = [
-            0 => ['pipe', 'r'], // stdin
-            1 => ['pipe', 'w'], // stdout
-            2 => ['pipe', 'w'], // stderr
+            0 => ['pipe', 'r'], // stdin (not used here)
+            1 => ['pipe', 'w'], // stdout (for capturing standard output)
+            2 => ['pipe', 'w'], // stderr (for capturing error output)
         ];
 
+        // Start the npm process using proc_open, which allows real-time output handling
         $process = proc_open($npmCommand, $descriptors, $pipes);
 
         if (is_resource($process)) {
-            // Capture real-time output from the stdout and stderr
+            // Read and output the real-time stdout content
             while (!feof($pipes[1])) {
                 echo fgets($pipes[1]);
             }
+
+            // Read and output the real-time stderr content (if any errors occur)
             while (!feof($pipes[2])) {
                 echo fgets($pipes[2]);
             }
 
-            // Close pipes and terminate the process
+            // Close the pipes and terminate the process
             fclose($pipes[1]);
             fclose($pipes[2]);
             proc_close($process);
         } else {
+            // If proc_open failed to start the npm process, output an error message
             echo "Error: Could not start the process for {$npmCommand}." . PHP_EOL;
         }
     }
