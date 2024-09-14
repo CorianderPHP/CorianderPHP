@@ -12,7 +12,7 @@ class CommandHandler
     protected $commands = [
         'hello' => \CorianderCore\Console\Commands\Hello::class,
         'nodejs' => \CorianderCore\Console\Commands\NodeJS::class,
-        'make' => \CorianderCore\Console\Commands\Make::class, // Add 'make' as the main command
+        'make' => \CorianderCore\Console\Commands\Make::class,
     ];
 
     /**
