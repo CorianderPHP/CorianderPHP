@@ -9,7 +9,7 @@
     <title><?= htmlspecialchars($metaTitle); ?></title>
     <meta name="description" content="<?= htmlspecialchars($metaDescription); ?>">
 
-    <link rel="stylesheet" href="public/assets/css/output.css?<?php echo filemtime(PROJECT_ROOT . '/public/assets/css/output.css'); ?>">
+    <link rel="stylesheet" href="/public/assets/css/output.css?<?php echo filemtime(PROJECT_ROOT . '/public/assets/css/output.css'); ?>">
 </head>
 
 <body class="bg-white dark:bg-black w-full absolute min-h-full scrollbar text-black dark:text-white">
