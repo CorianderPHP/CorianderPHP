@@ -34,13 +34,15 @@
 spl_autoload_register(function ($class) {
     /**
      * Base directories to search for class files.
-     * 
-     * - `core/`: Contains core framework modules.
-     * - `modules/`: Contains user-defined or external modules.
+     *
+     * - `/CorianderCore/core/`: Contains core framework modules.
+     * - `/CorianderCore/modules/`: Contains user-defined or external modules.
+     * - `/src/`: Contains Controllers, Models and user-defined classes.
      */
     $baseDirs = [
         PROJECT_ROOT . '/CorianderCore/core/',    // Core framework modules directory
         PROJECT_ROOT . '/CorianderCore/modules/', // External user-defined modules directory
+        PROJECT_ROOT . '/src/',                   // Controllers, Models and user-defined classes
     ];
 
     /**
@@ -67,7 +69,4 @@ spl_autoload_register(function ($class) {
             return;
         }
     }
-
-    // If the class file isn't found, throw an exception
-    throw new Exception("Class {$class} not found in any directory. Looked in: " . implode(', ', $baseDirs));
 });
