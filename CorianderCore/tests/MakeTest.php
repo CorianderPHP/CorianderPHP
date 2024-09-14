@@ -66,12 +66,12 @@ class MakeTest extends TestCase
 
     /**
      * Tests the output when an invalid make command is passed.
-     * It checks that the appropriate error message is displayed.
+     * It checks that the error message starts with the correct string.
      */
     public function testInvalidMakeCommand()
     {
-        // Expect the error message for an invalid command
-        $this->expectOutputString("Error: Unknown make command 'invalid'. Valid commands are: view." . PHP_EOL);
+        // Expect the error message to start with the specified string
+        $this->expectOutputRegex("/^Error: Unknown make command 'invalid'. Valid commands are:/");
 
         // Run the make command with an invalid subcommand
         $this->make->execute(['invalid']);

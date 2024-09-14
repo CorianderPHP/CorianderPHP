@@ -3,40 +3,44 @@
 namespace CorianderCore\Console\Commands;
 
 /**
- * Class responsible for handling make-related commands such as 'make:view'.
- * It delegates the specific subcommands (like view creation) to their respective handlers.
+ * Class responsible for handling make-related commands such as 'make:view', 'make:controller'.
+ * It delegates the specific subcommands (like view or controller creation) to their respective handlers.
  * This class serves as the central point for managing resource creation commands in the CorianderPHP framework.
  */
 class Make
 {
     /**
      * List of valid subcommands that the 'make' command supports.
-     * Each subcommand corresponds to a specific resource creation action (e.g., view).
+     * Each subcommand corresponds to a specific resource creation action (e.g., view, controller).
      *
      * @var array
      */
     protected $validSubcommands = [
         'view',
-        // Additional subcommands can be added here, such as 'controller', 'model', etc.
+        'controller'
     ];
 
     /**
-     * Instance of the subcommand handler (e.g., MakeView).
+     * Instances of the subcommand handlers (e.g., MakeView, MakeController).
      *
      * @var object|null
      */
     protected $makeViewInstance;
+    protected $makeControllerInstance;
 
     /**
      * Constructor for the Make class.
-     * Accepts optional instances for the subcommand handlers (e.g., MakeView), allowing for dependency injection during testing.
+     * Accepts optional instances for the subcommand handlers (e.g., MakeView, MakeController), 
+     * allowing for dependency injection during testing.
      *
      * @param object|null $makeView Optional MakeView instance for testing or dependency injection.
+     * @param object|null $makeController Optional MakeController instance for testing or dependency injection.
      */
-    public function __construct($makeView = null)
+    public function __construct($makeView = null, $makeController = null)
     {
-        // Assign the provided MakeView instance or create a default one if not provided
+        // Assign the provided instances or create default ones if not provided
         $this->makeViewInstance = $makeView ?: new \CorianderCore\Console\Commands\View\MakeView();
+        $this->makeControllerInstance = $makeController ?: new \CorianderCore\Console\Commands\Controller\MakeController();
     }
 
     /**
@@ -48,6 +52,7 @@ class Make
      *
      * Example:
      * - 'php coriander make:view home' will create a view named 'home' using the MakeView class.
+     * - 'php coriander make:controller User' will create a controller named 'UserController'.
      *
      * @param array $args The arguments passed to the make command, including the subcommand and resource name.
      */
@@ -59,7 +64,7 @@ class Make
             return;
         }
 
-        // Extract the subcommand (e.g., 'view')
+        // Extract the subcommand (e.g., 'view' or 'controller')
         $subcommand = strtolower($args[0]);
 
         // Verify if the provided subcommand is valid
@@ -70,7 +75,7 @@ class Make
             return;
         }
 
-        // Extract the remaining arguments, which are specific to the resource (e.g., view name)
+        // Extract the remaining arguments, which are specific to the resource (e.g., view or controller name)
         $resourceArgs = array_slice($args, 1);
 
         // Delegate the execution based on the subcommand type
@@ -79,7 +84,9 @@ class Make
                 $this->makeView($resourceArgs); // Delegate to the MakeView handler
                 break;
 
-            // Additional cases for other subcommands (e.g., make:controller) can be added here
+            case 'controller':
+                $this->makeController($resourceArgs); // Delegate to the MakeController handler
+                break;
 
             default:
                 // This fallback case is unlikely to be triggered due to the earlier validation,
@@ -106,5 +113,25 @@ class Make
 
         // Delegate the view creation task to the MakeView class
         $this->makeViewInstance->execute($args);
+    }
+
+    /**
+     * Handles the creation of a controller by delegating to the MakeController class.
+     * 
+     * This method checks for a valid controller name and then calls the MakeController class
+     * to handle the actual controller creation process.
+     *
+     * @param array $args The arguments for creating the controller (e.g., the name of the controller).
+     */
+    protected function makeController(array $args)
+    {
+        // Ensure a controller name is provided
+        if (empty($args)) {
+            echo "Error: Please specify a controller name, e.g., 'make:controller User'." . PHP_EOL;
+            return;
+        }
+
+        // Delegate the controller creation task to the MakeController class
+        $this->makeControllerInstance->execute($args);
     }
 }

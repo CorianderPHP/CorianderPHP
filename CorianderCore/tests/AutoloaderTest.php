@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Error;
 
 class AutoloaderTest extends TestCase
 {
@@ -15,6 +16,7 @@ class AutoloaderTest extends TestCase
 
     /**
      * Test that a core class is correctly autoloaded.
+     *
      * This test checks if the autoloader successfully loads core classes,
      * ensuring that required classes (like CommandHandler) are available when needed.
      */
@@ -25,16 +27,18 @@ class AutoloaderTest extends TestCase
     }
 
     /**
-     * Test that an exception is thrown when attempting to load a non-existent class.
+     * Test that an Error is thrown when attempting to load a non-existent class.
+     *
      * This test ensures that the autoloader behaves correctly when a class that doesn't
-     * exist is requested, throwing the appropriate exception.
+     * exist is requested. Since the autoloader no longer throws an Exception, but PHP
+     * throws an Error when trying to instantiate a non-existent class, we expect an Error.
      */
-    public function testThrowsExceptionForNonExistentClass()
+    public function testThrowsErrorForNonExistentClass()
     {
-        // Expect an Exception to be thrown when trying to load a class that does not exist
-        $this->expectException(Exception::class);
+        // Expect an Error to be thrown when trying to instantiate a class that does not exist
+        $this->expectException(Error::class);
 
-        // Attempt to instantiate a non-existent class by name, which should trigger the autoloader and fail
+        // Attempt to instantiate a non-existent class by name, which should trigger an Error
         $className = 'NonExistentClass';
         new $className();
     }

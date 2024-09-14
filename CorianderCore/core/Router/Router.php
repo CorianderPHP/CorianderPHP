@@ -3,11 +3,10 @@
 namespace CorianderCore\Router;
 
 /**
- * Router class responsible for handling page routing and automatic view loading.
+ * Router class responsible for handling page routing, including routing to controllers and views.
  *
- * This class manages incoming requests by routing them to the correct view or
- * custom callback. It also handles the inclusion of metadata files and defines
- * a 404 error page if the requested view is unavailable.
+ * This class manages incoming requests by routing them to the appropriate controller action
+ * or view. It also handles 404 errors if the requested controller or view is unavailable.
  */
 class Router
 {
@@ -24,9 +23,6 @@ class Router
     /**
      * Add a custom route with a corresponding callback function.
      *
-     * This method allows the addition of custom routes. When a request matches
-     * the specified route pattern, the associated callback function is executed.
-     *
      * @param string $route The route pattern (e.g., 'home', 'about').
      * @param callable $callback The function to execute when the route matches.
      */
@@ -38,9 +34,6 @@ class Router
     /**
      * Set the callback function for handling 404 (not found) errors.
      *
-     * This method specifies a function to be called when the requested route or view
-     * is not found, typically used to display a custom 404 error page.
-     *
      * @param callable $callback The function to call when a 404 error occurs.
      */
     public function setNotFound($callback)
@@ -49,24 +42,23 @@ class Router
     }
 
     /**
-     * Dispatch the current request to load the appropriate view or execute a callback.
+     * Dispatch the current request to the appropriate controller action or view.
      *
-     * This method identifies the requested route from the URL, attempts to load the
-     * corresponding view and metadata, and includes the header and footer for the page.
-     * If no matching route or view is found, a 404 error is triggered.
+     * This method parses the request URI to determine whether to route to a controller
+     * or a view, then executes the corresponding logic.
      */
     public function dispatch()
     {
-        // Extract the requested route from the URL
-        $request = trim($_SERVER['REQUEST_URI'], '/');
+        // Extract the requested route from the URL, ignoring query parameters
+        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $request = trim($requestUri, '/');
 
-        // Default to 'home' if the request is empty or explicitly requesting 'index.php'
-        if ($request === '' || $request === 'index.php') {
-            $request = 'home'; // Default route is 'home'
+        // Default to 'home' if the request is empty
+        if ($request === '') {
+            $request = 'home';
         }
 
         define('REQUESTED_VIEW', $request);
-        $REQUESTED_VIEW = $request;
 
         // Check if the request matches any custom routes
         if (isset($this->routes[$request])) {
@@ -74,16 +66,72 @@ class Router
             return;
         }
 
-        // Load the appropriate view and its metadata, or trigger a 404 if not found
+        // Split the request into segments for controller, action, and parameters
+        $segments = explode('/', $request);
+
+        $controllerSegment = $segments[0];
+        $controllerName = $this->formatControllerName($controllerSegment);
+
+        // Ensure the controller name ends with 'Controller' only if it doesn't already
+        if (!str_ends_with($controllerName, 'Controller')) {
+            $controllerName .= 'Controller';
+        }
+
+        $controllerClass = 'Controllers\\' . $controllerName;
+
+        // Determine the action name (default to 'index')
+        $action = isset($segments[1]) && $segments[1] !== '' ? $segments[1] : 'index';
+
+        // Collect any additional parameters
+        $params = array_slice($segments, 2);
+
+        // Check if the controller class exists
+        if (class_exists($controllerClass)) {
+            $controller = new $controllerClass();
+
+            // Check if the method exists in the controller
+            if (method_exists($controller, $action)) {
+                call_user_func_array([$controller, $action], $params);
+            } else {
+                // No suitable method found, handle 404
+                $this->handleNotFound();
+            }
+            return;
+        }
+
+        // If no controller found, attempt to load the view
         $this->loadViewWithMetadata($request);
     }
 
     /**
-     * Load the requested view and its associated metadata if available.
+     * Formats the controller name to PascalCase.
      *
-     * This method looks for the view in the /public/public_views/ directory. If a
-     * metadata.php file is found in the same directory as the view, it is used to override
-     * the default meta title and description for the page.
+     * Converts names like 'admin_user', 'admin-user', or 'adminUser' into 'AdminUser'.
+     *
+     * @param string $name The original controller name.
+     * @return string The formatted controller name in PascalCase.
+     */
+    private function formatControllerName(string $name): string
+    {
+        // Convert kebab-case or snake_case to PascalCase
+        return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
+    }
+
+    /**
+     * Handle a 404 Not Found error by invoking the notFoundCallback or displaying a default message.
+     */
+    private function handleNotFound()
+    {
+        if ($this->notFoundCallback) {
+            call_user_func($this->notFoundCallback);
+        } else {
+            header('HTTP/1.0 404 Not Found');
+            echo "404 Not Found";
+        }
+    }
+
+    /**
+     * Load the requested view and its associated metadata if available.
      *
      * @param string $request The requested route (e.g., 'home', 'about').
      */
@@ -109,13 +157,8 @@ class Router
             require_once $viewPath;
             require_once PROJECT_ROOT . '/public/public_views/footer.php';
         } else {
-            // If no view found, call the 404 callback or display a default 404 message
-            if ($this->notFoundCallback) {
-                call_user_func($this->notFoundCallback);
-            } else {
-                header('HTTP/1.0 404 Not Found');
-                echo "404 Not Found";
-            }
+            // If no view found, handle 404
+            $this->handleNotFound();
         }
     }
 }
