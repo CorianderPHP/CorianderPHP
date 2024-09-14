@@ -5,55 +5,84 @@ namespace Controllers;
 /**
  * Class {{controllerName}}
  *
- * This is the controller for handling logic related to {{controllerName}}.
- * You can add your methods here to manage routes and render views.
+ * This class handles the logic and routes related to the {{controllerName}}.
+ * Methods in this class manage route actions, view rendering, and interactions with models.
  */
 class {{controllerName}}
 {
     /**
      * Display the default page for this controller.
      *
-     * This method is intended to handle the default route for the controller.
-     * You can modify it to fetch data, interact with models, or simply render a view.
+     * This method handles the default route for the controller, 
+     * typically used to render the main page of a resource or section.
+     * You can fetch data, interact with models, or simply render a view.
      */
     public function index()
     {
-        // Render the default view for this controller
+        // Include the metadata specific to this view.
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+
+        // Render the common header.
         require PROJECT_ROOT . '/public/public_views/header.php';
+
+        // Render the default index view for this controller.
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/index.php';
+
+        // Render the common footer.
         require PROJECT_ROOT . '/public/public_views/footer.php';
     }
 
     /**
-     * Show a specific item by ID or slug (optional).
+     * Show a specific item by ID or slug.
      *
-     * @param mixed $id The ID or slug of the item to display.
-     * You can modify this method to fetch data based on the passed ID or slug.
+     * This method handles displaying a specific resource based on an ID or slug passed to it.
+     * Modify this method to interact with your models to fetch data.
+     *
+     * @param mixed $id The ID or slug of the resource to display.
      */
     public function show($id)
     {
-        // Example: Fetch an item from a database (add your logic here)
+        // Example: Fetch an item from the database (modify as needed)
         // $item = YourModel::find($id);
 
-        // Render the view for showing a specific item
+        // Include the metadata specific to this view.
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+
+        // Render the common header.
         require PROJECT_ROOT . '/public/public_views/header.php';
+
+        // Render the specific item view.
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/show.php';
+
+        // Render the common footer.
         require PROJECT_ROOT . '/public/public_views/footer.php';
     }
 
     /**
-     * Handle a form submission or other POST request (optional).
+     * Handle a form submission or other POST request.
      *
-     * This method can be used to process form submissions or other actions.
+     * This method processes data submitted via POST requests, such as form submissions.
+     * It validates and handles the data, rendering a success message or redirection to another view.
      */
     public function store()
     {
-        // Handle form submission data
-        // Example: $formData = $_POST;
+        // Process form submission data (e.g., $formData = $_POST).
+        // Add your form validation and handling logic here.
 
-        // Redirect or render a success page
-        header('Location: /{{kebabControllerName}}/success');
+        // Include the metadata specific to this view.
+        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+
+        // Render the common header.
+        require PROJECT_ROOT . '/public/public_views/header.php';
+
+        // Output a success message or perform further actions.
+        echo "Data submitted successfully.";
+
+        // Optionally, redirect to a success page.
+        // To implement, create 'success.php' in '/public/public_views/{{kebabControllerName}}/'
+        // require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/success.php';
+
+        // Render the common footer.
+        require PROJECT_ROOT . '/public/public_views/footer.php';
     }
 }
