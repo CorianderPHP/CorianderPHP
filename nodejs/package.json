@@ -1,19 +1,19 @@
 {
-  "name": "typescript_node",
-  "version": "0.0.0",
+  "name": "nodejs",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "watch-ts": "tsc --watch",
-    "build-ts": "tsc",
-    "watch-js": "node build.watch.js",
-    "build-js": "node build.js",
-    "watch-tailwind": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch --minify",
-    "build-tailwind": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
+    "watch-typescript": "tsc --watch",
+    "build-typescript": "tsc",
+    "watch-ts": "node build.watch.js",
+    "build-ts": "node build.js",
+    "watch-tw": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch --minify",
+    "build-tw": "npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
     "build-all": "node build.js && npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
     "build-prod": "node build.min.js && npx tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
   },
   "author": "Dancuo Lohan",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.19.8",
     "tailwindcss": "^3.3.6",
