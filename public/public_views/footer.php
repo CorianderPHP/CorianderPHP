@@ -10,7 +10,7 @@
 <?php
 if (file_exists(PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/index.php') && file_exists(PROJECT_ROOT . '/public/assets/js/' . REQUESTED_VIEW . '/index.js')) {
 ?>
-    <script type="module" src="public/assets/js/<?= REQUESTED_VIEW ?>/index.js?<?php echo filemtime(PROJECT_ROOT . '/public/assets/js/' . REQUESTED_VIEW . '/index.js'); ?>" defer></script>
+    <script type="module" src="/public/assets/js/<?= REQUESTED_VIEW ?>/index.js?<?php echo filemtime(PROJECT_ROOT . '/public/assets/js/' . REQUESTED_VIEW . '/index.js'); ?>" defer></script>
 <?php
 }
 ?>
