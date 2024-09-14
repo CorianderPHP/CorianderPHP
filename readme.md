@@ -43,9 +43,17 @@ CorianderPHP provides a custom CLI tool to help manage views, controllers, and N
 
 You can create a new view using the `make:view` command:
    ```bash
-   php coriander make:view about
+   php coriander make:view contactMe
    ```
-This will generate a new view in `public/public_views/about/` using the CorianderPHP templates for view and metadata.
+This will generate a new view in `public/public_views/contact-me/` using the CorianderPHP templates for view and metadata.
+
+### Creating Controllers
+
+You can create a new controller using the make:controller command:
+   ```bash
+   php coriander make:controller contactMe
+   ```
+This will generate a new controller in `src/Controllers/ContactMeController.php` using the CorianderPHP templates. The controller will include methods like `index()` for the default page, `show($id)` for displaying specific items, and `store()` for handling form submissions.
 
 ---
 
