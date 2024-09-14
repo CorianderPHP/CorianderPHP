@@ -19,7 +19,10 @@ class {{controllerName}}
     public function index()
     {
         // Render the default view for this controller
+        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+        require PROJECT_ROOT . '/public/public_views/header.php';
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/index.php';
+        require PROJECT_ROOT . '/public/public_views/footer.php';
     }
 
     /**
@@ -34,7 +37,10 @@ class {{controllerName}}
         // $item = YourModel::find($id);
 
         // Render the view for showing a specific item
+        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+        require PROJECT_ROOT . '/public/public_views/header.php';
         require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/show.php';
+        require PROJECT_ROOT . '/public/public_views/footer.php';
     }
 
     /**
