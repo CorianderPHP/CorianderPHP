@@ -32,6 +32,7 @@ class MakeView
      * 
      * This method handles the creation of a new view by:
      * - Verifying if a view name is provided.
+     * - Converting the view name to kebab-case.
      * - Checking if the view already exists.
      * - Creating the necessary directory and copying template files.
      *
@@ -39,30 +40,48 @@ class MakeView
      */
     public function execute(array $args)
     {
-        // Ensure a view name is provided.
-        if (empty($args)) {
-            echo "Error: Please specify a view name." . PHP_EOL;
-            return;
+        try {
+            // Ensure a view name is provided.
+            if (empty($args)) {
+                throw new \Exception("Error: Please specify a view name.");
+            }
+
+            // Get the view name and convert it to kebab-case (all lowercase with dashes).
+            $viewName = $this->toKebabCase($args[0]);
+            $viewPath = PROJECT_ROOT . '/public/public_views/' . $viewName;
+
+            // Check if the view already exists.
+            if ($this->viewExists($viewPath)) {
+                throw new \Exception("Error: View '{$viewName}' already exists.");
+            }
+
+            // Create the view directory.
+            $this->createDirectory($viewPath);
+
+            // Copy the necessary template files (index.php and metadata.php) to the new view directory.
+            $this->createFileFromTemplate('view.php', $viewPath . '/index.php', $viewName);
+            $this->createFileFromTemplate('metadata.php', $viewPath . '/metadata.php', $viewName);
+
+            echo "View '{$viewName}' created successfully at '{$viewPath}'." . PHP_EOL;
+
+        } catch (\Exception $e) {
+            // Handle any exceptions during the creation process.
+            echo $e->getMessage() . PHP_EOL;
         }
+    }
 
-        // Get the view name and determine the path where the view will be created.
-        $viewName = $args[0];
-        $viewPath = PROJECT_ROOT . '/public/public_views/' . $viewName;
-
-        // Check if the view already exists.
-        if ($this->viewExists($viewPath)) {
-            echo "Error: View '{$viewName}' already exists." . PHP_EOL;
-            return;
-        }
-
-        // Create the view directory.
-        $this->createDirectory($viewPath);
-
-        // Copy the necessary template files (index.php and metadata.php) to the new view directory.
-        $this->createFileFromTemplate('view.php', $viewPath . '/index.php', $viewName);
-        $this->createFileFromTemplate('metadata.php', $viewPath . '/metadata.php', $viewName);
-
-        echo "View '{$viewName}' created successfully at '{$viewPath}'." . PHP_EOL;
+    /**
+     * Converts a string to kebab-case (lowercase letters with dashes separating words).
+     * 
+     * Example: "TestController" becomes "test-controller".
+     * 
+     * @param string $string The input string to convert.
+     * @return string The converted kebab-case string.
+     */
+    protected function toKebabCase(string $string): string
+    {
+        // Convert camelCase or PascalCase to kebab-case (all lowercase, words separated by dashes)
+        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $string));
     }
 
     /**
@@ -83,12 +102,19 @@ class MakeView
      * Create the directory for the new view.
      * 
      * This method creates a new directory for the view with the appropriate permissions.
+     * Wrapped in try-catch to handle directory creation errors.
      *
      * @param string $viewPath The path to the view directory.
      */
     protected function createDirectory(string $viewPath)
     {
-        mkdir($viewPath, 0755, true); // Creates the directory with 0755 permissions.
+        try {
+            if (!mkdir($viewPath, 0755, true) && !is_dir($viewPath)) {
+                throw new \Exception("Error: Failed to create directory '{$viewPath}'.");
+            }
+        } catch (\Exception $e) {
+            throw new \Exception("Error: Unable to create view directory. " . $e->getMessage());
+        }
     }
 
     /**
@@ -96,7 +122,7 @@ class MakeView
      * 
      * This method reads a template file (e.g., view.php or metadata.php), replaces
      * any placeholders (e.g., {{viewName}}) with the actual view name, and writes
-     * the modified content to the destination file.
+     * the modified content to the destination file. Wrapped in try-catch for file handling errors.
      *
      * @param string $templateFile The name of the template file (e.g., 'view.php').
      * @param string $destinationFile The full path to the destination file (e.g., the new view's index.php).
@@ -104,22 +130,27 @@ class MakeView
      */
     protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $viewName)
     {
-        // Define the full path to the template file.
-        $templatePath = $this->templatesPath . '/' . $templateFile;
+        try {
+            // Define the full path to the template file.
+            $templatePath = $this->templatesPath . '/' . $templateFile;
 
-        // Check if the template file exists.
-        if (!file_exists($templatePath)) {
-            echo "Error: Template '{$templateFile}' not found." . PHP_EOL;
-            return;
+            // Check if the template file exists.
+            if (!file_exists($templatePath)) {
+                throw new \Exception("Error: Template '{$templateFile}' not found.");
+            }
+
+            // Read the content of the template file.
+            $content = file_get_contents($templatePath);
+
+            // Replace any placeholders (e.g., {{viewName}}) with the actual view name.
+            $content = str_replace('{{viewName}}', $viewName, $content);
+
+            // Write the modified content to the destination file.
+            if (file_put_contents($destinationFile, $content) === false) {
+                throw new \Exception("Error: Failed to write to file '{$destinationFile}'.");
+            }
+        } catch (\Exception $e) {
+            throw new \Exception("Error during file creation: " . $e->getMessage());
         }
-
-        // Read the content of the template file.
-        $content = file_get_contents($templatePath);
-
-        // Replace any placeholders (e.g., {{viewName}}) with the actual view name.
-        $content = str_replace('{{viewName}}', $viewName, $content);
-
-        // Write the modified content to the destination file.
-        file_put_contents($destinationFile, $content);
     }
 }
