@@ -69,9 +69,14 @@ class Router
         // Split the request into segments for controller, action, and parameters
         $segments = explode('/', $request);
 
-        // Determine the controller name
         $controllerSegment = $segments[0];
-        $controllerName = $this->formatControllerName($controllerSegment) . 'Controller';
+        $controllerName = $this->formatControllerName($controllerSegment);
+
+        // Ensure the controller name ends with 'Controller' only if it doesn't already
+        if (!str_ends_with($controllerName, 'Controller')) {
+            $controllerName .= 'Controller';
+        }
+
         $controllerClass = 'Controllers\\' . $controllerName;
 
         // Determine the action name (default to 'index')
@@ -108,6 +113,7 @@ class Router
      */
     private function formatControllerName(string $name): string
     {
+        // Convert kebab-case or snake_case to PascalCase
         return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
     }
 
