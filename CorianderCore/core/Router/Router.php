@@ -52,6 +52,7 @@ class Router
         // Extract the requested route from the URL, ignoring query parameters
         $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $request = trim($requestUri, '/');
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
 
         // Default to 'home' if the request is empty
         if ($request === '') {
@@ -89,11 +90,11 @@ class Router
         if (class_exists($controllerClass)) {
             $controller = new $controllerClass();
 
-            // Check if the method exists in the controller
-            if (method_exists($controller, $action)) {
+            if ($requestMethod === 'POST' && method_exists($controller, 'store')) {
+                call_user_func_array([$controller, 'store'], $params);
+            } elseif (method_exists($controller, $action)) {
                 call_user_func_array([$controller, $action], $params);
             } else {
-                // No suitable method found, handle 404
                 $this->handleNotFound();
             }
             return;
