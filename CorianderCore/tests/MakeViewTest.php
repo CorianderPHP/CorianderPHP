@@ -43,7 +43,7 @@ class MakeViewTest extends TestCase
      */
     public function testCreateViewSuccessfully()
     {
-        // Define the expected view path based on PROJECT_ROOT and the view name
+        // Define the expected view path based on PROJECT_ROOT and the view name in kebab-case
         $viewPath = PROJECT_ROOT . '/public/public_views/newview';
 
         // Mock the 'viewExists' method to return false, simulating that the view does not exist
@@ -97,5 +97,31 @@ class MakeViewTest extends TestCase
 
         // Run the 'execute' method without providing any arguments
         $this->makeView->execute([]);
+    }
+
+    /**
+     * Test that the view name is formatted correctly (kebab-case).
+     */
+    public function testViewNameFormatting()
+    {
+        // Define the expected view path with a kebab-case name
+        $viewPath = PROJECT_ROOT . '/public/public_views/admin-user';
+
+        // Mock the 'viewExists' method to return false, simulating that the view does not exist
+        $this->makeView->expects($this->once())
+            ->method('viewExists')
+            ->with($viewPath)
+            ->willReturn(false);
+
+        // Mock the creation of the directory
+        $this->makeView->expects($this->once())
+            ->method('createDirectory')
+            ->with($viewPath);
+
+        // Expect the output to indicate successful creation of the view
+        $this->expectOutputString("View 'admin-user' created successfully at '{$viewPath}'." . PHP_EOL);
+
+        // Run the 'execute' method to trigger view creation with PascalCase input
+        $this->makeView->execute(['AdminUser']);
     }
 }
