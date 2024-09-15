@@ -10,7 +10,6 @@ export default {
         '4': '4px',
       },
       fontFamily: {
-        'depixel': ['"DePixel"', 'sans-serif'],
         'poppins': ['"Poppins"', 'sans-serif'],
         'concert-one': ['"ConcertOne"', 'sans-serif'],
       },
