@@ -79,12 +79,12 @@ class MakeTest extends TestCase
 
     /**
      * Tests the output when no arguments are passed to the make command.
-     * It checks that an error message is displayed indicating the need for arguments.
+     * It checks that the error message starts with the correct string.
      */
     public function testNoArgumentsPassedToMakeCommand()
     {
-        // Expect an error message indicating that no arguments were passed
-        $this->expectOutputString("Error: Invalid make command. Use 'make:view', 'make:controller', etc." . PHP_EOL);
+        // Expect the error message to start with the specified string
+        $this->expectOutputRegex("/^Error: Invalid make command. Valid commands are:/");
 
         // Run the make command with no arguments
         $this->make->execute([]);
