@@ -3,44 +3,48 @@
 namespace CorianderCore\Console\Commands;
 
 /**
- * Class responsible for handling make-related commands such as 'make:view', 'make:controller'.
- * It delegates the specific subcommands (like view or controller creation) to their respective handlers.
+ * Class responsible for handling make-related commands such as 'make:view', 'make:controller', and 'make:database'.
+ * It delegates the specific subcommands (like view, controller, or database creation) to their respective handlers.
  * This class serves as the central point for managing resource creation commands in the CorianderPHP framework.
  */
 class Make
 {
     /**
      * List of valid subcommands that the 'make' command supports.
-     * Each subcommand corresponds to a specific resource creation action (e.g., view, controller).
+     * Each subcommand corresponds to a specific resource creation action (e.g., view, controller, database).
      *
      * @var array
      */
     protected $validSubcommands = [
         'view',
-        'controller'
+        'controller',
+        'database'
     ];
 
     /**
-     * Instances of the subcommand handlers (e.g., MakeView, MakeController).
+     * Instances of the subcommand handlers (e.g., MakeView, MakeController, MakeDatabase).
      *
      * @var object|null
      */
     protected $makeViewInstance;
     protected $makeControllerInstance;
+    protected $makeDatabaseInstance;
 
     /**
      * Constructor for the Make class.
-     * Accepts optional instances for the subcommand handlers (e.g., MakeView, MakeController), 
+     * Accepts optional instances for the subcommand handlers (e.g., MakeView, MakeController, MakeDatabase),
      * allowing for dependency injection during testing.
      *
      * @param object|null $makeView Optional MakeView instance for testing or dependency injection.
      * @param object|null $makeController Optional MakeController instance for testing or dependency injection.
+     * @param object|null $makeDatabase Optional MakeDatabase instance for testing or dependency injection.
      */
-    public function __construct($makeView = null, $makeController = null)
+    public function __construct($makeView = null, $makeController = null, $makeDatabase = null)
     {
         // Assign the provided instances or create default ones if not provided
         $this->makeViewInstance = $makeView ?: new \CorianderCore\Console\Commands\View\MakeView();
         $this->makeControllerInstance = $makeController ?: new \CorianderCore\Console\Commands\Controller\MakeController();
+        $this->makeDatabaseInstance = $makeDatabase ?: new \CorianderCore\Console\Commands\Database\MakeDatabase();
     }
 
     /**
@@ -53,6 +57,7 @@ class Make
      * Example:
      * - 'php coriander make:view home' will create a view named 'home' using the MakeView class.
      * - 'php coriander make:controller User' will create a controller named 'UserController'.
+     * - 'php coriander make:database' will initiate the process of database configuration.
      *
      * @param array $args The arguments passed to the make command, including the subcommand and resource name.
      */
@@ -60,11 +65,12 @@ class Make
     {
         // Ensure the command has at least one argument (the subcommand)
         if (empty($args) || !isset($args[0])) {
-            echo "Error: Invalid make command. Use 'make:view', 'make:controller', etc." . PHP_EOL;
+            echo "Error: Invalid make command. Valid commands are: " 
+                 . implode(', ', $this->validSubcommands) . '.' . PHP_EOL;
             return;
         }
 
-        // Extract the subcommand (e.g., 'view' or 'controller')
+        // Extract the subcommand (e.g., 'view', 'controller', 'database')
         $subcommand = strtolower($args[0]);
 
         // Verify if the provided subcommand is valid
@@ -86,6 +92,10 @@ class Make
 
             case 'controller':
                 $this->makeController($resourceArgs); // Delegate to the MakeController handler
+                break;
+
+            case 'database':
+                $this->makeDatabase($resourceArgs); // Delegate to the MakeDatabase handler
                 break;
 
             default:
@@ -133,5 +143,18 @@ class Make
 
         // Delegate the controller creation task to the MakeController class
         $this->makeControllerInstance->execute($args);
+    }
+
+    /**
+     * Handles the creation of a database configuration by delegating to the MakeDatabase class.
+     * 
+     * This method calls the MakeDatabase class to initiate the process of database creation and configuration.
+     *
+     * @param array $args The arguments for creating or configuring the database.
+     */
+    protected function makeDatabase(array $args)
+    {
+        // Delegate the database creation task to the MakeDatabase class
+        $this->makeDatabaseInstance->execute($args);
     }
 }
