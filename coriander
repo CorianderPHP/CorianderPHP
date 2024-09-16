@@ -25,6 +25,7 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
 }
 
 use CorianderCore\Console\CommandHandler;
+use CorianderCore\Console\ConsoleOutput;
 
 /**
  * @var array $argv Global array of command-line arguments passed to the script.
@@ -47,6 +48,9 @@ try {
     $handler->handle($command, $args);
 } catch (Exception $e) {
     // Handle any errors by outputting the message
-    echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    ConsoleOutput::hr();
+    ConsoleOutput::print("&4[Error]&7 Failed to execute command: &8" . $command . "&7.");
+    ConsoleOutput::print("&4|&7 " . $e->getMessage());
+    ConsoleOutput::hr();
     exit(1);
 }
