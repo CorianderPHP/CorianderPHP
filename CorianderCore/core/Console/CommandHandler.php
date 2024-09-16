@@ -24,6 +24,7 @@ class CommandHandler
      */
     public function handle(string $command, array $args)
     {
+        ConsoleOutput::hr();
         // Check if the command contains a colon (e.g., make:view)
         $splitCommand = explode(':', $command);
 
@@ -34,13 +35,15 @@ class CommandHandler
         // If 'help' is requested or no command is provided, display the list of commands
         if ($mainCommand === 'help' || !$mainCommand) {
             $this->listCommands();
+            ConsoleOutput::hr();
             return;
         }
 
         // Check if the main command exists
         if (!isset($this->commands[$mainCommand])) {
-            echo "Unknown command: {$mainCommand}" . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Unknown command: {$mainCommand}\n");
             $this->listCommands();
+            ConsoleOutput::hr();
             return;
         }
 
@@ -66,6 +69,7 @@ class CommandHandler
 
         // Execute the main command with the provided arguments (subcommand included)
         $commandInstance->execute($args);
+        ConsoleOutput::hr();
     }
 
     /**
@@ -73,14 +77,14 @@ class CommandHandler
      */
     protected function listCommands()
     {
-        echo "Available commands:" . PHP_EOL;
+        ConsoleOutput::print("Available commands:");
 
         // Always include 'help' as an available command
-        echo "  - help" . PHP_EOL;
+        ConsoleOutput::print("| - help");
 
         // List all commands from the $commands array
         foreach ($this->commands as $cmd => $class) {
-            echo "  - {$cmd}" . PHP_EOL;
+            ConsoleOutput::print("| - {$cmd}");
         }
     }
 }

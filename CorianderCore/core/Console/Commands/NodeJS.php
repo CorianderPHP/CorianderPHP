@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands;
 
+use CorianderCore\Console\ConsoleOutput;
+
 class NodeJS
 {
     /**
@@ -17,7 +19,7 @@ class NodeJS
     {
         // Check if any arguments were passed; if not, request a command.
         if (empty($args)) {
-            echo "Please provide a Node.js command to run." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Please provide a Node.js command to run. (e.g, php coriander nodejs run watch-tw)");
             return;
         }
 
@@ -55,7 +57,7 @@ class NodeJS
             proc_close($process);
         } else {
             // If proc_open failed to start the npm process, output an error message
-            echo "Error: Could not start the process for {$npmCommand}." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Could not start the process for {$npmCommand}.");
         }
     }
 }

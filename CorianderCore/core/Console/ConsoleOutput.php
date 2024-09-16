@@ -15,6 +15,7 @@ class ConsoleOutput
     const COLOR_BLUE = "\033[34m";
     const COLOR_CYAN = "\033[36m";
     const COLOR_GRAY = "\033[37m";
+    const COLOR_DARK_GRAY = "\033[90m";
     const COLOR_RESET = "\033[0m";
     
     // ANSI style codes
@@ -30,6 +31,7 @@ class ConsoleOutput
      *  - &3: Cyan
      *  - &e: Yellow
      *  - &7: Gray
+     *  - &8: Dark Gray
      *  - &l: Bold
      *  - &u: Underline
      *  - &r: Reset formatting
@@ -42,9 +44,9 @@ class ConsoleOutput
 
         // Replace color codes with corresponding ANSI codes
         $formattedMessage = str_replace([
-            '&4', '&2', '&3', '&e', '&7', '&l', '&u', '&r'
+            '&4', '&2', '&3', '&e', '&7', '&8', '&l', '&u', '&r'
         ], [
-            self::COLOR_RED, self::COLOR_GREEN, self::COLOR_CYAN, self::COLOR_YELLOW, self::COLOR_GRAY, self::STYLE_BOLD, self::STYLE_UNDERLINE, self::STYLE_RESET
+            self::COLOR_RED, self::COLOR_GREEN, self::COLOR_CYAN, self::COLOR_YELLOW, self::COLOR_GRAY, self::COLOR_DARK_GRAY, self::STYLE_BOLD, self::STYLE_UNDERLINE, self::STYLE_RESET
         ], $message);
 
         // Output the formatted message to the console
@@ -56,6 +58,6 @@ class ConsoleOutput
      */
     public static function hr()
     {
-        self::print("-----------------------------------------");
+        self::print("&8-----------------------------------------");
     }
 }

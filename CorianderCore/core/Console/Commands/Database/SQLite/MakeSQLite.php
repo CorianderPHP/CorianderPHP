@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands\Database\SQLite;
 
+use CorianderCore\Console\ConsoleOutput;
+
 /**
  * The MakeSQLite class is responsible for generating and setting up SQLite database configurations.
  */
@@ -40,12 +42,15 @@ class MakeSQLite
     public function execute()
     {
         // Ask the user for the SQLite database name
-        echo "Enter SQLite database name (without extension): ";
+        ConsoleOutput::print("Enter SQLite database name (without extension):\n");
         $dbName = trim(fgets(STDIN));
+        ConsoleOutput::hr();
 
         // Generate SQLite configuration and database files
         $this->generateConfig($dbName);
         $this->createDatabaseFiles($dbName);
+        ConsoleOutput::hr();
+        ConsoleOutput::print("&2[Success]&r&7 Database " . $dbName . ".sqlite created in folder: " . $this->databaseFolder);
     }
 
     /**
@@ -76,7 +81,7 @@ class MakeSQLite
         // Ensure the database folder exists
         if (!is_dir($this->databaseFolder)) {
             mkdir($this->databaseFolder, 0777, true);
-            echo "Database folder created at $this->databaseFolder.\n";
+            ConsoleOutput::print("&8[Info] Database folder created at $this->databaseFolder.");
         }
 
         // Paths for clean and data SQLite files
@@ -86,18 +91,18 @@ class MakeSQLite
         // Create clean SQLite file if it doesn't exist
         if (!file_exists($cleanFilePath)) {
             copy($this->templatesPath . '/database.sqlite', $cleanFilePath);
-            echo "Clean SQLite database file created at $cleanFilePath.\n";
+            ConsoleOutput::print("&8[Info] Clean SQLite database file created at $cleanFilePath.");
         }
 
         // Create data SQLite file if it doesn't exist
         if (!file_exists($dataFilePath)) {
             copy($this->templatesPath . '/database.sqlite', $dataFilePath);
-            echo "SQLite database file created at $dataFilePath.\n";
+            ConsoleOutput::print("&8[Info] SQLite database file created at $dataFilePath.");
         }
 
         // Protect the database with an .htaccess file
         copy($this->templatesPath . '/.htaccess', $this->databaseFolder . '/.htaccess');
-        echo ".htaccess file created to protect the SQLite database.\n";
+        ConsoleOutput::print("&8[Info] .htaccess file created to protect the SQLite database.");
 
         // Create a .gitignore file
         $this->createGitignore($dbName);
@@ -115,7 +120,7 @@ class MakeSQLite
 
         // Save the .gitignore file in the database folder
         file_put_contents($this->databaseFolder . '/.gitignore', $gitignoreContent);
-        echo ".gitignore file created in the database folder.\n";
+        ConsoleOutput::print("&8[Info] .gitignore file created in the database folder.");
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands\View;
 
+use CorianderCore\Console\ConsoleOutput;
+
 /**
  * The MakeView class is responsible for generating new view directories and files
  * based on predefined templates. It facilitates the creation of views in the framework,
@@ -62,11 +64,12 @@ class MakeView
             $this->createFileFromTemplate('view.php', $viewPath . '/index.php', $viewName);
             $this->createFileFromTemplate('metadata.php', $viewPath . '/metadata.php', $viewName);
 
-            echo "View '{$viewName}' created successfully at '{$viewPath}'." . PHP_EOL;
+            ConsoleOutput::print("&2[Success]&r&7 View '{$viewName}' created successfully at '{$viewPath}'.");
 
         } catch (\Exception $e) {
             // Handle any exceptions during the creation process.
             echo $e->getMessage() . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 " . $e->getMessage());
         }
     }
 

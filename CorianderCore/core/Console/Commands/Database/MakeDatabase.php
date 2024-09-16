@@ -25,7 +25,6 @@ class MakeDatabase
         $iniPath = php_ini_loaded_file();  // Get the currently loaded php.ini file
 
         if (!$mysqlAvailable) {
-            ConsoleOutput::hr();
             ConsoleOutput::print("&e| [Warning]&r&7 &uMySQL PDO driver is not available&r&7.");
             ConsoleOutput::print("&e| &7You will not be able to create a MySQL database.\n&e|");
             ConsoleOutput::print("&e| &7To install the MySQL PDO driver, refer to the following:");
@@ -59,7 +58,6 @@ class MakeDatabase
                 case '0':
                 case '':
                     ConsoleOutput::print("Exiting the database creation process.");
-                    ConsoleOutput::hr();
                     return;  // Exit the loop and terminate the script
                 case '1':
                     if ($mysqlAvailable) {
@@ -67,7 +65,7 @@ class MakeDatabase
                         $mysqlMaker->execute();
                         return;  // Exit the loop after successful MySQL execution
                     } else {
-                        ConsoleOutput::print("&l&4[Error]&r&7 MySQL is not available on this system.");
+                        ConsoleOutput::print("&l&4[Error]&7 MySQL is not available on this system.");
                     }
                     break;
                 case '2':
@@ -75,8 +73,7 @@ class MakeDatabase
                     $sqliteMaker->execute();
                     return;  // Exit the loop after successful SQLite execution
                 default:
-                    ConsoleOutput::print("&4[Error]&r&7 Invalid choice. Please enter &l0&r&7 to exit, &l1&r&7 for MySQL, or &l2&r&7 for SQLite.");
-                    ConsoleOutput::hr();
+                    ConsoleOutput::print("&4[Error]&7 Invalid choice. Please enter &l0&r&7 to exit, &l1&r&7 for MySQL, or &l2&r&7 for SQLite.");
                     break;
             }
         } while (true);  // Continue the loop until a valid choice is made or the user exits

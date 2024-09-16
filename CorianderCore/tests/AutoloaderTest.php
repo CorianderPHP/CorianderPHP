@@ -1,7 +1,6 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use Error;
 
 class AutoloaderTest extends TestCase
 {

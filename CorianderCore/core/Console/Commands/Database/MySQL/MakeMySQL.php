@@ -2,6 +2,7 @@
 
 namespace CorianderCore\Console\Commands\Database\MySQL;
 
+use CorianderCore\Console\ConsoleOutput;
 use \PDO;
 use \PDOException;
 
@@ -38,16 +39,19 @@ class MakeMySQL
     public function execute()
     {
         // Ask the user for MySQL connection details
-        echo "Enter MySQL host: ";
+        ConsoleOutput::print("Enter MySQL host:\n");
         $dbHost = trim(fgets(STDIN));
 
-        echo "Enter MySQL database name: ";
+        ConsoleOutput::hr();
+        ConsoleOutput::print("Enter MySQL database name:\n");
         $dbName = trim(fgets(STDIN));
 
-        echo "Enter MySQL user: ";
+        ConsoleOutput::hr();
+        ConsoleOutput::print("Enter MySQL user:\n");
         $dbUser = trim(fgets(STDIN));
 
-        echo "Enter MySQL password: ";
+        ConsoleOutput::hr();
+        ConsoleOutput::print("Enter MySQL password:\n");
         $dbPassword = trim(fgets(STDIN));
 
         // Test the MySQL connection
@@ -55,12 +59,15 @@ class MakeMySQL
             $dsn = "mysql:host=$dbHost;dbname=$dbName";
             $pdo = new PDO($dsn, $dbUser, $dbPassword);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            echo "Connection successful! Proceeding with configuration...\n";
+            ConsoleOutput::hr();
+            ConsoleOutput::print("&2[Success]&r&7 Connection successful! Proceeding with configuration...");
         } catch (PDOException $e) {
-            echo "Connection failed: " . $e->getMessage() . "\n";
-            echo "Do you want to proceed anyway? (y/n): ";
+            ConsoleOutput::hr();
+            ConsoleOutput::print("&4[Error]&7 Connection failed: " . $e->getMessage());
+            ConsoleOutput::print("Do you want to proceed anyway? (y/n):\n");
             $confirmation = strtolower(trim(fgets(STDIN)));
             if ($confirmation !== 'y') {
+                ConsoleOutput::print("&e[Warning]&7 Database configuration file not created.");
                 return;
             }
         }
@@ -91,7 +98,7 @@ class MakeMySQL
 
         // Save the generated configuration file
         $this->saveConfig($content);
-        echo "MySQL configuration generated successfully.\n";
+        ConsoleOutput::print("&2[Success]&r&7 MySQL configuration generated successfully.");
     }
 
     /**
