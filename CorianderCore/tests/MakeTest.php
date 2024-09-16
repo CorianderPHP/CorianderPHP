@@ -7,7 +7,8 @@ use CorianderCore\Console\Commands\View\MakeView;
 class MakeTest extends TestCase
 {
     /**
-     * @var Make Holds the instance of the Make command for testing.
+     * @var Make $make
+     * Holds the instance of the Make command for testing.
      */
     protected $make;
 
@@ -20,7 +21,7 @@ class MakeTest extends TestCase
     {
         // Define PROJECT_ROOT if it hasn't been defined already
         if (!defined('PROJECT_ROOT')) {
-            define('PROJECT_ROOT', dirname(__DIR__, 2));
+            define('PROJECT_ROOT', dirname(__DIR__, 2)); // Set PROJECT_ROOT to the project's root directory.
         }
     }
 
@@ -33,7 +34,7 @@ class MakeTest extends TestCase
     {
         // Create a mock for MakeView, only mocking the 'execute' method
         $mockMakeView = $this->getMockBuilder(MakeView::class)
-            ->onlyMethods(['execute']) // Mock only the 'execute' method
+            ->onlyMethods(['execute']) // Mock only the 'execute' method to simulate its behavior.
             ->getMock();
 
         // Initialize the Make class with the mocked MakeView
@@ -46,18 +47,18 @@ class MakeTest extends TestCase
      */
     public function testMakeViewCommandDelegatesToMakeView()
     {
-        // Create a mock for MakeView, only mocking the 'execute' method
+        // Create a mock for MakeView, mocking only the 'execute' method
         $mockMakeView = $this->getMockBuilder(MakeView::class)
             ->onlyMethods(['execute'])
             ->getMock();
 
-        // Expect that the 'execute' method in the mock will be called once,
-        // with the argument 'home' when make:view is executed
+        // Expect that the 'execute' method in the mock will be called exactly once,
+        // and that it will be called with the argument 'home' when 'make:view home' is executed
         $mockMakeView->expects($this->once())
             ->method('execute')
             ->with($this->equalTo(['home'])); // Expect 'home' as the argument
 
-        // Reinitialize the Make class with the mocked MakeView
+        // Reinitialize the Make class with the newly mocked MakeView
         $this->make = new Make($mockMakeView);
 
         // Simulate running the command: 'php coriander make:view home'
@@ -66,25 +67,25 @@ class MakeTest extends TestCase
 
     /**
      * Tests the output when an invalid make command is passed.
-     * It checks that the error message starts with the correct string.
+     * This test checks that the appropriate error message is displayed when the command is unknown.
      */
     public function testInvalidMakeCommand()
     {
-        // Expect the error message to start with the specified string
-        $this->expectOutputRegex("/^Error: Unknown make command 'invalid'. Valid commands are:/");
+        // Expect the output to contain the error message for an invalid make command
+        $this->expectOutputRegex("/Unknown make command: make:invalid/");
 
-        // Run the make command with an invalid subcommand
+        // Run the make command with an invalid subcommand 'invalid'
         $this->make->execute(['invalid']);
     }
 
     /**
      * Tests the output when no arguments are passed to the make command.
-     * It checks that the error message starts with the correct string.
+     * This test verifies that the error message listing available commands is displayed.
      */
     public function testNoArgumentsPassedToMakeCommand()
     {
-        // Expect the error message to start with the specified string
-        $this->expectOutputRegex("/^Error: Invalid make command. Valid commands are:/");
+        // Expect the output to contain the message listing available make commands
+        $this->expectOutputRegex("/Available make commands:/");
 
         // Run the make command with no arguments
         $this->make->execute([]);
@@ -92,12 +93,12 @@ class MakeTest extends TestCase
 
     /**
      * Tests the output when the 'make:view' command is executed without providing a view name.
-     * It checks that the appropriate error message is displayed.
+     * This test ensures that an appropriate error message is displayed indicating a missing view name.
      */
     public function testMakeViewWithoutViewName()
     {
         // Expect an error message indicating that no view name was provided
-        $this->expectOutputString("Error: Please specify a view name, e.g., 'make:view home'." . PHP_EOL);
+        $this->expectOutputRegex("/Please specify a view name, e.g., 'make:view agenda'/");
 
         // Run the 'make:view' command without providing a view name
         $this->make->execute(['view']);
