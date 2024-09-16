@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands\Controller;
 
+use CorianderCore\Console\ConsoleOutput;
+
 /**
  * The MakeController class is responsible for generating new controller files
  * based on predefined templates. It ensures that controllers are created in
@@ -41,7 +43,7 @@ class MakeController
     {
         // Ensure a controller name is provided.
         if (empty($args)) {
-            echo "Error: Please specify a controller name." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Please specify a controller name.");
             return;
         }
 
@@ -64,16 +66,16 @@ class MakeController
 
         // Check if the controller already exists.
         if ($this->controllerExists($controllerPath)) {
-            echo "Error: Controller '{$controllerName}' already exists." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Controller '{$controllerName}' already exists.");
             return;
         }
 
         // Create the controller file using the template.
         try {
             $this->createFileFromTemplate('Controller.php', $controllerPath, $controllerName, $kebabCaseName);
-            echo "Controller '{$controllerName}' created successfully at '{$controllerPath}'." . PHP_EOL;
+            ConsoleOutput::print("&2[Success]&7 Controller '{$controllerName}' created successfully at '{$controllerPath}'. ");
         } catch (\Exception $e) {
-            echo "Error: Failed to create controller '{$controllerName}'. " . $e->getMessage() . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Failed to create controller '{$controllerName}'. " . $e->getMessage());
         }
     }
 
