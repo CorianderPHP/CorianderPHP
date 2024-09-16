@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands;
 
+use CorianderCore\Console\ConsoleOutput;
+
 /**
  * Class responsible for handling make-related commands such as 'make:view', 'make:controller', and 'make:database'.
  * It delegates the specific subcommands (like view, controller, or database creation) to their respective handlers.
@@ -65,8 +67,7 @@ class Make
     {
         // Ensure the command has at least one argument (the subcommand)
         if (empty($args) || !isset($args[0])) {
-            echo "Error: Invalid make command. Valid commands are: " 
-                 . implode(', ', $this->validSubcommands) . '.' . PHP_EOL;
+            $this->listCommands();
             return;
         }
 
@@ -76,8 +77,8 @@ class Make
         // Verify if the provided subcommand is valid
         if (!in_array($subcommand, $this->validSubcommands)) {
             // Display an error message and list valid subcommands if the subcommand is invalid
-            echo "Error: Unknown make command '{$subcommand}'. Valid commands are: " 
-                 . implode(', ', $this->validSubcommands) . '.' . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Unknown make command: make:{$subcommand}\n");
+            $this->listCommands();
             return;
         }
 
@@ -101,7 +102,7 @@ class Make
             default:
                 // This fallback case is unlikely to be triggered due to the earlier validation,
                 // but serves as a safety net to catch any unforeseen issues.
-                echo "Error: Unknown subcommand '{$subcommand}'." . PHP_EOL;
+                ConsoleOutput::print("&4[Error]&7 Unknown make command: make:{$subcommand}\n");
         }
     }
 
@@ -117,7 +118,7 @@ class Make
     {
         // Ensure a view name is provided
         if (empty($args)) {
-            echo "Error: Please specify a view name, e.g., 'make:view home'." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Please specify a view name, e.g., 'make:view agenda'");
             return;
         }
 
@@ -137,7 +138,7 @@ class Make
     {
         // Ensure a controller name is provided
         if (empty($args)) {
-            echo "Error: Please specify a controller name, e.g., 'make:controller User'." . PHP_EOL;
+            ConsoleOutput::print("&4[Error]&7 Please specify a controller name, e.g., 'make:controller Agenda'.");
             return;
         }
 
@@ -156,5 +157,18 @@ class Make
     {
         // Delegate the database creation task to the MakeDatabase class
         $this->makeDatabaseInstance->execute($args);
+    }
+
+
+    /**
+     * Lists all available make: commands.
+     */
+    protected function listCommands()
+    {
+        ConsoleOutput::print("Available make commands:");
+
+        foreach ($this->validSubcommands as $cmd) {
+            ConsoleOutput::print("| - make:{$cmd}");
+        }
     }
 }
