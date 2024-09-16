@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Console\Commands;
 
+use CorianderCore\Console\ConsoleOutput;
+
 class Hello
 {
     /**
@@ -13,7 +15,7 @@ class Hello
      */
     public function execute()
     {
-        echo "Hi! I'm Coriander, how can I help you?" . PHP_EOL;
+        ConsoleOutput::print("Hi! I'm &2Coriander&7, how can I help you?");
     }
 }
 
