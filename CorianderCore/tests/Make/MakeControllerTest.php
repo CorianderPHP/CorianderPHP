@@ -31,7 +31,7 @@ class MakeControllerTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         if (!defined('PROJECT_ROOT')) {
-            define('PROJECT_ROOT', dirname(__DIR__, 2)); // Set PROJECT_ROOT to the project's root directory.
+            define('PROJECT_ROOT', dirname(__DIR__, 3)); // Set PROJECT_ROOT to the project's root directory.
         }
     }
 
