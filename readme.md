@@ -49,11 +49,19 @@ This will generate a new view in `public/public_views/contact-me/` using the Cor
 
 ### Creating Controllers
 
-You can create a new controller using the make:controller command:
+You can create a new controller using the `make:controller` command:
    ```bash
    php coriander make:controller contactMe
    ```
 This will generate a new controller in `src/Controllers/ContactMeController.php` using the CorianderPHP templates. The controller will include methods like `index()` for the default page, `show($id)` for displaying specific items, and `store()` for handling form submissions.
+
+### Creating Databases
+
+You can create a new database configuration using the `make:database` command:
+   ```bash
+   php coriander make:database
+   ```
+This will prompt you to choose between MySQL and SQLite and generate the appropriate configuration file in the `config` folder.
 
 ---
 
