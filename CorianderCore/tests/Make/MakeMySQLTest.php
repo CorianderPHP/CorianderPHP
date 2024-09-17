@@ -53,7 +53,7 @@ class MakeMySQLTest extends TestCase
     public function testMysqlConnectionFailure()
     {
         // Create a temporary directory for the test
-        $tempDir = PROJECT_ROOT . '/test_mysql_config';
+        $tempDir = PROJECT_ROOT . '/CorianderCore/tests/test_mysql_config';
         mkdir($tempDir, 0777, true);
 
         // Use reflection to set the protected properties

@@ -51,7 +51,7 @@ class MakeSQLiteTest extends TestCase
     public function testExecuteSqlite()
     {
         // Create a temporary directory for the test
-        $tempDir = PROJECT_ROOT . '/test_sqlite_database';
+        $tempDir = PROJECT_ROOT . '/CorianderCore/tests/test_sqlite_database';
         mkdir($tempDir, 0777, true);
 
         // Use reflection to set the protected properties
