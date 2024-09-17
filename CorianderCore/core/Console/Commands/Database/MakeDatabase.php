@@ -4,8 +4,8 @@ namespace CorianderCore\Console\Commands\Database;
 
 use CorianderCore\Console\Commands\Database\MySQL\MakeMySQL;
 use CorianderCore\Console\Commands\Database\SQLite\MakeSQLite;
+use CorianderCore\Console\Services\PdoDriverService;
 use CorianderCore\Console\ConsoleOutput;
-use PDO;
 
 /**
  * The MakeDatabase class is responsible for directing the user to either the MySQL or SQLite setup process.
@@ -14,13 +14,29 @@ use PDO;
 class MakeDatabase
 {
     /**
+     * @var PdoDriverService
+     */
+    protected $pdoDriverService;
+
+    /**
+     * Constructor for MakeDatabase.
+     *
+     * @param PdoDriverService|null $pdoDriverService
+     */
+    public function __construct(PdoDriverService $pdoDriverService = null)
+    {
+        // If no PdoDriverService is passed, instantiate a default one
+        $this->pdoDriverService = $pdoDriverService ?? new PdoDriverService();
+    }
+
+    /**
      * Executes the database configuration process based on user input.
      * Checks for the necessary PDO drivers before prompting the user to choose between MySQL and SQLite.
      */
     public function execute()
     {
         // Check available PDO drivers and warn if MySQL driver is missing
-        $availableDrivers = PDO::getAvailableDrivers();
+        $availableDrivers = $this->pdoDriverService->getAvailableDrivers();
         $mysqlAvailable = in_array('mysql', $availableDrivers);
         $iniPath = php_ini_loaded_file();  // Get the currently loaded php.ini file
 
