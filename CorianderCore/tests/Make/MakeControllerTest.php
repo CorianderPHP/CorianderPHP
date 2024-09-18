@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Controller\MakeController;
+use CorianderCore\Console\Commands\Make\Controller\MakeController;
 
 class MakeControllerTest extends TestCase
 {

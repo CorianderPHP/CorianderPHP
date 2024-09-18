@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Database\MySQL\MakeMySQL;
+use CorianderCore\Console\Commands\Make\Database\MySQL\MakeMySQL;
 use CorianderCore\Console\ConsoleOutput;
 
 class MakeMySQLTest extends TestCase

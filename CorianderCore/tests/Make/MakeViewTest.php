@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\View\MakeView;
+use CorianderCore\Console\Commands\Make\View\MakeView;
 
 class MakeViewTest extends TestCase
 {

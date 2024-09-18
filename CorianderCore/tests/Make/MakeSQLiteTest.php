@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Database\SQLite\MakeSQLite;
+use CorianderCore\Console\Commands\Make\Database\SQLite\MakeSQLite;
 use CorianderCore\Console\ConsoleOutput;
 
 class MakeSQLiteTest extends TestCase

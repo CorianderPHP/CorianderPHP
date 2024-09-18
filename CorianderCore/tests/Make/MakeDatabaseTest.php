@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Database\MakeDatabase;
+use CorianderCore\Console\Commands\Make\Database\MakeDatabase;
 use CorianderCore\Console\Services\PdoDriverService;
 
 class MakeDatabaseTest extends TestCase
