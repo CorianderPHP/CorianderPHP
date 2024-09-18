@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console\Commands\View;
+namespace CorianderCore\Console\Commands\Make\View;
 
 use CorianderCore\Console\ConsoleOutput;
 
