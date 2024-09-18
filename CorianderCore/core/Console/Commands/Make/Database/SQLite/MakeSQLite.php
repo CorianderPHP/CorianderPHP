@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Database\SQLite;
+namespace CorianderCore\Console\Commands\Make\Database\SQLite;
 
 use CorianderCore\Console\ConsoleOutput;
 
@@ -30,7 +30,7 @@ class MakeSQLite
     public function __construct()
     {
         // Define paths to the SQLite templates and configuration folder
-        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Database/SQLite/templates';
+        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Database/SQLite/templates';
         $this->configPath = PROJECT_ROOT . '/config';
         $this->databaseFolder = PROJECT_ROOT . '/database';
     }

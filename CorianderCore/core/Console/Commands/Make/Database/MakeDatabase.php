@@ -1,9 +1,9 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Database;
+namespace CorianderCore\Console\Commands\Make\Database;
 
-use CorianderCore\Console\Commands\Database\MySQL\MakeMySQL;
-use CorianderCore\Console\Commands\Database\SQLite\MakeSQLite;
+use CorianderCore\Console\Commands\Make\Database\MySQL\MakeMySQL;
+use CorianderCore\Console\Commands\Make\Database\SQLite\MakeSQLite;
 use CorianderCore\Console\Services\PdoDriverService;
 use CorianderCore\Console\ConsoleOutput;
 

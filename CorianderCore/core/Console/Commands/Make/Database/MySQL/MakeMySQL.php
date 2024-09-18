@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Database\MySQL;
+namespace CorianderCore\Console\Commands\Make\Database\MySQL;
 
 use CorianderCore\Console\ConsoleOutput;
 use \PDO;
@@ -28,7 +28,7 @@ class MakeMySQL
     public function __construct()
     {
         // Define paths to the MySQL templates and config folder
-        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Database/MySQL/templates';
+        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Database/MySQL/templates';
         $this->configPath = PROJECT_ROOT . '/config';
     }
 
