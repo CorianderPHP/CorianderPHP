@@ -44,9 +44,9 @@ class Make
     public function __construct($makeView = null, $makeController = null, $makeDatabase = null)
     {
         // Assign the provided instances or create default ones if not provided
-        $this->makeViewInstance = $makeView ?: new \CorianderCore\Console\Commands\View\MakeView();
-        $this->makeControllerInstance = $makeController ?: new \CorianderCore\Console\Commands\Controller\MakeController();
-        $this->makeDatabaseInstance = $makeDatabase ?: new \CorianderCore\Console\Commands\Database\MakeDatabase();
+        $this->makeViewInstance = $makeView ?: new \CorianderCore\Console\Commands\Make\View\MakeView();
+        $this->makeControllerInstance = $makeController ?: new \CorianderCore\Console\Commands\Make\Controller\MakeController();
+        $this->makeDatabaseInstance = $makeDatabase ?: new \CorianderCore\Console\Commands\Make\Database\MakeDatabase();
     }
 
     /**
