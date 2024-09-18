@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Controller;
+namespace CorianderCore\Console\Commands\Make\Controller;
 
 use CorianderCore\Console\ConsoleOutput;
 
