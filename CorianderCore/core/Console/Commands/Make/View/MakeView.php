@@ -26,7 +26,7 @@ class MakeView
     public function __construct()
     {
         // Set the path to the templates directory.
-        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/View/templates';
+        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/View/templates';
     }
 
     /**
