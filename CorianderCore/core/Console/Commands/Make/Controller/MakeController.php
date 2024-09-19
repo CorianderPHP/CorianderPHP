@@ -25,7 +25,7 @@ class MakeController
     public function __construct()
     {
         // Set the path to the templates directory.
-        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Controller/templates';
+        $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Controller/templates';
     }
 
     /**
