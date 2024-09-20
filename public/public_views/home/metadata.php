@@ -1,5 +1,7 @@
 <?php
-// Custom metadata for the Home page
+// Custom metadata for the home page
 $lang = 'en';
-$metaTitle = 'Welcome to CorianderPHP';
-$metaDescription = 'Welcome to CorianderPHP, a lightweight and performance-focused PHP framework.';
+$meta = '
+<title>home page</title>
+<meta name="description" content="This is the home page description.">
+';
