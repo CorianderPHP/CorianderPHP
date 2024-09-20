@@ -18,7 +18,7 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
 use CorianderCore\Router\Router;
 
 // Initialize the router
-$router = new Router();
+$router = Router::getInstance();
 
 // Custom 404 handler
 $router->setNotFound(function () {
