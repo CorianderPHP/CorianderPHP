@@ -1,13 +1,25 @@
+<?php
+$metaDataPath = PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/metadata.php';
+if (file_exists($metaDataPath)) {
+    include_once $metaDataPath;
+}
+?>
+
 <!DOCTYPE html>
-<html lang="<?= htmlspecialchars($lang); ?>">
+<html lang="<?= isset($lang) ? $lang : 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Dynamically generated meta tags -->
-    <title><?= htmlspecialchars($metaTitle); ?></title>
-    <meta name="description" content="<?= htmlspecialchars($metaDescription); ?>">
+    <?php
+    if (isset($metadata)) {
+        echo $metadata;
+    } else {
+        echo '<title>No configured title</title>';
+        echo '<meta name="description" content="No configured description.">';
+    }
+    ?>
 
     <link rel="stylesheet" href="/public/assets/css/output.css?<?php echo filemtime(PROJECT_ROOT . '/public/assets/css/output.css'); ?>">
 </head>
