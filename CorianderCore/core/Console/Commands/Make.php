@@ -34,19 +34,12 @@ class Make
 
     /**
      * Constructor for the Make class.
-     * Accepts optional instances for the subcommand handlers (e.g., MakeView, MakeController, MakeDatabase),
-     * allowing for dependency injection during testing.
-     *
-     * @param object|null $makeView Optional MakeView instance for testing or dependency injection.
-     * @param object|null $makeController Optional MakeController instance for testing or dependency injection.
-     * @param object|null $makeDatabase Optional MakeDatabase instance for testing or dependency injection.
      */
-    public function __construct($makeView = null, $makeController = null, $makeDatabase = null)
+    public function __construct()
     {
-        // Assign the provided instances or create default ones if not provided
-        $this->makeViewInstance = $makeView ?: new \CorianderCore\Console\Commands\Make\View\MakeView();
-        $this->makeControllerInstance = $makeController ?: new \CorianderCore\Console\Commands\Make\Controller\MakeController();
-        $this->makeDatabaseInstance = $makeDatabase ?: new \CorianderCore\Console\Commands\Make\Database\MakeDatabase();
+        $this->makeViewInstance = new \CorianderCore\Console\Commands\Make\View\MakeView();
+        $this->makeControllerInstance = new \CorianderCore\Console\Commands\Make\Controller\MakeController();
+        $this->makeDatabaseInstance = new \CorianderCore\Console\Commands\Make\Database\MakeDatabase();
     }
 
     /**
