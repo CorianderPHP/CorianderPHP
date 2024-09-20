@@ -1,7 +1,7 @@
 <?php
 $metaDataPath = PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/metadata.php';
 if (file_exists($metaDataPath)) {
-    include_once $metaDataPath;
+    require_once $metaDataPath;
 }
 ?>
 
