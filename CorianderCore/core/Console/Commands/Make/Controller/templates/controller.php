@@ -2,6 +2,8 @@
 
 namespace Controllers;
 
+use CorianderCore\Router\Router;
+
 /**
  * Class {{controllerName}}
  *
@@ -10,26 +12,25 @@ namespace Controllers;
  */
 class {{controllerName}}
 {
+    protected $router;
+
+    public function __construct()
+    {
+        // Get the static instance of the router
+        $this->router = Router::getInstance();
+    }
+
     /**
      * Display the default page for this controller.
-     *
-     * This method handles the default route for the controller, 
-     * typically used to render the main page of a resource or section.
-     * You can fetch data, interact with models, or simply render a view.
      */
     public function index()
     {
-        // Include the metadata specific to this view.
-        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+        $data = [
+            // Example data
+        ];
 
-        // Render the common header.
-        require PROJECT_ROOT . '/public/public_views/header.php';
-
-        // Render the default index view for this controller.
-        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/index.php';
-
-        // Render the common footer.
-        require PROJECT_ROOT . '/public/public_views/footer.php';
+        // Use the router instance to render the view
+        $this->router::renderView('{{kebabControllerName}}', $data);
     }
 
     /**
@@ -42,20 +43,13 @@ class {{controllerName}}
      */
     public function show($id)
     {
-        // Example: Fetch an item from the database (modify as needed)
-        // $item = YourModel::find($id);
+        // Example: Fetch an item from the database
+        $data = [
+            // Example: 'item' => YourModel::find($id)
+        ];
 
-        // Include the metadata specific to this view.
-        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
-
-        // Render the common header.
-        require PROJECT_ROOT . '/public/public_views/header.php';
-
-        // Render the specific item view.
-        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/show.php';
-
-        // Render the common footer.
-        require PROJECT_ROOT . '/public/public_views/footer.php';
+        // Use the router instance to render the specific view
+        $this->router::renderView('{{kebabControllerName}}/show', $data);
     }
 
     /**
@@ -66,23 +60,16 @@ class {{controllerName}}
      */
     public function store()
     {
-        // Process form submission data (e.g., $formData = $_POST).
-        // Add your form validation and handling logic here.
+        // Example: Process form submission data
+        // $formData = $_POST;
+        // Validation and processing logic here
 
-        // Include the metadata specific to this view.
-        require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/metadata.php';
+        // Example: Success message
+        $data = [
+            'message' => 'Data submitted successfully.'
+        ];
 
-        // Render the common header.
-        require PROJECT_ROOT . '/public/public_views/header.php';
-
-        // Output a success message or perform further actions.
-        echo "Data submitted successfully.";
-
-        // Optionally, redirect to a success page.
-        // To implement, create 'success.php' in '/public/public_views/{{kebabControllerName}}/'
-        // require PROJECT_ROOT . '/public/public_views/{{kebabControllerName}}/success.php';
-
-        // Render the common footer.
-        require PROJECT_ROOT . '/public/public_views/footer.php';
+        // Use the router instance to render the success view
+        $this->router::renderView('{{kebabControllerName}}/success', $data);
     }
 }
