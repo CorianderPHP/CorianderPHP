@@ -1,4 +1,7 @@
 <?php
+// Custom metadata for the {{viewName}} page
 $lang = 'en';
-$metaTitle = '{{viewName}}';
-$metaDescription = 'This is the {{viewName}} page description.';
+$meta = '
+<title>{{viewName}} page</title>
+<meta name="description" content="This is the {{viewName}} page description.">
+';
