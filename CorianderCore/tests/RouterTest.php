@@ -21,7 +21,7 @@ class RouterTest extends TestCase
     protected function setUp(): void
     {
         // Instantiate a new Router object before each test to ensure a clean state.
-        $this->router = new Router();
+        $this->router = Router::getInstance();
 
         // Reset the global $_SERVER array to default values for consistency across tests.
         $_SERVER = [];
