@@ -27,42 +27,11 @@ class MakeTest extends TestCase
 
     /**
      * This method is executed before each test.
-     * It creates a mock of the MakeView class to avoid actual filesystem operations 
-     * and initializes the Make class with the mock.
      */
     protected function setUp(): void
     {
-        // Create a mock for MakeView, only mocking the 'execute' method
-        $mockMakeView = $this->getMockBuilder(MakeView::class)
-            ->onlyMethods(['execute']) // Mock only the 'execute' method to simulate its behavior.
-            ->getMock();
-
         // Initialize the Make class with the mocked MakeView
-        $this->make = new Make($mockMakeView);
-    }
-
-    /**
-     * Tests whether the 'make:view' command properly delegates the task 
-     * of view creation to the MakeView class's 'execute' method.
-     */
-    public function testMakeViewCommandDelegatesToMakeView()
-    {
-        // Create a mock for MakeView, mocking only the 'execute' method
-        $mockMakeView = $this->getMockBuilder(MakeView::class)
-            ->onlyMethods(['execute'])
-            ->getMock();
-
-        // Expect that the 'execute' method in the mock will be called exactly once,
-        // and that it will be called with the argument 'home' when 'make:view home' is executed
-        $mockMakeView->expects($this->once())
-            ->method('execute')
-            ->with($this->equalTo(['home'])); // Expect 'home' as the argument
-
-        // Reinitialize the Make class with the newly mocked MakeView
-        $this->make = new Make($mockMakeView);
-
-        // Simulate running the command: 'php coriander make:view home'
-        $this->make->execute(['view', 'home']);
+        $this->make = new Make();
     }
 
     /**
