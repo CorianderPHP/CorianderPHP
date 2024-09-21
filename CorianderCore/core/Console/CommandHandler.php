@@ -13,6 +13,7 @@ class CommandHandler
         'hello' => \CorianderCore\Console\Commands\Hello::class,
         'nodejs' => \CorianderCore\Console\Commands\NodeJS::class,
         'make' => \CorianderCore\Console\Commands\Make::class,
+        'benchmark' => \CorianderCore\Console\Commands\Benchmark::class,
     ];
 
     /**
