@@ -1,15 +1,20 @@
-# CorianderPHP Framework
+# CorianderPHP: Lightweight, Modular PHP Framework
 
-**CorianderPHP** is a lightweight, performance-focused PHP framework designed for building modern web applications. It includes support for vanilla PHP, TypeScript, and TailwindCSS, making it a powerful tool for developers who value flexibility and eco-design principles.
+**CorianderPHP** is a minimalist PHP framework designed to help developers build applications faster, with a focus on modularity and simplicity. It provides a core foundation, CorianderCore, that can be updated independently of your application code, ensuring seamless upgrades without breaking your customizations.
+
+This framework aims to offer essential functionalities to streamline development, avoiding the bloat of larger frameworks by only including what you need. It’s an ideal starting point for developers who want a clean slate and the flexibility to choose their dependencies, without the overhead of an all-purpose framework.
 
 ---
 
 ## Features
 
-- **Vanilla PHP Framework**: Build applications using clean and optimized PHP code.
-- **NodeJS Integration**: Preconfigured TypeScript and TailwindCSS support for modern frontend development.
-- **CLI Tooling**: Includes a custom command-line interface (CLI) for generating views.
+- **Modular Architecture**: The core code can be extended with custom modules, keeping the base lightweight and focused on performance.
+- **Easy to Extend**: Add your own modules and features without modifying the core, ensuring future compatibility.
+- **No External Dependencies**: CorianderPHP doesn't impose unnecessary libraries, enabling you to select only the packages you need.
+- **CLI Tooling**: Includes a custom command-line interface (CLI) for generating views, controllers, database configuration, ect...
 - **Performance**: Focuses on optimizing performance and reducing environmental impact through lean code and efficient asset handling.
+- **NodeJS Integration**: Preconfigured TypeScript and TailwindCSS support for modern frontend development.
+- **Development Watchers**: Automatically watch and rebuild assets (TypeScript, CSS) when files are modified during development.
   
 ## Installation
 
@@ -29,8 +34,8 @@ To set up **CorianderPHP**, follow these steps:
    ```
 4. Set up your TypeScript and TailwindCSS assets with the available watchers:
    ```bash
-   php coriander nodejs watch-ts    # To watch and compile TypeScript
-   php coriander nodejs watch-tw    # To watch and compile TailwindCSS
+   php coriander nodejs run watch-ts    # To watch and compile TypeScript
+   php coriander nodejs run watch-tw    # To watch and compile TailwindCSS
    ```
 
 ---
@@ -41,39 +46,41 @@ CorianderPHP provides a custom CLI tool to help manage views, controllers, and N
 
 ### Creating Views
 
-You can create a new view using the `make:view` command:
+Generate a new view using the `make:view` command:
    ```bash
    php coriander make:view contactMe
    ```
-This will generate a new view in `public/public_views/contact-me/` using the CorianderPHP templates for view and metadata.
+This creates a new view in `public/public_views/contact-me/` using the CorianderPHP templates for view and metadata.
 
 ### Creating Controllers
 
-You can create a new controller using the `make:controller` command:
+Generate a new controller using the `make:controller` command:
    ```bash
    php coriander make:controller contactMe
    ```
-This will generate a new controller in `src/Controllers/ContactMeController.php` using the CorianderPHP templates. The controller will include methods like `index()` for the default page, `show($id)` for displaying specific items, and `store()` for handling form submissions.
+This creates a new controller in `src/Controllers/ContactMeController.php` using the CorianderPHP templates.
+
+The controller will include methods like `index()` for the default page, `show($id)` for displaying specific items, and `store()` for handling form submissions.
 
 ### Creating Databases
 
-You can create a new database configuration using the `make:database` command:
+Create a new database configuration using the `make:database` command:
    ```bash
    php coriander make:database
    ```
-This will prompt you to choose between MySQL and SQLite and generate the appropriate configuration file in the `config` folder.
+You will be prompted to choose between MySQL and SQLite, and the appropriate configuration file will be generated in the `config` folder.
 
 ---
 
 ## NodeJS Integration
 
-**CorianderPHP** tightly integrates NodeJS, TypeScript, and TailwindCSS to provide a modern front-end development experience:
+**CorianderPHP** tightly integrates NodeJS, TypeScript, and TailwindCSS to support modern front-end development practices:
 
-- **TypeScript**: Automatically compiles `.ts` files from the `nodejs/src` directory into JavaScript. Each page must have an `index.ts` file within its respective folder (e.g., `nodejs/src/home/index.ts`) to generate JavaScript specific to that page. You can also create additional utility or class files in other folders (e.g., `nodejs/src/Utils/Responsive.ts` or `nodejs/src/home/Search/Search.ts`) without needing an `index.ts`.
+- **TypeScript**: Compiles `.ts` files from the `nodejs/src` directory into JavaScript. Each page should have an `index.ts` file within its respective folder (e.g., `nodejs/src/home/index.ts`) to generate JavaScript specific to that page. Additional utility or class files can be placed in other folders (e.g., `nodejs/src/Utils/Responsive.ts` or `nodejs/src/home/Search/Search.ts`) without needing an `index.ts`.
 
-- **TailwindCSS**: Compiles CSS from `public/assets/css/input.css` and outputs a minified CSS file to `public/assets/css/output.css` for production.
+- **TailwindCSS**: Processes CSS from `public/assets/css/input.css` and outputs a minified CSS file to `public/assets/css/output.css` for production.
 
-### To manage these assets, the following commands are available:
+### Asset Management Commands
 
 #### Watch TypeScript
    ```bash
@@ -94,15 +101,15 @@ This will prompt you to choose between MySQL and SQLite and generate the appropr
 
 ## Development Status
 
-**CorianderPHP** is under active development. Some features, such as WebP image optimization and sitemap creation tools, are still being built. Additionally, detailed documentation will be provided in the near future to assist developers with using and extending the framework.
+**CorianderPHP** is under active development. Some features, such as WebP image optimization and sitemap creation tools, are currently being implemented. Comprehensive documentation will be provided to assist developers in using and extending the framework.
 
-We encourage you to stay updated and check back for upcoming releases and improvements.
+Stay tuned for future releases and enhancements.
 
 ---
 
 ## Contributing
 
-If you wish to contribute to **CorianderPHP**, please submit pull requests or report issues via GitHub.
+We welcome contributions to **CorianderPHP**. If you'd like to contribute, please submit pull requests or report issues on GitHub.
 
 ---
 
