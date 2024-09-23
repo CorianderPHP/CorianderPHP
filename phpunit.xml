@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="CorianderCore/autoload.php" displayDetailsOnTestsThatTriggerWarnings="true" >
+<phpunit bootstrap="CorianderCore/autoload.php"
+    colors="true"
+    displayDetailsOnTestsThatTriggerDeprecations="true"
+    displayDetailsOnTestsThatTriggerNotices="true"
+    displayDetailsOnTestsThatTriggerWarnings="true"
+    displayDetailsOnTestsThatTriggerErrors="true"
+    displayDetailsOnSkippedTests="true"
+>
     <testsuites>
         <testsuite name="CorianderPHP Test Suite">
             <directory>CorianderCore/tests</directory>
