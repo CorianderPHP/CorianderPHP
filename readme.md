@@ -84,17 +84,17 @@ You will be prompted to choose between MySQL and SQLite, and the appropriate con
 
 #### Watch TypeScript
    ```bash
-   php coriander nodejs watch-ts
+   php coriander nodejs run watch-ts
    ```
 
 #### Watch TailwindCSS
    ```bash
-   php coriander nodejs watch-tw
+   php coriander nodejs run watch-tw
    ```
 
 #### Build for Production
    ```bash
-   php coriander nodejs build-all
+   php coriander nodejs run build-all
    ```
 
 ---
