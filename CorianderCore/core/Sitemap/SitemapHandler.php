@@ -26,12 +26,15 @@ class SitemapHandler
 
     /**
      * Constructor to initialize paths.
+     *
+     * @param string $viewsPath The path to the public views directory. Defaults to PROJECT_ROOT . '/public/public_views'.
      */
-    public function __construct()
+    public function __construct(string $viewsPath = PROJECT_ROOT . '/public/public_views')
     {
         // Set the path to the public views directory.
-        $this->viewsPath = PROJECT_ROOT . '/public/public_views';
+        $this->viewsPath = $viewsPath;
     }
+
 
     /**
      * Fetch all static pages from the public_views directory.
@@ -111,8 +114,10 @@ class SitemapHandler
      * This function generates a sitemap.xml file containing both static and
      * dynamic pages. It first fetches static pages and then adds dynamic
      * pages before saving the sitemap to the project directory.
+     *
+     * @param string $outputDir The directory where the sitemap.xml file will be saved. Defaults to PROJECT_ROOT . '/public/'.
      */
-    public function generateSitemap(): void
+    public function generateSitemap(string $outputDir = PROJECT_ROOT . '/public/'): void
     {
         // Create the root element for the XML sitemap.
         $sitemapXml = new SimpleXMLElement('<urlset/>');
@@ -129,8 +134,8 @@ class SitemapHandler
             $this->addPageToSitemap($sitemapXml, $page);
         }
 
-        // Save the generated sitemap.xml file to the public directory.
-        $sitemapXml->asXML(PROJECT_ROOT . '/public/sitemap.xml');
+        // Save the generated sitemap.xml file to the specified directory.
+        $sitemapXml->asXML($outputDir . 'sitemap.xml');
     }
 
     /**
