@@ -20,7 +20,8 @@ class Make
     protected $validSubcommands = [
         'view',
         'controller',
-        'database'
+        'database',
+        'sitemap'
     ];
 
     /**
@@ -31,6 +32,7 @@ class Make
     protected $makeViewInstance;
     protected $makeControllerInstance;
     protected $makeDatabaseInstance;
+    protected $makeSitemapInstance;
 
     /**
      * Constructor for the Make class.
@@ -40,6 +42,7 @@ class Make
         $this->makeViewInstance = new \CorianderCore\Console\Commands\Make\View\MakeView();
         $this->makeControllerInstance = new \CorianderCore\Console\Commands\Make\Controller\MakeController();
         $this->makeDatabaseInstance = new \CorianderCore\Console\Commands\Make\Database\MakeDatabase();
+        $this->makeSitemapInstance = new \CorianderCore\Console\Commands\Make\Sitemap\MakeSitemap();
     }
 
     /**
@@ -53,6 +56,7 @@ class Make
      * - 'php coriander make:view home' will create a view named 'home' using the MakeView class.
      * - 'php coriander make:controller User' will create a controller named 'UserController'.
      * - 'php coriander make:database' will initiate the process of database configuration.
+     * - 'php coriander make:sitemap' will create or update the website sitemap.
      *
      * @param array $args The arguments passed to the make command, including the subcommand and resource name.
      */
@@ -90,6 +94,10 @@ class Make
 
             case 'database':
                 $this->makeDatabase($resourceArgs); // Delegate to the MakeDatabase handler
+                break;
+
+            case 'sitemap':
+                $this->makeSitemap($resourceArgs); // Delegate to the MakeSitemap handler
                 break;
 
             default:
@@ -152,6 +160,18 @@ class Make
         $this->makeDatabaseInstance->execute($args);
     }
 
+    /**
+     * Handles the creation of a sitemap by delegating to the MakeSitemap class.
+     * 
+     * This method calls the MakeSitemap class to generate or update the sitemap file.
+     *
+     * @param array $args The arguments for creating or updating the sitemap.
+     */
+    protected function makeSitemap(array $args)
+    {
+        // Delegate the sitemap creation task to the MakeSitemap class
+        $this->makeSitemapInstance->execute($args);
+    }
 
     /**
      * Lists all available make: commands.
