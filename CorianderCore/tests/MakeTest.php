@@ -21,7 +21,7 @@ class MakeTest extends TestCase
     {
         // Define PROJECT_ROOT if it hasn't been defined already
         if (!defined('PROJECT_ROOT')) {
-            define('PROJECT_ROOT', dirname(__DIR__, 3)); // Set PROJECT_ROOT to the project's root directory.
+            define('PROJECT_ROOT', dirname(__DIR__, 2)); // Set PROJECT_ROOT to the project's root directory.
         }
     }
 
