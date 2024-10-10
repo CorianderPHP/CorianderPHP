@@ -185,7 +185,7 @@ class Router
      *
      * This method is called when no matching route, controller, or view is found for the request.
      */
-    private static function handleNotFound()
+    public static function handleNotFound()
     {
         if (self::$instance && self::$instance->notFoundCallback) {
             call_user_func(self::$instance->notFoundCallback);
