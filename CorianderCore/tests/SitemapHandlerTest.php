@@ -32,9 +32,9 @@ class SitemapHandlerTest extends TestCase
             define('PROJECT_URL', '');
         }
 
-        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp";
-        self::$viewsPath = self::$testPath . '/public_views';
-        self::$outputDir = self::$testPath . '/output/';
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp/";
+        self::$viewsPath = self::$testPath . 'public_views';
+        self::$outputDir = self::$testPath . 'output/';
 
         // Create test directories if they don't exist
         if (!is_dir(self::$viewsPath)) {
