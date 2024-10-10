@@ -36,6 +36,15 @@ $router->setNotFound(function () {
     require_once PROJECT_ROOT . '/public/public_views/footer.php';
 });
 
+$router->add('sitemap.xml', function () use ($router) {
+    $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
+    if (!file_exists($sitemapPath)) {
+        $router->handleNotFound();
+        return;
+    }
+    require_once $sitemapPath;
+});
+
 // Dispatch the request to the correct view or controller
 $router->dispatch();
 
