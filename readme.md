@@ -70,6 +70,19 @@ Create a new database configuration using the `make:database` command:
    ```
 You will be prompted to choose between MySQL and SQLite, and the appropriate configuration file will be generated in the `config` folder.
 
+### Creating Sitemap
+
+Generate a new sitemap file using the `make:sitemap` command:
+   ```bash
+   php coriander make:sitemap
+   ```
+This creates a sitemap.php file in the `public/` directory. The sitemap script:
+- Checks if a `sitemap.xml` exists and if it was created today. If not, it regenerates the file.
+- Fetches static pages automatically.
+- Allows you to manually add dynamic pages (e.g., blog posts).
+- Outputs the `sitemap.xml` with the correct XML headers for SEO.
+You can customize the generated `sitemap.php` file to fit your needs by adding dynamic URLs or adjusting priorities.
+
 ---
 
 ## NodeJS Integration

@@ -17,7 +17,7 @@ Before working with the **NodeJS** features in CorianderPHP, ensure you’ve ins
 
 - Install NodeJS dependencies (run this from the root of the project):
    ```bash
-   php coriander nodejs install
+   php coriander nodejs run install
    ```
 
 ---
@@ -29,27 +29,27 @@ The following npm scripts are available in the `package.json` file to manage you
 
 - **Watch TypeScript**: Watches and compiles TypeScript files from the `src/` folder. (Run this in a dedicated terminal)
    ```bash
-   php coriander nodejs watch-ts
+   php coriander nodejs run watch-ts
    ```
 - **Build TypeScript**: Compiles all TypeScript files once.
    ```bash
-   php coriander nodejs build-ts
+   php coriander nodejs run build-ts
    ```
 - **Watch TailwindCSS**: Watches and compiles CSS using TailwindCSS. (Run this in a dedicated terminal)
    ```bash
-   php coriander nodejs watch-tw
+   php coriander nodejs run watch-tw
    ```
 - **Build TailwindCSS**: Compiles CSS with TailwindCSS and minifies it.
    ```bash
-   php coriander nodejs build-tw
+   php coriander nodejs run build-tw
    ```
 - **Build All (Development)**: Compiles both TypeScript and TailwindCSS but **only minifies the CSS**. JavaScript is not minified in this mode.
    ```bash
-   php coriander nodejs build-all
+   php coriander nodejs run build-all
    ```
 - **Build for Production**: Compiles and **minifies both JavaScript and CSS** for production use.
    ```bash
-   php coriander nodejs build-all
+   php coriander nodejs run build-all
    ```
 
 ---
@@ -94,17 +94,17 @@ The build and watch scripts utilize **esbuild** and **TailwindCSS** to create an
 
 1. **Start the TypeScript watcher** in a **dedicated terminal** to automatically compile `.ts` files as you work:
    ```bash
-   php coriander nodejs watch-ts
+   php coriander nodejs run watch-ts
    ```
 
 2. **Start the TailwindCSS watcher** in a **dedicated terminal** to auto-compile CSS changes:
    ```bash
-   php coriander nodejs watch-tw
+   php coriander nodejs run watch-tw
    ```
 
 3. **Build for Production** when you’re ready to deploy:
    ```bash
-   php coriander nodejs build-prod
+   php coriander nodejs run build-prod
    ```
 
 | Important: Always run the commands from the root of the CorianderPHP project.
