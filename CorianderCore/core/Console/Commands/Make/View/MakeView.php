@@ -3,6 +3,7 @@
 namespace CorianderCore\Console\Commands\Make\View;
 
 use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Utils\DirectoryHandler;
 
 /**
  * The MakeView class is responsible for generating new view directories and files
@@ -18,14 +19,22 @@ class MakeView
     protected $templatesPath;
 
     /**
+     * @var string $viewPath The path where the view will be created.
+     */
+    protected $viewPath;
+
+    /**
      * Constructor for the MakeView class.
      * 
-     * Initializes the path to the directory where view templates are stored.
-     * The templates will be copied to the new view directories during view creation.
+     * Initializes the path to the directory where view templates are stored and
+     * sets the path where new views will be created.
+     * 
+     * @param string $viewPath The path where the view will be created (default: PROJECT_ROOT . '/public/public_views/').
      */
-    public function __construct()
+    public function __construct(string $viewPath = PROJECT_ROOT . '/public/public_views/')
     {
-        // Set the path to the templates directory.
+        // Set the view creation path and templates path.
+        $this->viewPath = $viewPath;
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/View/templates';
     }
 
@@ -40,7 +49,7 @@ class MakeView
      *
      * @param array $args The arguments passed to the command, where the first argument is the view name.
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         try {
             // Ensure a view name is provided.
@@ -48,27 +57,27 @@ class MakeView
                 throw new \Exception("Error: Please specify a view name.");
             }
 
-            // Get the view name and convert it to kebab-case (all lowercase with dashes).
+            // Convert the view name to kebab-case (lowercase with dashes between words).
             $viewName = $this->toKebabCase($args[0]);
-            $viewPath = PROJECT_ROOT . '/public/public_views/' . $viewName;
+            $fullViewPath = $this->viewPath . $viewName;
 
             // Check if the view already exists.
-            if ($this->viewExists($viewPath)) {
+            if ($this->viewExists($fullViewPath)) {
                 throw new \Exception("Error: View '{$viewName}' already exists.");
             }
 
             // Create the view directory.
-            $this->createDirectory($viewPath);
+            DirectoryHandler::createDirectory($fullViewPath);
 
             // Copy the necessary template files (index.php and metadata.php) to the new view directory.
-            $this->createFileFromTemplate('view.php', $viewPath . '/index.php', $viewName);
-            $this->createFileFromTemplate('metadata.php', $viewPath . '/metadata.php', $viewName);
+            $this->createFileFromTemplate('view.php', $fullViewPath . '/index.php', $viewName);
+            $this->createFileFromTemplate('metadata.php', $fullViewPath . '/metadata.php', $viewName);
 
-            ConsoleOutput::print("&2[Success]&r&7 View '{$viewName}' created successfully at '{$viewPath}'.");
+            // Output success message.
+            ConsoleOutput::print("&2[Success]&r&7 View '{$viewName}' created successfully at '{$fullViewPath}'.");
 
         } catch (\Exception $e) {
             // Handle any exceptions during the creation process.
-            echo $e->getMessage() . PHP_EOL;
             ConsoleOutput::print("&4[Error]&7 " . $e->getMessage());
         }
     }
@@ -83,7 +92,7 @@ class MakeView
      */
     protected function toKebabCase(string $string): string
     {
-        // Convert camelCase or PascalCase to kebab-case (all lowercase, words separated by dashes)
+        // Convert PascalCase or camelCase to kebab-case.
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $string));
     }
 
@@ -99,25 +108,6 @@ class MakeView
     protected function viewExists(string $viewPath): bool
     {
         return file_exists($viewPath);
-    }
-
-    /**
-     * Create the directory for the new view.
-     * 
-     * This method creates a new directory for the view with the appropriate permissions.
-     * Wrapped in try-catch to handle directory creation errors.
-     *
-     * @param string $viewPath The path to the view directory.
-     */
-    protected function createDirectory(string $viewPath)
-    {
-        try {
-            if (!mkdir($viewPath, 0755, true) && !is_dir($viewPath)) {
-                throw new \Exception("Error: Failed to create directory '{$viewPath}'.");
-            }
-        } catch (\Exception $e) {
-            throw new \Exception("Error: Unable to create view directory. " . $e->getMessage());
-        }
     }
 
     /**
