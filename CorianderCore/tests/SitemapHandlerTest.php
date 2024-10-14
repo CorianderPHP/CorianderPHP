@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Sitemap\SitemapHandler;
-use SimpleXMLElement;
+use CorianderCore\Utils\DirectoryHandler;
 
 /**
  * Class SitemapHandlerTest
@@ -53,6 +53,20 @@ class SitemapHandlerTest extends TestCase
 
         file_put_contents($viewDir . '/metadata.php', "<?php\n\$addViewInSitemap = true;\n\$sitemapPriority = 0.8;");
         file_put_contents($viewDir . '/index.php', "<h1>Sample View</h1>");
+    }
+    
+    /**
+     * tearDownAfterClass
+     *
+     * This method runs once after all tests in the class have completed.
+     * It cleans up the test environment by removing test files and directories.
+     */
+    public static function tearDownAfterClass(): void
+    {
+        // Cleanup: Remove test files and directories if they exist
+        if (is_dir(self::$testPath)) {
+            DirectoryHandler::deleteDirectory(self::$testPath); // Cleanup the temporary directory.
+        }
     }
 
     /**
@@ -108,39 +122,5 @@ class SitemapHandlerTest extends TestCase
         $sitemapXml = simplexml_load_file($sitemapFilePath);
         $this->assertInstanceOf(SimpleXMLElement::class, $sitemapXml, 'Sitemap XML could not be loaded.');
         $this->assertCount(2, $sitemapXml->url, 'Sitemap XML does not contain the expected number of URLs.');
-    }
-
-    /**
-     * tearDownAfterClass
-     *
-     * This method runs once after all tests in the class have completed.
-     * It cleans up the test environment by removing test files and directories.
-     */
-    public static function tearDownAfterClass(): void
-    {
-        // Cleanup: Remove test files and directories if they exist
-        $viewDir = self::$viewsPath . '/sampleView';
-        if (is_dir($viewDir)) {
-            unlink($viewDir . '/metadata.php');
-            unlink($viewDir . '/index.php');
-            rmdir($viewDir);
-        }
-
-        if (is_dir(self::$viewsPath)) {
-            rmdir(self::$viewsPath);
-        }
-
-        $sitemapFilePath = self::$outputDir . 'sitemap.xml';
-        if (file_exists($sitemapFilePath)) {
-            unlink($sitemapFilePath);
-        }
-
-        if (is_dir(self::$outputDir)) {
-            rmdir(self::$outputDir);
-        }
-
-        if(is_dir(self::$testPath)) {
-            rmdir(self::$testPath);
-        }
     }
 }
