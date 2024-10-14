@@ -17,14 +17,22 @@ class MakeController
     protected $templatesPath;
 
     /**
+     * @var string $basePath The base path where controllers will be created.
+     */
+    protected $basePath;
+
+    /**
      * Constructor for the MakeController class.
      * 
-     * Initializes the path to the directory where controller templates are stored.
-     * The templates will be copied to the correct location during controller creation.
+     * Initializes the path to the directory where controller templates are stored,
+     * and sets the base path where controllers will be generated.
+     * 
+     * @param string $basePath The base path where controllers will be stored (default: PROJECT_ROOT . '/src/Controllers/').
      */
-    public function __construct()
+    public function __construct(string $basePath = PROJECT_ROOT . '/src/Controllers/')
     {
-        // Set the path to the templates directory.
+        // Set the path to the base controller directory and templates directory.
+        $this->basePath = $basePath;
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Controller/templates';
     }
 
@@ -33,7 +41,7 @@ class MakeController
      * 
      * This method handles the creation of a new controller by:
      * - Verifying if a controller name is provided.
-     * - Ensuring the controller name is properly formatted.
+     * - Ensuring the controller name follows the proper naming conventions.
      * - Checking if the controller already exists.
      * - Creating the necessary file using a template.
      *
@@ -47,7 +55,7 @@ class MakeController
             return;
         }
 
-        // Format the controller name (convert to PascalCase with multiple uppercase if necessary).
+        // Format the controller name (convert to PascalCase).
         $controllerName = $this->formatControllerName($args[0]);
 
         // Ensure the controller name ends with "Controller".
@@ -55,11 +63,11 @@ class MakeController
             $controllerName .= 'Controller';
         }
 
-        // Convert to kebab-case for view paths.
+        // Convert to kebab-case for potential view paths.
         $kebabCaseName = $this->toKebabCase($args[0]);
 
-        // Determine the path where the controller will be created.
-        $controllerPath = PROJECT_ROOT . '/src/Controllers/' . $controllerName . '.php';
+        // Determine the full path where the controller will be created.
+        $controllerPath = $this->basePath . $controllerName . '.php';
 
         // Ensure the directory exists.
         $this->ensureDirectoryExists(dirname($controllerPath));
@@ -90,7 +98,7 @@ class MakeController
      */
     protected function formatControllerName(string $name): string
     {
-        // Convert kebab-case or snake_case to PascalCase and maintain proper casing for multiple words
+        // Convert kebab-case or snake_case to PascalCase.
         return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
     }
 
@@ -104,7 +112,7 @@ class MakeController
      */
     protected function toKebabCase(string $string): string
     {
-        // Convert PascalCase or camelCase to kebab-case (all lowercase, words separated by dashes)
+        // Convert PascalCase or camelCase to kebab-case.
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $string));
     }
 
@@ -149,7 +157,7 @@ class MakeController
      * @param string $templateFile The name of the template file (e.g., 'Controller.php').
      * @param string $destinationFile The full path to the destination file (e.g., the new controller's file).
      * @param string $controllerName The name of the controller (used to replace placeholders in the template).
-     * @param string $kebabCaseName The kebab-case version of the controller name for the view paths.
+     * @param string $kebabCaseName The kebab-case version of the controller name for view paths.
      * @throws \Exception If the template file cannot be written.
      */
     protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $controllerName, string $kebabCaseName)
