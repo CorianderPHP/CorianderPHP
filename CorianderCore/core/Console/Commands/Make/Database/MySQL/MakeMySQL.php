@@ -24,12 +24,14 @@ class MakeMySQL
 
     /**
      * Constructor to initialize paths for templates and configuration files.
+     * 
+     * @param string $configPath Path to the configuration folder (default: PROJECT_ROOT . '/config').
      */
-    public function __construct()
+    public function __construct(string $configPath = PROJECT_ROOT . '/config')
     {
         // Define paths to the MySQL templates and config folder
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Database/MySQL/templates';
-        $this->configPath = PROJECT_ROOT . '/config';
+        $this->configPath = $configPath;
     }
 
     /**
