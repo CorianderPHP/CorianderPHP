@@ -25,30 +25,41 @@ class MakeSQLite
     protected $databaseFolder;
 
     /**
-     * Constructor to initialize paths for templates and configuration files.
+     * Constructor to initialize paths for templates, configuration files, and database folder.
+     * 
+     * @param string $configPath Path to the configuration folder (default: PROJECT_ROOT . '/config').
+     * @param string $databaseFolder Path to the database folder (default: PROJECT_ROOT . '/database').
      */
-    public function __construct()
-    {
-        // Define paths to the SQLite templates and configuration folder
+    public function __construct(
+        string $configPath = PROJECT_ROOT . '/config',
+        string $databaseFolder = PROJECT_ROOT . '/database'
+    ) {
+        // Define paths to the SQLite templates, config, and database folder
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Database/SQLite/templates';
-        $this->configPath = PROJECT_ROOT . '/config';
-        $this->databaseFolder = PROJECT_ROOT . '/database';
+        $this->configPath = $configPath;
+        $this->databaseFolder = $databaseFolder;
     }
 
     /**
      * Executes the process of creating an SQLite configuration.
-     * Prompts the user for the SQLite database name and generates necessary files.
+     * Optionally accepts a database name. If not provided, prompts the user for the SQLite database name.
+     *
+     * @param string|null $dbName Optional database name. If null, prompts the user for input.
      */
-    public function execute()
+    public function execute(string $dbName = null)
     {
-        // Ask the user for the SQLite database name
-        ConsoleOutput::print("Enter SQLite database name (without extension):\n");
-        $dbName = trim(fgets(STDIN));
+        // Ask the user for the SQLite database name if not provided
+        if (empty($dbName)) {
+            ConsoleOutput::print("Enter SQLite database name (without extension):\n");
+            $dbName = trim(fgets(STDIN));
+        }
+
         ConsoleOutput::hr();
 
         // Generate SQLite configuration and database files
         $this->generateConfig($dbName);
         $this->createDatabaseFiles($dbName);
+
         ConsoleOutput::hr();
         ConsoleOutput::print("&2[Success]&r&7 Database " . $dbName . ".sqlite created in folder: " . $this->databaseFolder);
     }
