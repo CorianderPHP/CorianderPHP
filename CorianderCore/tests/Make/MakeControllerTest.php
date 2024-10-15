@@ -2,148 +2,117 @@
 
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Console\Commands\Make\Controller\MakeController;
+use CorianderCore\Utils\DirectoryHandler;
 
+/**
+ * The MakeControllerTest class contains unit tests for the MakeController class.
+ * It verifies the functionality of creating controller files based on predefined templates.
+ */
 class MakeControllerTest extends TestCase
 {
     /**
-     * @var MakeController|\PHPUnit\Framework\MockObject\MockObject $makeController 
-     * Holds the mock instance of MakeController for testing.
+     * @var MakeController Holds the instance of the MakeController class for testing.
      */
     protected $makeController;
 
     /**
-     * @var bool $srcCreatedDuringTest
-     * Flag to track if the 'src' directory was created during the test.
+     * @var string Path to the temporary directory where test files will be created.
      */
-    protected $srcCreatedDuringTest = false;
-
-    /**
-     * @var bool $controllersCreatedDuringTest
-     * Flag to track if the 'Controllers' directory was created during the test.
-     */
-    protected $controllersCreatedDuringTest = false;
+    protected static $testPath;
 
     /**
      * This method is executed once before any tests are run.
      * It ensures that the PROJECT_ROOT constant is defined,
-     * which is essential for resolving paths during the test.
+     * and sets the temporary test path.
      */
     public static function setUpBeforeClass(): void
     {
+        // Define PROJECT_ROOT if it hasn't been defined already
         if (!defined('PROJECT_ROOT')) {
             define('PROJECT_ROOT', dirname(__DIR__, 3)); // Set PROJECT_ROOT to the project's root directory.
         }
+
+        // Set the path to the temporary test directory.
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp/";
     }
 
     /**
-     * This method is executed before each test.
-     * It creates a mock of the MakeController class and sets up the testing environment.
-     * It also checks if the 'src' and 'Controllers' directories need to be created
-     * during the test and sets flags accordingly.
+     * Sets up the necessary conditions before each test.
+     * It ensures that the test directory exists and initializes the MakeController class
+     * with the test path as the base path for controller creation.
      */
     protected function setUp(): void
     {
-        // Check if the 'src' directory exists; set flag if not.
-        if (!is_dir(PROJECT_ROOT . '/src')) {
-            $this->srcCreatedDuringTest = true;
+        // Ensure the test directory exists
+        if (!is_dir(self::$testPath)) {
+            mkdir(self::$testPath, 0755, true);
         }
 
-        // Check if the 'Controllers' directory exists; set flag if not.
-        if (!is_dir(PROJECT_ROOT . '/src/Controllers')) {
-            $this->controllersCreatedDuringTest = true;
-        }
-
-        // Create a mock of MakeController with 'controllerExists' and 'createFileFromTemplate' methods mocked.
-        $this->makeController = $this->getMockBuilder(MakeController::class)
-            ->onlyMethods(['controllerExists', 'createFileFromTemplate']) // Mock only relevant methods for testing.
-            ->getMock();
+        // Initialize the MakeController class with the test path as the base path
+        $this->makeController = new MakeController(self::$testPath);
     }
 
     /**
-     * This method is executed after each test.
-     * It cleans up by deleting the 'src/Controllers' and 'src' directories if they were created during the test.
-     */
-    protected function tearDown(): void
-    {
-        if ($this->controllersCreatedDuringTest) {
-            $this->deleteDirectory(PROJECT_ROOT . '/src/Controllers'); // Cleanup Controllers directory.
-        }
-        if ($this->srcCreatedDuringTest) {
-            $this->deleteDirectory(PROJECT_ROOT . '/src'); // Cleanup src directory.
-        }
-    }
-
-    /**
-     * Helper method to recursively delete a directory.
+     * tearDownAfterClass
      *
-     * @param string $dirPath The path to the directory to delete.
+     * This method runs once after all tests in the class have completed.
+     * It cleans up the test environment by removing the temporary test directory and its contents.
      */
-    protected function deleteDirectory(string $dirPath)
+    public static function tearDownAfterClass(): void
     {
-        if (!is_dir($dirPath)) {
-            return;
+        // Cleanup: Remove test files and directories if they exist
+        if (is_dir(self::$testPath)) {
+            DirectoryHandler::deleteDirectory(self::$testPath); // Cleanup the temporary directory.
         }
-
-        $files = array_diff(scandir($dirPath), ['.', '..']); // Exclude '.' and '..' directories
-
-        // Recursively delete files and subdirectories.
-        foreach ($files as $file) {
-            $filePath = "$dirPath/$file";
-            is_dir($filePath) ? $this->deleteDirectory($filePath) : unlink($filePath); // Delete file or recurse for directory.
-        }
-
-        rmdir($dirPath); // Remove the directory itself.
     }
 
     /**
-     * Test if a controller is created successfully when it doesn't already exist.
-     * This checks that the correct success message is output and the controller is created in the correct location.
+     * Tests the successful creation of a controller when it doesn't already exist.
+     * It checks that the correct success message is output and the controller file is created in the specified location.
      */
     public function testCreateControllerSuccessfully()
     {
-        // Define the expected controller file path.
-        $controllerPath = PROJECT_ROOT . '/src/Controllers/TestController.php';
-
-        // Mock 'controllerExists' to return false, simulating that the controller does not exist.
-        $this->makeController->expects($this->once())
-            ->method('controllerExists')
-            ->with($controllerPath)
-            ->willReturn(false);
-
-        // Expect the output to include a success message.
-        $this->expectOutputRegex("/Success/");
-        $this->expectOutputRegex("/Controller 'TestController' created successfully at /");
+        $controllerName = "new";
 
         // Run the 'execute' method to trigger controller creation.
-        $this->makeController->execute(['test']);
+        $this->makeController->execute([$controllerName]);
+
+        // Expect the output to include a success message indicating controller creation.
+        $this->expectOutputRegex("/Success/");
+        $this->expectOutputRegex("/Controller 'NewController' created successfully at /");
+
+        // Optionally, assert that the controller file exists in the test directory.
+        $expectedControllerPath = self::$testPath . "NewController.php";
+        $this->assertFileExists($expectedControllerPath, "Controller file was not created at the expected path.");
     }
 
     /**
-     * Test if an error is displayed when a controller with the same name already exists.
-     * This ensures that the correct error message is displayed and no new controller is created.
+     * Tests the scenario where a controller with the same name already exists.
+     * It ensures that the appropriate error message is displayed and no new controller is created.
      */
     public function testControllerAlreadyExists()
     {
-        // Define the expected controller file path.
-        $controllerPath = PROJECT_ROOT . '/src/Controllers/ExistingController.php';
+        $controllerName = "new";
 
-        // Mock 'controllerExists' to return true, simulating the controller already exists.
-        $this->makeController->expects($this->once())
-            ->method('controllerExists')
-            ->with($controllerPath)
-            ->willReturn(true);
+        // First, create the controller to simulate its existence.
+        $this->makeController->execute([$controllerName]);
 
-        // Expect the output to include an error message indicating the controller already exists.
+        // Capture the output of the second execution attempt.
         $this->expectOutputRegex("/Error/");
-        $this->expectOutputRegex("/Controller 'ExistingController' already exists./");
+        $this->expectOutputRegex("/Controller 'NewController' already exists./");
 
-        // Run the 'execute' method with an existing controller name.
-        $this->makeController->execute(['existing']);
+        // Run the 'execute' method again with the same controller name to trigger the existence check.
+        $this->makeController->execute([$controllerName]);
+
+        // Optionally, assert that only one controller file exists.
+        $expectedControllerPath = self::$testPath . "NewController.php";
+        $this->assertFileExists($expectedControllerPath, "Controller file should exist.");
+        // Ensure no duplicate file was created (this is more conceptual as PHP can't create duplicate files).
     }
 
     /**
-     * Test if an error is shown when no controller name is provided.
-     * This ensures that the appropriate error message is shown when the controller name is missing.
+     * Tests the scenario where no controller name is provided to the 'execute' method.
+     * It checks if the appropriate error message is displayed when no arguments are passed.
      */
     public function testNoControllerNameProvided()
     {
@@ -156,25 +125,22 @@ class MakeControllerTest extends TestCase
     }
 
     /**
-     * Test that the controller name is formatted correctly (PascalCase).
-     * When a name in kebab-case is provided, the controller should be created in PascalCase.
+     * Tests that the controller name is formatted correctly (PascalCase).
+     * It ensures that even if the input is given in kebab-case, the controller is created in PascalCase.
      */
     public function testControllerNameFormatting()
     {
-        // Define the expected controller file path for a kebab-case input.
-        $controllerPath = PROJECT_ROOT . '/src/Controllers/AdminUserController.php';
+        $controllerName = "admin-user";
 
-        // Mock 'controllerExists' to return false, indicating the controller does not exist.
-        $this->makeController->expects($this->once())
-            ->method('controllerExists')
-            ->with($controllerPath)
-            ->willReturn(false);
+        // Run the 'execute' method to trigger controller creation with kebab-case input.
+        $this->makeController->execute([$controllerName]);
 
         // Expect the output to include a success message with the correctly formatted controller name.
         $this->expectOutputRegex("/Success/");
         $this->expectOutputRegex("/Controller 'AdminUserController' created successfully at /");
 
-        // Run the 'execute' method with a kebab-case name to test the formatting.
-        $this->makeController->execute(['admin-user']);
+        // Optionally, assert that the controller file exists with the PascalCase name.
+        $expectedControllerPath = self::$testPath . "AdminUserController.php";
+        $this->assertFileExists($expectedControllerPath, "Controller file was not created with the correct PascalCase name.");
     }
 }

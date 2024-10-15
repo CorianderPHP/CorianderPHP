@@ -3,6 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Console\Commands\Make\Database\SQLite\MakeSQLite;
 use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Utils\DirectoryHandler;
 
 class MakeSQLiteTest extends TestCase
 {
@@ -12,9 +13,14 @@ class MakeSQLiteTest extends TestCase
     protected $makeSQLite;
 
     /**
+     * @var string Path to the temporary directory for testing.
+     */
+    protected static $testPath;
+
+    /**
      * This method is executed once before any tests are run.
      * It ensures that the PROJECT_ROOT constant is defined, 
-     * which is essential for path resolution within the framework.
+     * and sets the test path to a temporary folder.
      */
     public static function setUpBeforeClass(): void
     {
@@ -22,6 +28,9 @@ class MakeSQLiteTest extends TestCase
         if (!defined('PROJECT_ROOT')) {
             define('PROJECT_ROOT', dirname(__DIR__, 3)); // Set PROJECT_ROOT to the project's root directory.
         }
+
+        // Set the path to the temporary test directory
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp";
     }
 
     /**
@@ -29,8 +38,13 @@ class MakeSQLiteTest extends TestCase
      */
     protected function setUp(): void
     {
-        // Initialize the MakeSQLite class
-        $this->makeSQLite = new MakeSQLite();
+        // Ensure the test path exists
+        if (!is_dir(self::$testPath)) {
+            mkdir(self::$testPath, 0777, true);
+        }
+
+        // Initialize the MakeSQLite class with custom paths
+        $this->makeSQLite = new MakeSQLite(self::$testPath . '/config', self::$testPath . '/database');
 
         // Mock the ConsoleOutput class to suppress actual output during tests
         $consoleOutputMock = $this->getMockBuilder(ConsoleOutput::class)
@@ -44,75 +58,34 @@ class MakeSQLiteTest extends TestCase
                 echo $message;
             });
     }
+    
+    /**
+     * tearDownAfterClass
+     *
+     * This method runs once after all tests in the class have completed.
+     * It cleans up the test environment by removing test files and directories.
+     */
+    public static function tearDownAfterClass(): void
+    {
+        // Cleanup: Remove test files and directories if they exist
+        if (is_dir(self::$testPath)) {
+            DirectoryHandler::deleteDirectory(self::$testPath); // Cleanup the temporary directory.
+        }
+    }
 
     /**
      * Test the execution of the MakeSQLite process, ensuring it handles SQLite configuration creation.
      */
     public function testExecuteSqlite()
     {
-        // Create a temporary directory for the test
-        $tempDir = PROJECT_ROOT . '/CorianderCore/tests/test_sqlite_database';
-        mkdir($tempDir, 0777, true);
-
-        // Use reflection to set the protected properties
-        $this->setProtectedProperty($this->makeSQLite, 'databaseFolder', $tempDir . '');
-        $this->setProtectedProperty($this->makeSQLite, 'configPath', $tempDir . '');
+        // Execute the MakeSQLite process
+        $this->makeSQLite->execute('test');
 
         // Expect the output to indicate success
-        $this->expectOutputRegex("/\[Success\].*Database .sqlite created in folder/");
-
-        // Execute the MakeSQLite process
-        $this->makeSQLite->execute();
-
-        // Clean up the temporary directory
-        $this->removeDirectory($tempDir);
-    }
-
-    /**
-     * Clean up the environment after each test.
-     */
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-    }
-
-    /**
-     * Recursively remove a directory and its contents.
-     *
-     * @param string $dir The directory to remove.
-     */
-    protected function removeDirectory($dir)
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-        $items = scandir($dir);
-        foreach ($items as $item) {
-            if ($item == '.' || $item == '..') {
-                continue;
-            }
-            $itemPath = $dir . '/' . $item;
-            if (is_dir($itemPath)) {
-                $this->removeDirectory($itemPath);
-            } else {
-                unlink($itemPath);
-            }
-        }
-        rmdir($dir);
-    }
-
-    /**
-     * Set a protected or private property on an object via reflection.
-     *
-     * @param object $object The object on which to set the property.
-     * @param string $propertyName The name of the property to set.
-     * @param mixed $value The value to set on the property.
-     */
-    protected function setProtectedProperty($object, $propertyName, $value)
-    {
-        $reflection = new \ReflectionClass($object);
-        $property = $reflection->getProperty($propertyName);
-        $property->setAccessible(true);
-        $property->setValue($object, $value);
+        $this->expectOutputRegex("/\[Success\].*Database test.sqlite created in folder/");
+        // Check if the SQLite files and config file were created
+        $this->assertFileExists(self::$testPath . '/database/clean_test.sqlite');
+        $this->assertFileExists(self::$testPath . '/database/test.sqlite');
+        $this->assertFileExists(self::$testPath . '/config/database.php');
     }
 }
