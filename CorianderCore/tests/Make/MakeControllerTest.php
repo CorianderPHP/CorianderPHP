@@ -1,5 +1,7 @@
 <?php
 
+namespace CorianderCore\Tests\Make;
+
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Console\Commands\Make\Controller\MakeController;
 use CorianderCore\Utils\DirectoryHandler;
@@ -49,7 +51,7 @@ class MakeControllerTest extends TestCase
         }
 
         // Initialize the MakeController class with the test path as the base path
-        $this->makeController = new MakeController(self::$testPath);
+        $this->makeController = new MakeController(self::$testPath . 'src/Controllers/');
     }
 
     /**
@@ -79,10 +81,10 @@ class MakeControllerTest extends TestCase
 
         // Expect the output to include a success message indicating controller creation.
         $this->expectOutputRegex("/Success/");
-        $this->expectOutputRegex("/Controller 'NewController' created successfully at /");
+        $this->expectOutputRegex("/Controller 'NewController' created successfully aat /");
 
         // Optionally, assert that the controller file exists in the test directory.
-        $expectedControllerPath = self::$testPath . "NewController.php";
+        $expectedControllerPath = self::$testPath . "src/Controllers/NewController.php";
         $this->assertFileExists($expectedControllerPath, "Controller file was not created at the expected path.");
     }
 
@@ -105,7 +107,7 @@ class MakeControllerTest extends TestCase
         $this->makeController->execute([$controllerName]);
 
         // Optionally, assert that only one controller file exists.
-        $expectedControllerPath = self::$testPath . "NewController.php";
+        $expectedControllerPath = self::$testPath . "src/Controllers/NewController.php";
         $this->assertFileExists($expectedControllerPath, "Controller file should exist.");
         // Ensure no duplicate file was created (this is more conceptual as PHP can't create duplicate files).
     }
@@ -140,7 +142,7 @@ class MakeControllerTest extends TestCase
         $this->expectOutputRegex("/Controller 'AdminUserController' created successfully at /");
 
         // Optionally, assert that the controller file exists with the PascalCase name.
-        $expectedControllerPath = self::$testPath . "AdminUserController.php";
+        $expectedControllerPath = self::$testPath . "src/Controllers/AdminUserController.php";
         $this->assertFileExists($expectedControllerPath, "Controller file was not created with the correct PascalCase name.");
     }
 }
