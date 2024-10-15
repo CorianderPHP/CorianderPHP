@@ -81,7 +81,7 @@ class MakeControllerTest extends TestCase
 
         // Expect the output to include a success message indicating controller creation.
         $this->expectOutputRegex("/Success/");
-        $this->expectOutputRegex("/Controller 'NewController' created successfully aat /");
+        $this->expectOutputRegex("/Controller 'NewController' created successfully at /");
 
         // Optionally, assert that the controller file exists in the test directory.
         $expectedControllerPath = self::$testPath . "src/Controllers/NewController.php";
