@@ -1,8 +1,12 @@
 <?php
 
+namespace CorianderCore\Tests;
+
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Sitemap\SitemapHandler;
 use CorianderCore\Utils\DirectoryHandler;
+use ReflectionClass;
+use SimpleXMLElement;
 
 /**
  * Class SitemapHandlerTest

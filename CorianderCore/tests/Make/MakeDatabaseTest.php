@@ -1,5 +1,7 @@
 <?php
 
+namespace CorianderCore\Tests\Make;
+
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Console\Commands\Make\Database\MakeDatabase;
 use CorianderCore\Console\Services\PdoDriverService;

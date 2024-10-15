@@ -1,5 +1,7 @@
 <?php
 
+namespace CorianderCore\Tests;
+
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Image\ImageHandler;
 use CorianderCore\Utils\DirectoryHandler;

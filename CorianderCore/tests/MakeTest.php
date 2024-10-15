@@ -1,5 +1,7 @@
 <?php
 
+namespace CorianderCore\Tests;
+
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Console\Commands\Make;
 use CorianderCore\Console\Commands\Make\View\MakeView;
