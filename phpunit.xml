@@ -9,7 +9,7 @@
 >
     <testsuites>
         <testsuite name="CorianderPHP Test Suite">
-            <directory>CorianderCore/tests</directory>
+            <directory suffix="Test.php">CorianderCore/tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>
