@@ -80,7 +80,7 @@ class MakeController
 
         // Create the controller file using the template.
         try {
-            $this->createFileFromTemplate('Controller.php', $controllerPath, $controllerName, $kebabCaseName);
+            $this->createFileFromTemplate('controller.php', $controllerPath, $controllerName, $kebabCaseName);
             ConsoleOutput::print("&2[Success]&7 Controller '{$controllerName}' created successfully at '{$controllerPath}'. ");
         } catch (\Exception $e) {
             ConsoleOutput::print("&4[Error]&7 Failed to create controller '{$controllerName}'. " . $e->getMessage());
