@@ -1,5 +1,7 @@
 <?php
 
+namespace CorianderCore\Tests;
+
 use PHPUnit\Framework\TestCase;
 
 class AutoloaderTest extends TestCase
