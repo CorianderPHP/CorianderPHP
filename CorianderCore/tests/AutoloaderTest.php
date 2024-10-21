@@ -2,6 +2,7 @@
 
 namespace CorianderCore\Tests;
 
+use Error;
 use PHPUnit\Framework\TestCase;
 
 class AutoloaderTest extends TestCase
