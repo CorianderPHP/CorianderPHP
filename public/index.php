@@ -36,6 +36,7 @@ $router->setNotFound(function () {
     require_once PROJECT_ROOT . '/public/public_views/footer.php';
 });
 
+// Route for handling sitemap.xml requests
 $router->add('sitemap.xml', function () use ($router) {
     $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
     if (!file_exists($sitemapPath)) {
