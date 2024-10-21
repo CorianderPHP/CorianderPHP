@@ -3,7 +3,6 @@
 namespace CorianderCore\Database;
 
 use \PDO;
-use \Exception;
 
 /**
  * DatabaseHandler is a Singleton class responsible for managing a single
@@ -21,6 +20,11 @@ class DatabaseHandler
      * @var PDO|null The PDO instance used for database connection, or null if unsupported.
      */
     private $pdo = null;
+
+    /**
+     * @var bool Auto-close flag to determine if the connection should close automatically.
+     */
+    private static $autoCloseConnection = true;
 
     /**
      * Private constructor to prevent direct instantiation.
@@ -79,12 +83,24 @@ class DatabaseHandler
     }
 
     /**
+     * Set whether the connection should automatically close after each query.
+     * 
+     * @param bool $autoClose Whether to automatically close the connection after each query.
+     */
+    public static function setAutoCloseConnection($autoClose)
+    {
+        self::$autoCloseConnection = $autoClose;
+    }
+
+    /**
      * Closes the database connection and resets the Singleton instance.
-     * This method sets the PDO instance to null and resets the Singleton instance
-     * to allow for a new connection to be established in the future if necessary.
+     * If auto-close is disabled, it simply returns without closing the connection.
      */
     public function close()
     {
+        if(!self::$autoCloseConnection) {
+            return;
+        }
         $this->pdo = null;
         self::$instance = null;
     }
