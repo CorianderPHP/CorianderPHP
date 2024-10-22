@@ -15,7 +15,9 @@ This framework aims to offer essential functionalities to streamline development
 - **Performance**: Focuses on optimizing performance and reducing environmental impact through lean code and efficient asset handling.
 - **NodeJS Integration**: Preconfigured TypeScript and TailwindCSS support for modern frontend development.
 - **Development Watchers**: Automatically watch and rebuild assets (TypeScript, CSS) when files are modified during development.
-  
+
+---
+
 ## Installation
 
 To set up **CorianderPHP**, follow these steps:
