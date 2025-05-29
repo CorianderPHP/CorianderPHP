@@ -2,7 +2,7 @@
 
 namespace Controllers;
 
-use CorianderCore\Router\Router;
+use CorianderCore\Router\ViewRenderer;
 
 /**
  * Class {{controllerName}}
@@ -12,12 +12,12 @@ use CorianderCore\Router\Router;
  */
 class {{controllerName}}
 {
-    protected $router;
+    protected ViewRenderer $view;
 
     public function __construct()
     {
-        // Get the static instance of the router
-        $this->router = Router::getInstance();
+        // Create a new instance of the ViewRenderer
+        $this->view = new ViewRenderer();
     }
 
     /**
@@ -29,8 +29,8 @@ class {{controllerName}}
             // Example data
         ];
 
-        // Use the router instance to render the view
-        $this->router::renderView('{{kebabControllerName}}', $data);
+        // Use the ViewRenderer to render the view
+        $this->view->render('{{kebabControllerName}}', $data);
     }
 
     /**
@@ -48,8 +48,8 @@ class {{controllerName}}
             // Example: 'item' => YourModel::find($id)
         ];
 
-        // Use the router instance to render the specific view
-        $this->router::renderView('{{kebabControllerName}}/show', $data);
+        // Use the ViewRenderer to render the specific view
+        $this->view->render('{{kebabControllerName}}/show', $data);
     }
 
     /**
@@ -69,7 +69,7 @@ class {{controllerName}}
             'message' => 'Data submitted successfully.'
         ];
 
-        // Use the router instance to render the success view
-        $this->router::renderView('{{kebabControllerName}}/success', $data);
+        // Use the ViewRenderer to render the success view
+        $this->view->render('{{kebabControllerName}}/success', $data);
     }
 }
