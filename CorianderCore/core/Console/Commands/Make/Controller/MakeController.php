@@ -38,52 +38,52 @@ class MakeController
 
     /**
      * Executes the controller creation process.
-     * 
-     * This method handles the creation of a new controller by:
-     * - Verifying if a controller name is provided.
-     * - Ensuring the controller name follows the proper naming conventions.
-     * - Checking if the controller already exists.
-     * - Creating the necessary file using a template.
+     *
+     * This method creates either a web or API controller based on the provided arguments.
+     * It supports the `--api` flag to determine if an API controller should be generated
+     * instead of a standard web controller.
+     *
+     * Steps performed:
+     * - Parses the controller name and `--api` flag.
+     * - Normalizes the controller name (PascalCase + "Controller" suffix).
+     * - Chooses the appropriate template (API or Web).
+     * - Ensures the target directory exists.
+     * - Creates the controller file from a template with placeholder replacement.
      *
      * @param array $args The arguments passed to the command, where the first argument is the controller name.
      */
     public function execute(array $args)
     {
-        // Ensure a controller name is provided.
         if (empty($args)) {
             ConsoleOutput::print("&4[Error]&7 Please specify a controller name.");
             return;
         }
 
-        // Format the controller name (convert to PascalCase).
-        $controllerName = $this->formatControllerName($args[0]);
+        $controllerNameRaw = $args[0];
+        $isApi = in_array('--api', $args, true);
 
-        // Ensure the controller name ends with "Controller".
+        $controllerName = $this->formatControllerName($controllerNameRaw);
         if (!preg_match('/Controller$/', $controllerName)) {
             $controllerName .= 'Controller';
         }
 
-        // Convert to kebab-case for potential view paths.
-        $kebabCaseName = $this->toKebabCase($args[0]);
+        $kebabCaseName = $this->toKebabCase($controllerNameRaw);
+        $templateFile = $isApi ? 'ApiController.php' : 'WebController.php';
+        $controllerSubdir = $isApi ? 'ApiControllers' : 'Controllers';
+        $controllerPath = dirname($this->basePath) . "/{$controllerSubdir}/{$controllerName}.php";
 
-        // Determine the full path where the controller will be created.
-        $controllerPath = $this->basePath . $controllerName . '.php';
-
-        // Ensure the directory exists.
         $this->ensureDirectoryExists(dirname($controllerPath));
 
-        // Check if the controller already exists.
         if ($this->controllerExists($controllerPath)) {
-            ConsoleOutput::print("&4[Error]&7 Controller '{$controllerName}' already exists.");
+            ConsoleOutput::print("&4[Error]&7 Controller '{$controllerName}' already exists at '{$controllerPath}'.");
             return;
         }
 
-        // Create the controller file using the template.
         try {
-            $this->createFileFromTemplate('controller.php', $controllerPath, $controllerName, $kebabCaseName);
+            $this->createFileFromTemplate($templateFile, $controllerPath, $controllerName, $kebabCaseName);
             ConsoleOutput::print("&2[Success]&7 Controller '{$controllerName}' created successfully at '{$controllerPath}'. ");
         } catch (\Exception $e) {
-            ConsoleOutput::print("&4[Error]&7 Failed to create controller '{$controllerName}'. " . $e->getMessage());
+            ConsoleOutput::print("&4[Error]&7 Failed to create controller: " . $e->getMessage());
         }
     }
 
