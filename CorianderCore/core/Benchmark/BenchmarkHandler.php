@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Benchmark;
+namespace CorianderCore\Core\Benchmark;
 
 /**
  * BenchmarkHandler is responsible for measuring key performance indicators

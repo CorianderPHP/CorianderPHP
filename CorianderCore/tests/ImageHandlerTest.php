@@ -3,8 +3,8 @@
 namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Image\ImageHandler;
-use CorianderCore\Utils\DirectoryHandler;
+use CorianderCore\Core\Image\ImageHandler;
+use CorianderCore\Core\Utils\DirectoryHandler;
 
 /**
  * Class ImageHandlerTest

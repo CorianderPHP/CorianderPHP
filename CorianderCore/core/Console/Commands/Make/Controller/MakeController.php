@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\Controller;
+namespace CorianderCore\Core\Console\Commands\Make\Controller;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * The MakeController class is responsible for generating new controller files

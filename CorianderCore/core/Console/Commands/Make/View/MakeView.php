@@ -1,9 +1,9 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\View;
+namespace CorianderCore\Core\Console\Commands\Make\View;
 
-use CorianderCore\Console\ConsoleOutput;
-use CorianderCore\Utils\DirectoryHandler;
+use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Utils\DirectoryHandler;
 
 /**
  * The MakeView class is responsible for generating new view directories and files

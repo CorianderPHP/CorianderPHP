@@ -3,7 +3,7 @@
 namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Router\Router;
+use CorianderCore\Core\Router\Router;
 
 class RouterTest extends TestCase
 {

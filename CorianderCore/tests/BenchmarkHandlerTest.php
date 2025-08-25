@@ -2,7 +2,7 @@
 
 namespace CorianderCore\Tests;
 
-use CorianderCore\Benchmark\BenchmarkHandler;
+use CorianderCore\Core\Benchmark\BenchmarkHandler;
 use PHPUnit\Framework\TestCase;
 
 /**

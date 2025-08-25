@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Sitemap;
+namespace CorianderCore\Core\Sitemap;
 
 use SimpleXMLElement;
 

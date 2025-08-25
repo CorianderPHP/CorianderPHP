@@ -1,10 +1,10 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Benchmark;
+namespace CorianderCore\Core\Console\Commands\Benchmark;
 
-use CorianderCore\Benchmark\BenchmarkHandler;
-use CorianderCore\Console\ConsoleOutput;
-use CorianderCore\Router\Router;
+use CorianderCore\Core\Benchmark\BenchmarkHandler;
+use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Router\Router;
 
 /**
  * BenchmarkRouter handles benchmarking related to routing performance.

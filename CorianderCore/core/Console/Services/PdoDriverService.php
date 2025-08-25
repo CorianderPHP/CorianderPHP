@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console\Services;
+namespace CorianderCore\Core\Console\Services;
 
 class PdoDriverService
 {

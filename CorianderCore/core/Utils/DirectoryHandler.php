@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Utils;
+namespace CorianderCore\Core\Utils;
 
 /**
  * The DirectoryHandler class provides utilities for working with directories.

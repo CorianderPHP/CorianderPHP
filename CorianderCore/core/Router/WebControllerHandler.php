@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
-use CorianderCore\Router\NameFormatter;
+use CorianderCore\Core\Router\NameFormatter;
 
 /**
  * Handles dispatching to web controllers by resolving controller class and action from a URL path.
@@ -12,7 +12,7 @@ use CorianderCore\Router\NameFormatter;
  * - Loading the appropriate controller file if needed.
  * - Invoking the controller action method based on HTTP method and URI segments.
  *
- * @package CorianderCore\Router
+ * @package CorianderCore\Core\Router
  */
 class WebControllerHandler
 {

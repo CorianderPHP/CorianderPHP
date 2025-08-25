@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Handles dispatching to API controllers based on RESTful methods and subpaths.

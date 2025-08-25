@@ -1,8 +1,8 @@
 <?php
 
-namespace Controllers;
+namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
 
-use CorianderCore\Router\ViewRenderer;
+use CorianderCore\Core\Router\ViewRenderer;
 
 /**
  * Class {{controllerName}}

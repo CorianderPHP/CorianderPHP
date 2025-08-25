@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\Sitemap;
+namespace CorianderCore\Core\Console\Commands\Make\Sitemap;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * The MakeSitemap class is responsible for generating the sitemap.php file

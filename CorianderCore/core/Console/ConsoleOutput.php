@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console;
+namespace CorianderCore\Core\Console;
 
 /**
  * The ConsoleOutput class handles console output with custom color

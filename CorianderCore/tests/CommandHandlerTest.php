@@ -3,7 +3,7 @@
 namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\CommandHandler;
+use CorianderCore\Core\Console\CommandHandler;
 
 class CommandHandlerTest extends TestCase
 {

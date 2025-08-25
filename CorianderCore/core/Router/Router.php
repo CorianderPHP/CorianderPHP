@@ -1,10 +1,10 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
-use CorianderCore\Router\RouteDispatcher;
-use CorianderCore\Router\RouteRegistry;
-use CorianderCore\Router\NotFoundHandler;
+use CorianderCore\Core\Router\RouteDispatcher;
+use CorianderCore\Core\Router\RouteRegistry;
+use CorianderCore\Core\Router\NotFoundHandler;
 
 /**
  * Entry point for route dispatching.

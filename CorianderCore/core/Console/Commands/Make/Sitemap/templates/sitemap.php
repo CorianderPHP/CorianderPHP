@@ -5,7 +5,7 @@ $sitemapPath = PROJECT_ROOT . '/public/sitemap.xml';
 // Check if the sitemap.xml file exists and if it was generated today
 if (!file_exists($sitemapPath) || date('Y-m-d', filemtime($sitemapPath)) !== date('Y-m-d')) {
     // Initialize the SitemapHandler
-    $sitemapHandler = new \CorianderCore\Sitemap\SitemapHandler();
+    $sitemapHandler = new \CorianderCore\Core\Sitemap\SitemapHandler();
 
     // Fetch and add static pages to the sitemap
     $sitemapHandler->fetchStaticPages();
