@@ -7,6 +7,12 @@ namespace CorianderCore\Core\Router;
  */
 class NotFoundHandler
 {
+    /**
+     * Execute the not-found callback or output a default 404 response.
+     *
+     * @param RouteRegistry $registry Registry containing an optional 404 handler.
+     * @return void
+     */
     public function handle(RouteRegistry $registry): void
     {
         $callback = $registry->getNotFound();

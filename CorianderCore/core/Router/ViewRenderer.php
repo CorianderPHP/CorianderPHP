@@ -7,6 +7,16 @@ namespace CorianderCore\Core\Router;
  */
 class ViewRenderer
 {
+    /**
+     * Render a public view page.
+     *
+     * Looks for an index.php in the specified view directory and includes
+     * header and footer templates if found.
+     *
+     * @param string $viewPath Path relative to public/public_views.
+     * @param array  $data     Variables extracted into the view scope.
+     * @return bool True if the view was rendered, otherwise false.
+     */
     public function render(string $viewPath, array $data = []): bool
     {
         extract($data);
