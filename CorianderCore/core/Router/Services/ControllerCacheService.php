@@ -24,11 +24,23 @@ class ControllerCacheService
      */
     private static ?self $instance = null;
 
+    /**
+     * Retrieve the singleton instance of the cache service.
+     *
+     * Ensures only one instance is used throughout the application.
+     *
+     * @return self Singleton instance of the service.
+     */
     public static function getInstance(): self
     {
         return self::$instance ??= new self();
     }
 
+    /**
+     * Create a new controller cache service.
+     *
+     * @param string $cacheFile Absolute path to the cache file storing controller mappings.
+     */
     public function __construct(string $cacheFile = PROJECT_ROOT . '/cache/controllers.php')
     {
         $this->cacheFile = $cacheFile;
