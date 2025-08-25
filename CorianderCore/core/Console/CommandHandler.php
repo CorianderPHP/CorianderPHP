@@ -2,6 +2,12 @@
 
 namespace CorianderCore\Core\Console;
 
+/**
+ * Routes console commands to their corresponding handler classes and manages execution.
+ *
+ * Maintains the registry of available commands, dispatches subcommands, and
+ * provides help output when requested or when an unknown command is encountered.
+ */
 class CommandHandler
 {
     /**
