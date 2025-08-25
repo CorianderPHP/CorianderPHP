@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands;
+namespace CorianderCore\Core\Console\Commands;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 class Hello
 {

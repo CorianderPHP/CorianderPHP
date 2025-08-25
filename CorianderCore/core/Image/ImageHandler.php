@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Image;
+namespace CorianderCore\Core\Image;
 
 /**
  * Handles image conversion and rendering for PNG, JPG, and JPEG files.

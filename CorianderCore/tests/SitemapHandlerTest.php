@@ -3,8 +3,8 @@
 namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Sitemap\SitemapHandler;
-use CorianderCore\Utils\DirectoryHandler;
+use CorianderCore\Core\Sitemap\SitemapHandler;
+use CorianderCore\Core\Utils\DirectoryHandler;
 use ReflectionClass;
 use SimpleXMLElement;
 

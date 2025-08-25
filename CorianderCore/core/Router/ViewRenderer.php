@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Renders public view pages.

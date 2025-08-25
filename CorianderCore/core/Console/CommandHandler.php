@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Console;
+namespace CorianderCore\Core\Console;
 
 class CommandHandler
 {
@@ -10,10 +10,10 @@ class CommandHandler
      * @var array
      */
     protected $commands = [
-        'hello' => \CorianderCore\Console\Commands\Hello::class,
-        'nodejs' => \CorianderCore\Console\Commands\NodeJS::class,
-        'make' => \CorianderCore\Console\Commands\Make::class,
-        'benchmark' => \CorianderCore\Console\Commands\Benchmark::class,
+        'hello' => \CorianderCore\Core\Console\Commands\Hello::class,
+        'nodejs' => \CorianderCore\Core\Console\Commands\NodeJS::class,
+        'make' => \CorianderCore\Core\Console\Commands\Make::class,
+        'benchmark' => \CorianderCore\Core\Console\Commands\Benchmark::class,
     ];
 
     /**

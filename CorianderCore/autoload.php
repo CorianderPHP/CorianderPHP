@@ -2,71 +2,32 @@
 
 /**
  * CorianderPHP Autoloader
- * 
- * This autoloader dynamically loads PHP classes in the CorianderPHP framework based on the PSR-4 standard.
- * The autoloader automatically resolves and includes class files by mapping namespaces to directory structures.
- * 
- * It supports two primary class paths:
- * 
- * 1. **Core Framework Modules** (`core/` directory):
- *    - The `core/` directory contains all the essential modules required for the framework to function.
- *    - For example, the class `CorianderCore\Console\CommandHandler` will be mapped to:
- *      `CorianderCore/core/Console/CommandHandler.php`
- * 
- * 2. **User-Defined Modules** (`modules/` directory):
- *    - The `modules/` directory holds any user-defined modules that extend or modify the framework's behavior.
- *    - For example, the class `CustomModule\Google\GoogleSSO` will be mapped to:
- *      `CorianderCore/modules/CustomModule/Google/GoogleSSO.php`
- * 
- * ### Functionality
- * 
- * The autoloader follows these steps:
- * 
- * - Strips the `CorianderCore\` prefix from class names (if applicable) to align with the file structure.
- * - Converts the namespace into a file path by replacing namespace separators (`\`) with directory separators (`/`).
- * - Searches through the core and modules directories to locate the correct file for the class.
- * - If the class file is found, it is included. If not, an exception is thrown with an error message.
- * 
- * @param string $class The fully-qualified class name (namespace included).
- * @throws Exception If the class file cannot be located in any of the directories.
+ *
+ * Provides PSR-4 compliant class loading using a simple namespace-to-directory map.
+ *
+ * Supported namespace prefixes:
+ * - `CorianderCore\\Core\\`    → `/CorianderCore/core/`
+ * - `CorianderCore\\Modules\\` → `/CorianderCore/modules/`
+ * - `CorianderCore\\Tests\\`   → `/CorianderCore/tests/`
+ *
+ * @param string $class Fully-qualified class name
  */
-
-spl_autoload_register(function ($class) {
-    /**
-     * Base directories to search for class files.
-     *
-     * - `/CorianderCore/core/`: Contains core framework modules.
-     * - `/CorianderCore/modules/`: Contains user-defined or external modules.
-     * - `/src/`: Contains Controllers, Models and user-defined classes.
-     */
-    $baseDirs = [
-        PROJECT_ROOT . '/CorianderCore/core/',    // Core framework modules directory
-        PROJECT_ROOT . '/CorianderCore/modules/', // External user-defined modules directory
-        PROJECT_ROOT . '/src/',                   // Controllers, Models and user-defined classes
+spl_autoload_register(function (string $class): void {
+    $prefixes = [
+        'CorianderCore\\Core\\'    => PROJECT_ROOT . '/CorianderCore/core/',
+        'CorianderCore\\Modules\\' => PROJECT_ROOT . '/CorianderCore/modules/',
+        'CorianderCore\\Tests\\'   => PROJECT_ROOT . '/CorianderCore/tests/',
     ];
 
-    /**
-     * Convert the namespace to a relative file path.
-     * 
-     * 1. Remove the "CorianderCore\" prefix from class names.
-     * 2. Replace the namespace separator (`\`) with the directory separator (`/`).
-     * 3. Append the `.php` file extension.
-     * 
-     * Example: `CorianderCore\Console\CommandHandler` becomes `Console/CommandHandler.php`.
-     * 
-     * @var string $relativeClassPath The relative file path derived from the class name.
-     */
-    $relativeClassPath = str_replace('CorianderCore\\', '', $class);
-    $relativeClassPath = str_replace('\\', '/', $relativeClassPath) . '.php';
-
-    // Search through the defined base directories for the class file
-    foreach ($baseDirs as $baseDir) {
-        $file = $baseDir . $relativeClassPath;
-
-        // If the class file is found, require it
+    foreach ($prefixes as $prefix => $baseDir) {
+        $len = strlen($prefix);
+        if (strncmp($class, $prefix, $len) !== 0) {
+            continue;
+        }
+        $relative = substr($class, $len);
+        $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
         if (file_exists($file)) {
             require_once $file;
-            return;
         }
     }
 });

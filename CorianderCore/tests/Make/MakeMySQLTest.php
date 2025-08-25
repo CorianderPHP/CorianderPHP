@@ -3,9 +3,9 @@
 namespace CorianderCore\Tests\Make;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Make\Database\MySQL\MakeMySQL;
-use CorianderCore\Console\ConsoleOutput;
-use CorianderCore\Utils\DirectoryHandler;
+use CorianderCore\Core\Console\Commands\Make\Database\MySQL\MakeMySQL;
+use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Utils\DirectoryHandler;
 
 class MakeMySQLTest extends TestCase
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands;
+namespace CorianderCore\Core\Console\Commands;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * Class responsible for handling make-related commands such as 'make:view', 'make:controller', and 'make:database'.
@@ -39,10 +39,10 @@ class Make
      */
     public function __construct()
     {
-        $this->makeViewInstance = new \CorianderCore\Console\Commands\Make\View\MakeView();
-        $this->makeControllerInstance = new \CorianderCore\Console\Commands\Make\Controller\MakeController();
-        $this->makeDatabaseInstance = new \CorianderCore\Console\Commands\Make\Database\MakeDatabase();
-        $this->makeSitemapInstance = new \CorianderCore\Console\Commands\Make\Sitemap\MakeSitemap();
+        $this->makeViewInstance = new \CorianderCore\Core\Console\Commands\Make\View\MakeView();
+        $this->makeControllerInstance = new \CorianderCore\Core\Console\Commands\Make\Controller\MakeController();
+        $this->makeDatabaseInstance = new \CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase();
+        $this->makeSitemapInstance = new \CorianderCore\Core\Console\Commands\Make\Sitemap\MakeSitemap();
     }
 
     /**

@@ -3,8 +3,8 @@
 namespace CorianderCore\Tests\Make;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Make\Controller\MakeController;
-use CorianderCore\Utils\DirectoryHandler;
+use CorianderCore\Core\Console\Commands\Make\Controller\MakeController;
+use CorianderCore\Core\Utils\DirectoryHandler;
 
 /**
  * The MakeControllerTest class contains unit tests for the MakeController class.

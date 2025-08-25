@@ -3,8 +3,8 @@
 namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Make;
-use CorianderCore\Console\Commands\Make\View\MakeView;
+use CorianderCore\Core\Console\Commands\Make;
+use CorianderCore\Core\Console\Commands\Make\View\MakeView;
 
 class MakeTest extends TestCase
 {

@@ -1,11 +1,11 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\Database;
+namespace CorianderCore\Core\Console\Commands\Make\Database;
 
-use CorianderCore\Console\Commands\Make\Database\MySQL\MakeMySQL;
-use CorianderCore\Console\Commands\Make\Database\SQLite\MakeSQLite;
-use CorianderCore\Console\Services\PdoDriverService;
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\Commands\Make\Database\MySQL\MakeMySQL;
+use CorianderCore\Core\Console\Commands\Make\Database\SQLite\MakeSQLite;
+use CorianderCore\Core\Console\Services\PdoDriverService;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * The MakeDatabase class is responsible for directing the user to either the MySQL or SQLite setup process.

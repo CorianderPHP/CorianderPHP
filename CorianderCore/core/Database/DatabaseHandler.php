@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Database;
+namespace CorianderCore\Core\Database;
 
 use \PDO;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\Database\SQLite;
+namespace CorianderCore\Core\Console\Commands\Make\Database\SQLite;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * The MakeSQLite class is responsible for generating and setting up SQLite database configurations.

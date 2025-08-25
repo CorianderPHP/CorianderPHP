@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands;
+namespace CorianderCore\Core\Console\Commands;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
  * Benchmark is responsible for handling benchmark-related commands such as 'benchmark:router'.
@@ -32,7 +32,7 @@ class Benchmark
      */
     public function __construct()
     {
-        $this->benchmarkRouterInstance = new \CorianderCore\Console\Commands\Benchmark\BenchmarkRouter();
+        $this->benchmarkRouterInstance = new \CorianderCore\Core\Console\Commands\Benchmark\BenchmarkRouter();
     }
 
     /**

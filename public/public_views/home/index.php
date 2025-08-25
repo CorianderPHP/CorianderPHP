@@ -1,6 +1,6 @@
 <?php
 
-use CorianderCore\Image\ImageHandler;
+use CorianderCore\Core\Image\ImageHandler;
 ?>
 <h1 class="mt-6 md:mt-16 font-concert-one text-2xl sm:text-4xl hsm:text-5xl md:text-6xl text-dark-green dark:text-peach tracking-1 text-center">
     🎉 Installation Successful! 🎉

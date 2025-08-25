@@ -1,10 +1,10 @@
 <?php
 
-namespace CorianderCore\Database;
+namespace CorianderCore\Core\Database;
 
 use \PDO;
 use Exception;
-use CorianderCore\Database\DatabaseHandler;
+use CorianderCore\Core\Database\DatabaseHandler;
 
 class SQLManager
 {

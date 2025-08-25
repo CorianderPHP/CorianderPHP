@@ -1,13 +1,13 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Utility class for formatting controller and route names.
  *
  * Converts URI segments to PascalCase to match controller class naming conventions.
  *
- * @package CorianderCore\Router
+ * @package CorianderCore\Core\Router
  */
 class NameFormatter
 {

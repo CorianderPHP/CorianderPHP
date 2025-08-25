@@ -1,6 +1,6 @@
 <?php
 
-namespace ApiControllers;
+namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
 
 /**
  * Class {{controllerName}}

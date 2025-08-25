@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Determines whether to dispatch a Web, API, or custom route.

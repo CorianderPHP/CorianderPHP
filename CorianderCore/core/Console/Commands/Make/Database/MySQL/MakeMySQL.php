@@ -1,8 +1,8 @@
 <?php
 
-namespace CorianderCore\Console\Commands\Make\Database\MySQL;
+namespace CorianderCore\Core\Console\Commands\Make\Database\MySQL;
 
-use CorianderCore\Console\ConsoleOutput;
+use CorianderCore\Core\Console\ConsoleOutput;
 use \PDO;
 use \PDOException;
 

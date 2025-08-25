@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Manages custom routes and 404 callback.

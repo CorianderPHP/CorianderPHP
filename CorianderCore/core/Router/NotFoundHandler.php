@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Router;
+namespace CorianderCore\Core\Router;
 
 /**
  * Handles 404 not found logic.

@@ -25,7 +25,7 @@ class AutoloaderTest extends TestCase
     public function testCanLoadCoreClass()
     {
         // Assert that the CommandHandler class exists and is autoloaded correctly
-        $this->assertTrue(class_exists('CorianderCore\Console\CommandHandler'));
+        $this->assertTrue(class_exists('CorianderCore\Core\Console\CommandHandler'));
     }
 
     /**

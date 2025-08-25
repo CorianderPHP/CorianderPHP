@@ -3,8 +3,8 @@
 namespace CorianderCore\Tests\Make;
 
 use PHPUnit\Framework\TestCase;
-use CorianderCore\Console\Commands\Make\Database\MakeDatabase;
-use CorianderCore\Console\Services\PdoDriverService;
+use CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase;
+use CorianderCore\Core\Console\Services\PdoDriverService;
 
 class MakeDatabaseTest extends TestCase
 {
