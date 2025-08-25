@@ -3,6 +3,7 @@
 namespace CorianderCore\Core\Console\Commands\Make\Controller;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Router\NameFormatter;
 
 /**
  * The MakeController class is responsible for generating new controller files
@@ -62,7 +63,7 @@ class MakeController
         $controllerNameRaw = $args[0];
         $isApi = in_array('--api', $args, true);
 
-        $controllerName = $this->formatControllerName($controllerNameRaw);
+        $controllerName = NameFormatter::toPascalCase($controllerNameRaw);
         if (!preg_match('/Controller$/', $controllerName)) {
             $controllerName .= 'Controller';
         }
@@ -85,21 +86,6 @@ class MakeController
         } catch (\Exception $e) {
             ConsoleOutput::print("&4[Error]&7 Failed to create controller: " . $e->getMessage());
         }
-    }
-
-    /**
-     * Formats the controller name to PascalCase.
-     * 
-     * This method converts a controller name like 'admin_user', 'admin-user', or 'adminUser'
-     * into 'AdminUser' to ensure proper naming conventions.
-     *
-     * @param string $name The original controller name.
-     * @return string The formatted controller name in PascalCase.
-     */
-    protected function formatControllerName(string $name): string
-    {
-        // Convert kebab-case or snake_case to PascalCase.
-        return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
     }
 
     /**
