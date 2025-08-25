@@ -43,13 +43,19 @@ class Router
     /**
      * Register a custom route handler.
      *
-     * @param string   $route    URI path to match.
+     * @param string   $method  HTTP method for the route.
+     * @param string   $pattern URI pattern, e.g. '/user/{id}'.
      * @param callable $callback Callback executed when the route is matched.
      * @return void
      */
-    public function add(string $route, callable $callback): void
+    public function add(string $method, string $pattern, callable $callback): void
     {
-        $this->registry->add($route, $callback);
+        $pattern = trim($pattern, '/');
+        $regex = preg_quote($pattern, '#');
+        $regex = preg_replace('#\\\{([^/]+)\\\}#', '([^/]+)', $regex);
+        $regex = '#^' . $regex . '$#';
+
+        $this->registry->add(strtoupper($method), $regex, $callback);
     }
 
     /**

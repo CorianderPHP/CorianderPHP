@@ -34,9 +34,14 @@ class RouteDispatcher
 
         defined('REQUESTED_VIEW') || define('REQUESTED_VIEW', $path);
 
-        if ($callback = $this->registry->get($path)) {
-            call_user_func($callback);
-            return;
+        $method = strtoupper($method);
+
+        foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $callback]) {
+            if ($routeMethod === $method && preg_match($pattern, $path, $matches)) {
+                array_shift($matches);
+                call_user_func_array($callback, $matches);
+                return;
+            }
         }
 
         if (str_starts_with($path, 'api/')) {
