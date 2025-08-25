@@ -22,6 +22,13 @@ class WebControllerHandler
      */
     private ControllerCacheService $cacheService;
 
+    /**
+     * Cache for existence checks to avoid redundant filesystem lookups.
+     *
+     * @var array<string, bool>
+     */
+    private array $controllerExistenceCache = [];
+
     public function __construct(?ControllerCacheService $cacheService = null)
     {
         $this->cacheService = $cacheService ?? new ControllerCacheService();
@@ -109,23 +116,27 @@ class WebControllerHandler
      */
     private function controllerExists(string $controllerClass, string $controllerFile): bool
     {
-        if ($this->cacheService->has($controllerClass)) {
-            $cachedFile = $this->cacheService->get($controllerClass);
-            if (!class_exists($controllerClass) && $cachedFile && file_exists($cachedFile)) {
+        if (isset($this->controllerExistenceCache[$controllerClass])) {
+            return $this->controllerExistenceCache[$controllerClass];
+        }
+
+        $cachedFile = $this->cacheService->get($controllerClass);
+        if ($cachedFile !== null) {
+            if (!class_exists($controllerClass) && file_exists($cachedFile)) {
                 require_once $cachedFile;
             }
-            return class_exists($controllerClass);
+            return $this->controllerExistenceCache[$controllerClass] = class_exists($controllerClass);
         }
 
         if (class_exists($controllerClass)) {
-            return true;
+            return $this->controllerExistenceCache[$controllerClass] = true;
         }
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
-            return class_exists($controllerClass);
+            return $this->controllerExistenceCache[$controllerClass] = class_exists($controllerClass);
         }
 
-        return false;
+        return $this->controllerExistenceCache[$controllerClass] = false;
     }
 }
