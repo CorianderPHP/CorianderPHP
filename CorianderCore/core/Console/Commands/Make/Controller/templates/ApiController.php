@@ -1,6 +1,13 @@
 <?php
 
-namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
+/**
+ * Template for generating API controllers.
+ *
+ * Workflow:
+ * - Exposes basic `get` and `post` handlers returning JSON responses.
+ * - Can be extended with additional actions for sub-routes.
+ */
+namespace ApiControllers;
 
 /**
  * Class {{controllerName}}
@@ -11,6 +18,8 @@ class {{controllerName}}
 {
     /**
      * Handles GET requests to /api/{{kebabControllerName}}.
+     *
+     * @return void
      */
     public function get(): void
     {
@@ -20,6 +29,8 @@ class {{controllerName}}
 
     /**
      * Handles POST requests to /api/{{kebabControllerName}}.
+     *
+     * @return void
      */
     public function post(): void
     {

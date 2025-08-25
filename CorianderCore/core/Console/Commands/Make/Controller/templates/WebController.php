@@ -1,6 +1,14 @@
 <?php
 
-namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
+/**
+ * Template for creating standard web controllers.
+ *
+ * Workflow:
+ * - Instantiates a {@see ViewRenderer} for view rendering.
+ * - Provides example actions (index, show, store) that demonstrate passing
+ *   data to views and handling route logic.
+ */
+namespace Controllers;
 
 use CorianderCore\Core\Router\ViewRenderer;
 
@@ -12,18 +20,27 @@ use CorianderCore\Core\Router\ViewRenderer;
  */
 class {{controllerName}}
 {
+    /**
+     * Handles view rendering.
+     *
+     * @var ViewRenderer
+     */
     protected ViewRenderer $view;
 
+    /**
+     * Initialize the controller with a view renderer instance.
+     */
     public function __construct()
     {
-        // Create a new instance of the ViewRenderer
         $this->view = new ViewRenderer();
     }
 
     /**
      * Display the default page for this controller.
+     *
+     * @return void
      */
-    public function index()
+    public function index(): void
     {
         $data = [
             // Example data
@@ -40,8 +57,9 @@ class {{controllerName}}
      * Modify this method to interact with your models to fetch data.
      *
      * @param mixed $id The ID or slug of the resource to display.
+     * @return void
      */
-    public function show($id)
+    public function show($id): void
     {
         // Example: Fetch an item from the database
         $data = [
@@ -57,8 +75,10 @@ class {{controllerName}}
      *
      * This method processes data submitted via POST requests, such as form submissions.
      * It validates and handles the data, rendering a success message or redirection to another view.
+     *
+     * @return void
      */
-    public function store()
+    public function store(): void
     {
         // Example: Process form submission data
         // $formData = $_POST;
@@ -73,3 +93,4 @@ class {{controllerName}}
         $this->view->render('{{kebabControllerName}}/success', $data);
     }
 }
+
