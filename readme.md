@@ -114,6 +114,25 @@ You can customize the generated `sitemap.php` file to fit your needs by adding d
 
 ---
 
+## CSRF Protection
+
+CorianderPHP ships with a simple token-based CSRF guard. The router registers a
+middleware that validates tokens on incoming `POST` requests. To include the
+token in your forms, output the helper inside the `<form>` element:
+
+```php
+<form method="POST" action="/submit">
+    <?= \CorianderCore\Core\Security\Csrf::input() ?>
+    <!-- your fields -->
+    <button type="submit">Send</button>
+</form>
+```
+
+Controller templates already verify the token using `Csrf::validateRequest()` or
+`Csrf::validate()` for JSON payloads.
+
+---
+
 ## Development Status
 
 **CorianderPHP** is under active development. Some features, such as WebP image optimization and sitemap creation tools, are currently being implemented. Comprehensive documentation will be provided to assist developers in using and extending the framework.

@@ -16,9 +16,11 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
 }
 
 use CorianderCore\Core\Router\Router;
+use CorianderCore\Core\Security\Csrf;
 
 // Initialize the router
 $router = Router::getInstance();
+$router->before([Csrf::class, 'verify']);
 
 // Custom 404 handler
 $notFound = function () {

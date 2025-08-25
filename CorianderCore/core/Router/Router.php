@@ -14,6 +14,10 @@ class Router
     private static ?Router $instance = null;
     private RouteRegistry $registry;
     private RouteDispatcher $dispatcher;
+    /**
+     * @var callable[] List of middleware hooks executed before dispatch.
+     */
+    private array $beforeHooks = [];
 
     private function __construct()
     {
@@ -78,7 +82,27 @@ class Router
      */
     public function dispatch(): void
     {
-        $this->dispatcher->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+        $uri = $_SERVER['REQUEST_URI'];
+        $method = $_SERVER['REQUEST_METHOD'];
+
+        foreach ($this->beforeHooks as $hook) {
+            if ($hook($uri, $method) === false) {
+                return;
+            }
+        }
+
+        $this->dispatcher->dispatch($uri, $method);
+    }
+
+    /**
+     * Register a middleware-like hook to run before dispatching.
+     *
+     * @param callable $hook Callback receiving URI and method. Return false to halt dispatch.
+     * @return void
+     */
+    public function before(callable $hook): void
+    {
+        $this->beforeHooks[] = $hook;
     }
     
 }

@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
 
+use CorianderCore\Core\Security\Csrf;
+
 /**
  * Class {{controllerName}}
  *
@@ -24,6 +26,12 @@ class {{controllerName}}
     public function post(): void
     {
         $input = json_decode(file_get_contents('php://input'), true);
+        if (!Csrf::validate($input['csrf_token'] ?? null)) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Invalid CSRF token']);
+            return;
+        }
         header('Content-Type: application/json');
         echo json_encode(['message' => 'Data received', 'data' => $input]);
     }
