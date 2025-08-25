@@ -147,7 +147,7 @@ class RouterTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/about';
 
         // Add a custom route for 'about' that echoes a specific message
-        $this->router->add('about', function () {
+        $this->router->add('GET', '/about', function () {
             echo 'About Page Content';
         });
 
@@ -334,5 +334,49 @@ class RouterTest extends TestCase
 
         // Assert that the output contains the expected content from the 'store' method
         $this->assertStringContainsString('Form submitted successfully', $output);
+    }
+
+    /**
+     * Test that route parameters are extracted and passed to the callback.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testRouteParameterExtraction()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/user/123';
+
+        $captured = null;
+        $this->router->add('GET', '/user/{id}', function ($id) use (&$captured) {
+            $captured = $id;
+        });
+
+        $this->router->dispatch();
+
+        $this->assertSame('123', $captured);
+    }
+
+    /**
+     * Test that a route is rejected when the HTTP method does not match.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testMethodRejection()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/user/123';
+
+        $executed = false;
+        $this->router->add('GET', '/user/{id}', function () use (&$executed) {
+            $executed = true;
+        });
+
+        $notFoundCalled = false;
+        $this->router->setNotFound(function () use (&$notFoundCalled) {
+            $notFoundCalled = true;
+        });
+
+        $this->router->dispatch();
+
+        $this->assertFalse($executed);
+        $this->assertTrue($notFoundCalled);
     }
 }

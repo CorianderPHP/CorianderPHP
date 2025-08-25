@@ -15,13 +15,13 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
     require_once PROJECT_ROOT . '/vendor/autoload.php';
 }
 
-use CorianderCore\Router\Router;
+use CorianderCore\Core\Router\Router;
 
 // Initialize the router
 $router = Router::getInstance();
 
 // Custom 404 handler
-$router->setNotFound(function () {
+$notFound = function () {
     $notFoundView = "notfound";
 
     $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
@@ -34,17 +34,14 @@ $router->setNotFound(function () {
     require_once PROJECT_ROOT . '/public/public_views/header.php';
     require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
     require_once PROJECT_ROOT . '/public/public_views/footer.php';
-});
+};
+$router->setNotFound($notFound);
 
-// Route for handling sitemap.xml requests
-$router->add('sitemap.xml', function () use ($router) {
-    $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
-    if (!file_exists($sitemapPath)) {
-        $router->handleNotFound();
-        return;
-    }
-    require_once $sitemapPath;
-});
+// Load project-specific routes if available
+$routesFile = __DIR__ . '/routes.php';
+if (file_exists($routesFile)) {
+    require $routesFile;
+}
 
 // Dispatch the request to the correct view or controller
 $router->dispatch();

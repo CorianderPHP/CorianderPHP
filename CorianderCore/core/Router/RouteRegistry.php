@@ -8,7 +8,7 @@ namespace CorianderCore\Core\Router;
 class RouteRegistry
 {
     /**
-     * @var array<string, callable>
+     * @var array<int, array{0:string,1:string,2:callable}>
      */
     private array $routes = [];
 
@@ -20,24 +20,24 @@ class RouteRegistry
     /**
      * Register a new route and its handler.
      *
-     * @param string   $route    Path to register.
+     * @param string   $method  HTTP method for the route.
+     * @param string   $pattern Regex pattern for the route.
      * @param callable $callback Callback executed for the route.
      * @return void
      */
-    public function add(string $route, callable $callback): void
+    public function add(string $method, string $pattern, callable $callback): void
     {
-        $this->routes[$route] = $callback;
+        $this->routes[] = [$method, $pattern, $callback];
     }
 
     /**
-     * Retrieve the callback for a registered route.
+     * Retrieve all registered routes.
      *
-     * @param string $route Path to look up.
-     * @return callable|null The matching callback or null if not found.
+     * @return array<int, array{0:string,1:string,2:callable}>
      */
-    public function get(string $route): ?callable
+    public function getRoutes(): array
     {
-        return $this->routes[$route] ?? null;
+        return $this->routes;
     }
 
     /**
