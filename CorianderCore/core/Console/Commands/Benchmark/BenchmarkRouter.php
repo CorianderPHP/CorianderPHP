@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Console\Commands\Benchmark;
 use CorianderCore\Core\Benchmark\BenchmarkHandler;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Router\Router;
+use CorianderCore\Core\Router\NameFormatter;
 
 /**
  * BenchmarkRouter handles benchmarking related to routing performance.
@@ -91,7 +92,7 @@ class BenchmarkRouter
         }
 
         // Check for a controller matching the route name
-        $controllerName = $router->formatControllerName($route) . 'Controller';
+        $controllerName = NameFormatter::toPascalCase($route) . 'Controller';
         $controllerClass = 'Controllers\\' . $controllerName;
 
         if (class_exists($controllerClass)) {

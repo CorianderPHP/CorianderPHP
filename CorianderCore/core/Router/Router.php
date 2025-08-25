@@ -75,14 +75,4 @@ class Router
         $this->dispatcher->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
     }
     
-    /**
-     * Convert a raw route name to PascalCase controller name.
-     *
-     * @param string $name The raw controller segment (e.g., 'user-profile').
-     * @return string PascalCase format (e.g., 'UserProfile').
-     */
-    public function formatControllerName(string $name): string
-    {
-        return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
-    }
 }

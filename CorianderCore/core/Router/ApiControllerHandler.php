@@ -2,6 +2,8 @@
 
 namespace CorianderCore\Core\Router;
 
+use CorianderCore\Core\Router\NameFormatter;
+
 /**
  * Handles dispatching to API controllers based on RESTful methods and subpaths.
  */
@@ -22,7 +24,7 @@ class ApiControllerHandler
         $segments = explode('/', $path);
         array_shift($segments); // Remove 'api'
 
-        $controllerName = $this->formatControllerName($segments[0] ?? '');
+        $controllerName = NameFormatter::toPascalCase($segments[0] ?? '');
         $controllerClass = 'ApiControllers\\' . $controllerName . 'Controller';
 
         if (!class_exists($controllerClass)) {
@@ -47,16 +49,5 @@ class ApiControllerHandler
 
         call_user_func_array([$controller, $action], $params);
         return true;
-    }
-
-    /**
-     * Convert a URI segment into a PascalCase controller name.
-     *
-     * @param string $name The raw controller segment.
-     * @return string PascalCase formatted controller name.
-     */
-    private function formatControllerName(string $name): string
-    {
-        return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));
     }
 }
