@@ -3,6 +3,7 @@
 namespace CorianderCore\Core\Console\Commands\Make\Controller\templates;
 
 use CorianderCore\Core\Router\ViewRenderer;
+use CorianderCore\Core\Security\Csrf;
 
 /**
  * Class {{controllerName}}
@@ -60,6 +61,12 @@ class {{controllerName}}
      */
     public function store()
     {
+        if (!Csrf::validateRequest()) {
+            http_response_code(403);
+            echo 'Invalid CSRF token';
+            return;
+        }
+
         // Example: Process form submission data
         // $formData = $_POST;
         // Validation and processing logic here
