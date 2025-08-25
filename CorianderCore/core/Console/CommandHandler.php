@@ -14,6 +14,7 @@ class CommandHandler
         'nodejs' => \CorianderCore\Core\Console\Commands\NodeJS::class,
         'make' => \CorianderCore\Core\Console\Commands\Make::class,
         'benchmark' => \CorianderCore\Core\Console\Commands\Benchmark::class,
+        'cache' => \CorianderCore\Core\Console\Commands\Cache::class,
     ];
 
     /**
