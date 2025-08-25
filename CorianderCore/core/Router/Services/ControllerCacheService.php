@@ -13,19 +13,32 @@ class ControllerCacheService
     private string $cacheFile;
 
     /**
-     * Cached controller class to file mappings.
+     * Shared cached controller mappings keyed by cache file path.
      *
-     * @var array<string, string>
+     * @var array<string, array<string, string>>
      */
-    private array $cache = [];
+    private static array $cacheStore = [];
+
+    /**
+     * Singleton instance of the cache service.
+     */
+    private static ?self $instance = null;
+
+    public static function getInstance(): self
+    {
+        return self::$instance ??= new self();
+    }
 
     public function __construct(string $cacheFile = PROJECT_ROOT . '/cache/controllers.php')
     {
         $this->cacheFile = $cacheFile;
-        if (file_exists($cacheFile)) {
-            $data = require $cacheFile;
-            if (is_array($data)) {
-                $this->cache = $data;
+
+        if (!isset(self::$cacheStore[$cacheFile])) {
+            if (file_exists($cacheFile)) {
+                $data = require $cacheFile;
+                self::$cacheStore[$cacheFile] = is_array($data) ? $data : [];
+            } else {
+                self::$cacheStore[$cacheFile] = [];
             }
         }
     }
@@ -35,7 +48,7 @@ class ControllerCacheService
      */
     public function has(string $controllerClass): bool
     {
-        return isset($this->cache[$controllerClass]);
+        return isset(self::$cacheStore[$this->cacheFile][$controllerClass]);
     }
 
     /**
@@ -43,7 +56,7 @@ class ControllerCacheService
      */
     public function get(string $controllerClass): ?string
     {
-        return $this->cache[$controllerClass] ?? null;
+        return self::$cacheStore[$this->cacheFile][$controllerClass] ?? null;
     }
 
     /**
@@ -67,7 +80,7 @@ class ControllerCacheService
 
         $content = "<?php\nreturn " . var_export($controllers, true) . ";\n";
         file_put_contents($this->cacheFile, $content);
-        $this->cache = $controllers;
+        self::$cacheStore[$this->cacheFile] = $controllers;
     }
 
     /**
@@ -78,6 +91,6 @@ class ControllerCacheService
         if (file_exists($this->cacheFile)) {
             unlink($this->cacheFile);
         }
-        $this->cache = [];
+        self::$cacheStore[$this->cacheFile] = [];
     }
 }

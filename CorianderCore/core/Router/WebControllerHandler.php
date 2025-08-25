@@ -31,7 +31,7 @@ class WebControllerHandler
 
     public function __construct(?ControllerCacheService $cacheService = null)
     {
-        $this->cacheService = $cacheService ?? new ControllerCacheService();
+        $this->cacheService = $cacheService ?? ControllerCacheService::getInstance();
     }
 
     /**
@@ -45,9 +45,8 @@ class WebControllerHandler
     {
         $segments = explode('/', $path);
         $controllerClass = $this->resolveControllerClass($segments[0] ?? '');
-        $controllerFile = $this->resolveControllerFile($controllerClass);
 
-        if (!$this->controllerExists($controllerClass, $controllerFile)) {
+        if (!$this->controllerExists($controllerClass)) {
             return false;
         }
 
@@ -111,10 +110,9 @@ class WebControllerHandler
      * Checks whether a given controller class exists and includes its file if needed.
      *
      * @param string $controllerClass The fully qualified controller class name.
-     * @param string $controllerFile The file path of the controller.
      * @return bool True if the controller class exists, false otherwise.
      */
-    private function controllerExists(string $controllerClass, string $controllerFile): bool
+    private function controllerExists(string $controllerClass): bool
     {
         if (isset($this->controllerExistenceCache[$controllerClass])) {
             return $this->controllerExistenceCache[$controllerClass];
@@ -132,6 +130,7 @@ class WebControllerHandler
             return $this->controllerExistenceCache[$controllerClass] = true;
         }
 
+        $controllerFile = $this->resolveControllerFile($controllerClass);
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
             return $this->controllerExistenceCache[$controllerClass] = class_exists($controllerClass);

@@ -25,7 +25,7 @@ class Cache
 
     public function __construct()
     {
-        $this->controllerCacheService = new ControllerCacheService();
+        $this->controllerCacheService = ControllerCacheService::getInstance();
     }
 
     /**
