@@ -7,6 +7,16 @@ namespace CorianderCore\Core\Router;
  */
 class ApiControllerHandler
 {
+    /**
+     * Dispatch an API request to the appropriate controller action.
+     *
+     * Parses the path to determine the controller and action method based on
+     * REST conventions and the HTTP verb.
+     *
+     * @param string $path   The request path including the leading 'api/'.
+     * @param string $method The HTTP method (GET, POST, etc.).
+     * @return bool True if the request was handled, otherwise false.
+     */
     public function handle(string $path, string $method): bool
     {
         $segments = explode('/', $path);
@@ -39,6 +49,12 @@ class ApiControllerHandler
         return true;
     }
 
+    /**
+     * Convert a URI segment into a PascalCase controller name.
+     *
+     * @param string $name The raw controller segment.
+     * @return string PascalCase formatted controller name.
+     */
     private function formatControllerName(string $name): string
     {
         return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $name)));

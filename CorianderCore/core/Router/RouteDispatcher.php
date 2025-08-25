@@ -15,6 +15,16 @@ class RouteDispatcher
         private NotFoundHandler $notFoundHandler
     ) {}
 
+    /**
+     * Dispatch a request to the appropriate handler.
+     *
+     * Resolves custom routes first, then API controllers, and finally
+     * web controllers or view rendering.
+     *
+     * @param string $uri    The incoming request URI.
+     * @param string $method The HTTP method (GET, POST, etc.).
+     * @return void
+     */
     public function dispatch(string $uri, string $method): void
     {
         $path = trim(parse_url($uri, PHP_URL_PATH), '/');
