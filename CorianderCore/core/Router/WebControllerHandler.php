@@ -3,6 +3,7 @@
 namespace CorianderCore\Core\Router;
 
 use CorianderCore\Core\Router\NameFormatter;
+use CorianderCore\Core\Router\Services\ControllerCacheService;
 
 /**
  * Handles dispatching to web controllers by resolving controller class and action from a URL path.
@@ -17,11 +18,14 @@ use CorianderCore\Core\Router\NameFormatter;
 class WebControllerHandler
 {
     /**
-     * Cache for class existence checks to avoid redundant filesystem and reflection calls.
-     *
-     * @var array<string, bool>
+     * Service used to resolve controller class paths from a cached PHP file.
      */
-    private array $controllerExistenceCache = [];
+    private ControllerCacheService $cacheService;
+
+    public function __construct(?ControllerCacheService $cacheService = null)
+    {
+        $this->cacheService = $cacheService ?? new ControllerCacheService();
+    }
 
     /**
      * Handle the request and attempt to dispatch to a web controller.
@@ -97,7 +101,7 @@ class WebControllerHandler
     }
 
     /**
-     * Checks and caches whether a given controller class exists and includes its file if needed.
+     * Checks whether a given controller class exists and includes its file if needed.
      *
      * @param string $controllerClass The fully qualified controller class name.
      * @param string $controllerFile The file path of the controller.
@@ -105,19 +109,23 @@ class WebControllerHandler
      */
     private function controllerExists(string $controllerClass, string $controllerFile): bool
     {
-        if (isset($this->controllerExistenceCache[$controllerClass])) {
-            return $this->controllerExistenceCache[$controllerClass];
+        if ($this->cacheService->has($controllerClass)) {
+            $cachedFile = $this->cacheService->get($controllerClass);
+            if (!class_exists($controllerClass) && $cachedFile && file_exists($cachedFile)) {
+                require_once $cachedFile;
+            }
+            return class_exists($controllerClass);
         }
 
         if (class_exists($controllerClass)) {
-            return $this->controllerExistenceCache[$controllerClass] = true;
+            return true;
         }
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
-            return $this->controllerExistenceCache[$controllerClass] = class_exists($controllerClass);
+            return class_exists($controllerClass);
         }
 
-        return $this->controllerExistenceCache[$controllerClass] = false;
+        return false;
     }
 }
