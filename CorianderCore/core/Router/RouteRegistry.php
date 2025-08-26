@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Router;
 
 use Closure;
+use Psr\Http\Server\MiddlewareInterface;
 
 /**
  * Manages custom routes and 404 callback.
@@ -16,7 +17,7 @@ use Closure;
 class RouteRegistry
 {
     /**
-     * @var array<int, array{0:string,1:string,2:callable}>
+     * @var array<int, array{0:string,1:string,2:array<int,string>,3:callable,4:MiddlewareInterface[]}>
      */
     private array $routes = [];
 
@@ -28,20 +29,22 @@ class RouteRegistry
     /**
      * Register a new route and its handler.
      *
-     * @param string   $method  HTTP method for the route.
-     * @param string   $pattern Regex pattern for the route.
-     * @param callable $callback Callback executed for the route.
+     * @param string                $method     HTTP method for the route.
+     * @param string                $pattern    Regex pattern for the route.
+     * @param array<int,string>     $parameters Ordered parameter names.
+     * @param callable              $callback   Callback executed for the route.
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
      * @return void
      */
-    public function add(string $method, string $pattern, callable $callback): void
+    public function add(string $method, string $pattern, array $parameters, callable $callback, array $middleware): void
     {
-        $this->routes[] = [$method, $pattern, $callback];
+        $this->routes[] = [$method, $pattern, $parameters, $callback, $middleware];
     }
 
     /**
      * Retrieve all registered routes.
      *
-     * @return array<int, array{0:string,1:string,2:callable}>
+     * @return array<int, array{0:string,1:string,2:array<int,string>,3:callable,4:MiddlewareInterface[]}>
      */
     public function getRoutes(): array
     {

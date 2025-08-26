@@ -93,7 +93,10 @@ class RouterIntegrationTest extends TestCase
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testComplexRouteParameterDispatch(): void
     {
-        $this->router->add('GET', '/blog/{year}/{month}/{slug}', function (string $year, string $month, string $slug) {
+        $this->router->add('GET', '/blog/{year}/{month}/{slug}', function (ServerRequest $request) {
+            $year = $request->getAttribute('year');
+            $month = $request->getAttribute('month');
+            $slug = $request->getAttribute('slug');
             return new Response(200, [], "$year-$month-$slug");
         });
 
@@ -110,7 +113,7 @@ class RouterIntegrationTest extends TestCase
     public function testCsrfMiddlewareRejectsInvalidToken(): void
     {
         $this->router->addMiddleware(new CsrfMiddleware());
-        $this->router->add('POST', '/submit', fn () => new Response(200, [], 'OK'));
+        $this->router->add('POST', '/submit', fn (ServerRequest $r) => new Response(200, [], 'OK'));
 
         $request = (new ServerRequest('POST', '/submit'))
             ->withParsedBody(['csrf_token' => 'bad']);
@@ -127,7 +130,7 @@ class RouterIntegrationTest extends TestCase
     {
         $token = Csrf::token();
         $this->router->addMiddleware(new CsrfMiddleware());
-        $this->router->add('POST', '/submit', fn () => new Response(200, [], 'OK'));
+        $this->router->add('POST', '/submit', fn (ServerRequest $r) => new Response(200, [], 'OK'));
 
         $request = (new ServerRequest('POST', '/submit'))
             ->withParsedBody(['csrf_token' => $token]);
@@ -135,5 +138,48 @@ class RouterIntegrationTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('OK', (string) $response->getBody());
+    }
+
+    /**
+     * Ensure route groups apply prefixes and middleware.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testRouteGroupPrefixAndMiddleware(): void
+    {
+        $mw = new class implements \Psr\Http\Server\MiddlewareInterface {
+            public function process(\Psr\Http\Message\ServerRequestInterface $request, \Psr\Http\Server\RequestHandlerInterface $handler): \Psr\Http\Message\ResponseInterface {
+                return $handler->handle($request->withAttribute('mw', 'yes'));
+            }
+        };
+
+        $this->router->group('/admin', [$mw], function (Router $r) {
+            $r->add('GET', '/dashboard', function (ServerRequest $req) {
+                return new Response(200, [], $req->getAttribute('mw'));
+            });
+        });
+
+        $response = $this->router->dispatch(new ServerRequest('GET', '/admin/dashboard'));
+
+        $this->assertSame('yes', (string) $response->getBody());
+    }
+
+    /**
+     * Ensure middleware can be registered per route.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testRouteSpecificMiddleware(): void
+    {
+        $mw = new class implements \Psr\Http\Server\MiddlewareInterface {
+            public function process(\Psr\Http\Message\ServerRequestInterface $request, \Psr\Http\Server\RequestHandlerInterface $handler): \Psr\Http\Message\ResponseInterface {
+                return $handler->handle($request->withAttribute('mw', 'route'));
+            }
+        };
+
+        $this->router->add('GET', '/test', function (ServerRequest $req) {
+            return new Response(200, [], $req->getAttribute('mw'));
+        }, [$mw]);
+
+        $response = $this->router->dispatch(new ServerRequest('GET', '/test'));
+        $this->assertSame('route', (string) $response->getBody());
     }
 }

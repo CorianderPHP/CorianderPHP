@@ -7,9 +7,11 @@ use CorianderCore\Core\Router\Handlers\ApiControllerHandler;
 use CorianderCore\Core\Router\Handlers\NotFoundHandler;
 use CorianderCore\Core\Router\Handlers\WebControllerHandler;
 use CorianderCore\Core\Router\ViewRenderer;
+use CorianderCore\Core\Router\Middleware\MiddlewareQueue;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Determines whether to dispatch a Web, API, or custom route.
@@ -44,16 +46,31 @@ class RouteDispatcher
 
         $method = strtoupper($request->getMethod());
 
-        foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $callback]) {
+        foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $params, $callback, $middleware]) {
             if ($routeMethod === $method && preg_match($pattern, $path, $matches)) {
                 array_shift($matches);
-                ob_start();
-                $result = call_user_func_array($callback, $matches);
-                $content = ob_get_clean();
-                if ($result instanceof ResponseInterface) {
-                    return $result;
+                $requestWithAttributes = $request;
+                foreach ($params as $i => $name) {
+                    $requestWithAttributes = $requestWithAttributes->withAttribute($name, $matches[$i] ?? null);
                 }
-                return new Response(200, [], $content);
+
+                $handler = new class($callback) implements RequestHandlerInterface {
+                    public function __construct(private $callback) {}
+
+                    public function handle(ServerRequestInterface $request): ResponseInterface
+                    {
+                        ob_start();
+                        $result = call_user_func($this->callback, $request);
+                        $content = ob_get_clean();
+                        if ($result instanceof ResponseInterface) {
+                            return $result;
+                        }
+                        return new Response(200, [], $content);
+                    }
+                };
+
+                $queue = new MiddlewareQueue($middleware, $handler);
+                return $queue->handle($requestWithAttributes);
             }
         }
 
