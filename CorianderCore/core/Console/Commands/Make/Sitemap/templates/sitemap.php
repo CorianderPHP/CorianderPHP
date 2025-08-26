@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Set the path to the sitemap.xml file
 $sitemapPath = PROJECT_ROOT . '/public/sitemap.xml';
 

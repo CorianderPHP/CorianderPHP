@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Database;
 
@@ -16,14 +17,14 @@ class MakeDatabase
     /**
      * @var PdoDriverService
      */
-    protected $pdoDriverService;
+    protected PdoDriverService $pdoDriverService;
 
     /**
      * Constructor for MakeDatabase.
      *
      * @param PdoDriverService|null $pdoDriverService
      */
-    public function __construct(PdoDriverService $pdoDriverService = null)
+    public function __construct(?PdoDriverService $pdoDriverService = null)
     {
         // If no PdoDriverService is passed, instantiate a default one
         $this->pdoDriverService = $pdoDriverService ?? new PdoDriverService();
@@ -33,7 +34,7 @@ class MakeDatabase
      * Executes the database configuration process based on user input.
      * Checks for the necessary PDO drivers before prompting the user to choose between MySQL and SQLite.
      */
-    public function execute()
+    public function execute(): void
     {
         // Check available PDO drivers and warn if MySQL driver is missing
         $availableDrivers = $this->pdoDriverService->getAvailableDrivers();
@@ -65,7 +66,7 @@ class MakeDatabase
             // SQLite option is always available
             ConsoleOutput::print("&l2&r&7. [&2✓&7] SQLite\n");
 
-            $dbChoice = trim(fgets(STDIN));
+            $dbChoice = trim((string)fgets(STDIN));
             ConsoleOutput::print("\nYou've selected: " . $dbChoice);
             ConsoleOutput::hr();
 

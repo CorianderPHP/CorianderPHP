@@ -1,6 +1,14 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * RouteRegistry stores application routes and the fallback handler for
+ * unmatched requests, acting as a lightweight router configuration store.
+ */
 
 namespace CorianderCore\Core\Router;
+
+use Closure;
 
 /**
  * Manages custom routes and 404 callback.
@@ -13,9 +21,9 @@ class RouteRegistry
     private array $routes = [];
 
     /**
-     * @var callable|null
+     * @var Closure|null
      */
-    private $notFoundCallback = null;
+    private ?Closure $notFoundCallback = null;
 
     /**
      * Register a new route and its handler.
@@ -48,7 +56,7 @@ class RouteRegistry
      */
     public function setNotFound(callable $callback): void
     {
-        $this->notFoundCallback = $callback;
+        $this->notFoundCallback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
     }
 
     /**

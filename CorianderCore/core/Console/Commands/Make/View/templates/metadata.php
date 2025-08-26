@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Set the language attribute for the <html> tag on the {{viewName}} page.
 $lang = isset($lang) ? $lang : 'en';
 

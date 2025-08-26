@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * ImageHandler converts images to WebP and builds responsive <picture> tags
+ * for efficient image delivery.
+ */
 
 namespace CorianderCore\Core\Image;
 
@@ -16,10 +22,15 @@ class ImageHandler
 {
     use StaticLoggerTrait;
 
-    // Path to the image directory
-    private static $imageDir = PROJECT_ROOT;
-    // Subdirectory for storing WebP images
-    private static $webpDir = 'webp/';
+    /**
+     * Path to the base image directory.
+     */
+    private static string $imageDir = PROJECT_ROOT;
+
+    /**
+     * Subdirectory for storing WebP images.
+     */
+    private static string $webpDir = 'webp/';
 
     /**
      * Renders a picture tag with WebP and original format support.
@@ -70,7 +81,7 @@ class ImageHandler
      * @param int $quality The quality for the WebP conversion.
      * @return string|false The path to the WebP image if successful, or false on failure.
      */
-    public static function convertToWebP(string $imagePath, int $quality = 80)
+    public static function convertToWebP(string $imagePath, int $quality = 80): string|false
     {
         $fullImagePath = self::$imageDir . $imagePath;
         

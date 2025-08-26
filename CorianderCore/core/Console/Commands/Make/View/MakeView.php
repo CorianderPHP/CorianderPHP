@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\View;
 
@@ -14,14 +15,14 @@ use CorianderCore\Core\Utils\DirectoryHandler;
 class MakeView
 {
     /**
-     * @var string $templatesPath The path to the directory containing view templates.
+     * @var string The path to the directory containing view templates.
      */
-    protected $templatesPath;
+    protected string $templatesPath;
 
     /**
-     * @var string $viewPath The path where the view will be created.
+     * @var string The path where the view will be created.
      */
-    protected $viewPath;
+    protected string $viewPath;
 
     /**
      * Constructor for the MakeView class.
@@ -121,7 +122,7 @@ class MakeView
      * @param string $destinationFile The full path to the destination file (e.g., the new view's index.php).
      * @param string $viewName The name of the view (used to replace placeholders in the template).
      */
-    protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $viewName)
+    protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $viewName): void
     {
         try {
             // Define the full path to the template file.

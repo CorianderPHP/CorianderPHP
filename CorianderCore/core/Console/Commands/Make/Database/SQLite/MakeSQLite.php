@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Database\SQLite;
 
@@ -12,17 +13,17 @@ class MakeSQLite
     /**
      * @var string Path to the SQLite templates.
      */
-    protected $templatesPath;
+    protected string $templatesPath;
 
     /**
      * @var string Path to the configuration folder where the SQLite configuration will be saved.
      */
-    protected $configPath;
+    protected string $configPath;
 
     /**
      * @var string Path to the database folder where SQLite database files are stored.
      */
-    protected $databaseFolder;
+    protected string $databaseFolder;
 
     /**
      * Constructor to initialize paths for templates, configuration files, and database folder.
@@ -46,7 +47,7 @@ class MakeSQLite
      *
      * @param string|null $dbName Optional database name. If null, prompts the user for input.
      */
-    public function execute(string $dbName = null)
+    public function execute(?string $dbName = null): void
     {
         // Ask the user for the SQLite database name if not provided
         if (empty($dbName)) {
@@ -69,7 +70,7 @@ class MakeSQLite
      *
      * @param string $dbName The name of the SQLite database.
      */
-    protected function generateConfig($dbName)
+    protected function generateConfig(string $dbName): void
     {
         // Load the SQLite configuration template
         $templatePath = $this->templatesPath . '/database.php';
@@ -87,7 +88,7 @@ class MakeSQLite
      *
      * @param string $dbName The name of the SQLite database.
      */
-    protected function createDatabaseFiles($dbName)
+    protected function createDatabaseFiles(string $dbName): void
     {
         // Ensure the database folder exists
         if (!is_dir($this->databaseFolder)) {
@@ -124,7 +125,7 @@ class MakeSQLite
      *
      * @param string $dbName The name of the SQLite database.
      */
-    protected function createGitignore($dbName)
+    protected function createGitignore(string $dbName): void
     {
         $gitignoreTemplate = file_get_contents($this->templatesPath . '/.gitignore');
         $gitignoreContent = str_replace('{{DB_NAME}}', $dbName, $gitignoreTemplate);
@@ -139,7 +140,7 @@ class MakeSQLite
      *
      * @param string $content The content of the configuration file.
      */
-    protected function saveConfig(string $content)
+    protected function saveConfig(string $content): void
     {
         // Ensure the configuration folder exists
         if (!is_dir($this->configPath)) {

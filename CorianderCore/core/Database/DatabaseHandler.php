@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * DatabaseHandler manages a single PDO connection shared across the
+ * application, supporting MySQL and SQLite with optional auto-closing.
+ */
 
 namespace CorianderCore\Core\Database;
 
@@ -17,7 +23,7 @@ class DatabaseHandler
     /**
      * @var DatabaseHandler|null Singleton instance of the DatabaseHandler class.
      */
-    private static $instance = null;
+    private static ?DatabaseHandler $instance = null;
 
     /**
      * @var LoggerInterface Logger used for reporting connection issues.
@@ -27,12 +33,12 @@ class DatabaseHandler
     /**
      * @var PDO|null The PDO instance used for database connection, or null if unsupported.
      */
-    private $pdo = null;
+    private ?PDO $pdo = null;
 
     /**
      * @var bool Auto-close flag to determine if the connection should close automatically.
      */
-    private static $autoCloseConnection = true;
+    private static bool $autoCloseConnection = true;
 
     /**
      * Private constructor to prevent direct instantiation.
@@ -78,7 +84,7 @@ class DatabaseHandler
      *
      * @return DatabaseHandler The Singleton instance of the DatabaseHandler.
      */
-    public static function getInstance(?LoggerInterface $logger = null)
+    public static function getInstance(?LoggerInterface $logger = null): DatabaseHandler
     {
         if (self::$instance === null) {
             $logger = $logger ?? new Logger();
@@ -92,17 +98,18 @@ class DatabaseHandler
      * 
      * @return PDO|null The PDO instance for interacting with the database, or null if no connection is available.
      */
-    public function getPDO()
+    public function getPDO(): ?PDO
     {
         return $this->pdo;
     }
 
     /**
      * Set whether the connection should automatically close after each query.
-     * 
+     *
      * @param bool $autoClose Whether to automatically close the connection after each query.
+     * @return void
      */
-    public static function setAutoCloseConnection($autoClose)
+    public static function setAutoCloseConnection(bool $autoClose): void
     {
         self::$autoCloseConnection = $autoClose;
     }
@@ -110,10 +117,12 @@ class DatabaseHandler
     /**
      * Closes the database connection and resets the Singleton instance.
      * If auto-close is disabled, it simply returns without closing the connection.
+     *
+     * @return void
      */
-    public function close()
+    public function close(): void
     {
-        if(!self::$autoCloseConnection) {
+        if (!self::$autoCloseConnection) {
             return;
         }
         $this->pdo = null;

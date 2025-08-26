@@ -1,4 +1,9 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * BenchmarkRouter simulates routing requests to measure dispatcher performance.
+ */
 
 namespace CorianderCore\Core\Console\Commands\Benchmark;
 
@@ -18,8 +23,9 @@ class BenchmarkRouter
      * Executes the benchmark process for the router.
      *
      * @param array $args The arguments passed to the benchmark:router command (e.g., route name, duration).
+     * @return void
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         // Default route to 'home' if not specified
         $route = $args[0] ?? 'home';

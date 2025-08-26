@@ -1,8 +1,19 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * Make command coordinates resource-generation subcommands such as
+ * views, controllers, databases and sitemaps by delegating to their
+ * respective handlers.
+ */
 
 namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\Commands\Make\View\MakeView;
+use CorianderCore\Core\Console\Commands\Make\Controller\MakeController;
+use CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase;
+use CorianderCore\Core\Console\Commands\Make\Sitemap\MakeSitemap;
 
 /**
  * Class responsible for handling make-related commands such as 'make:view', 'make:controller', and 'make:database'.
@@ -15,9 +26,9 @@ class Make
      * List of valid subcommands that the 'make' command supports.
      * Each subcommand corresponds to a specific resource creation action (e.g., view, controller, database).
      *
-     * @var array
+     * @var string[]
      */
-    protected $validSubcommands = [
+    protected array $validSubcommands = [
         'view',
         'controller',
         'database',
@@ -27,12 +38,24 @@ class Make
     /**
      * Instances of the subcommand handlers (e.g., MakeView, MakeController, MakeDatabase).
      *
-     * @var object|null
+     * @var MakeView
      */
-    protected $makeViewInstance;
-    protected $makeControllerInstance;
-    protected $makeDatabaseInstance;
-    protected $makeSitemapInstance;
+    protected MakeView $makeViewInstance;
+
+    /**
+     * @var MakeController
+     */
+    protected MakeController $makeControllerInstance;
+
+    /**
+     * @var MakeDatabase
+     */
+    protected MakeDatabase $makeDatabaseInstance;
+
+    /**
+     * @var MakeSitemap
+     */
+    protected MakeSitemap $makeSitemapInstance;
 
     /**
      * Constructor for the Make class.
@@ -60,7 +83,7 @@ class Make
      *
      * @param array $args The arguments passed to the make command, including the subcommand and resource name.
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         // Ensure the command has at least one argument (the subcommand)
         if (empty($args) || !isset($args[0])) {
@@ -115,7 +138,7 @@ class Make
      *
      * @param array $args The arguments for creating the view (e.g., the name of the view).
      */
-    protected function makeView(array $args)
+    protected function makeView(array $args): void
     {
         // Ensure a view name is provided
         if (empty($args)) {
@@ -135,7 +158,7 @@ class Make
      *
      * @param array $args The arguments for creating the controller (e.g., the name of the controller).
      */
-    protected function makeController(array $args)
+    protected function makeController(array $args): void
     {
         // Ensure a controller name is provided
         if (empty($args)) {
@@ -154,7 +177,7 @@ class Make
      *
      * @param array $args The arguments for creating or configuring the database.
      */
-    protected function makeDatabase(array $args)
+    protected function makeDatabase(array $args): void
     {
         // Delegate the database creation task to the MakeDatabase class
         $this->makeDatabaseInstance->execute($args);
@@ -167,7 +190,7 @@ class Make
      *
      * @param array $args The arguments for creating or updating the sitemap.
      */
-    protected function makeSitemap(array $args)
+    protected function makeSitemap(array $args): void
     {
         // Delegate the sitemap creation task to the MakeSitemap class
         $this->makeSitemapInstance->execute($args);
@@ -176,7 +199,7 @@ class Make
     /**
      * Lists all available make: commands.
      */
-    protected function listCommands()
+    protected function listCommands(): void
     {
         ConsoleOutput::print("Available make commands:");
 

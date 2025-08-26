@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * BenchmarkHandler captures execution metrics to evaluate performance of
+ * framework components such as memory, CPU and initialization time.
+ */
 
 namespace CorianderCore\Core\Benchmark;
 
@@ -8,22 +14,56 @@ namespace CorianderCore\Core\Benchmark;
  */
 class BenchmarkHandler
 {
-    protected $startTime;
-    protected $endTime;
-    protected $initialMemory;
-    protected $cpuStart;
-    protected $cpuEnd;
+    /**
+     * @var float Start time of the benchmark.
+     */
+    protected float $startTime = 0.0;
 
-    protected $lowestMemoryUsage;
-    protected $highestMemoryUsage;
-    protected $lowestCpuUsage;
-    protected $highestCpuUsage;
+    /**
+     * @var float End time of the benchmark.
+     */
+    protected float $endTime = 0.0;
+
+    /**
+     * @var int Initial memory usage in bytes.
+     */
+    protected int $initialMemory = 0;
+
+    /**
+     * @var float CPU usage at start.
+     */
+    protected float $cpuStart = 0.0;
+
+    /**
+     * @var float CPU usage at end.
+     */
+    protected float $cpuEnd = 0.0;
+
+    /**
+     * @var int Lowest memory usage recorded.
+     */
+    protected int $lowestMemoryUsage = 0;
+
+    /**
+     * @var int Highest memory usage recorded.
+     */
+    protected int $highestMemoryUsage = 0;
+
+    /**
+     * @var float Lowest CPU usage recorded.
+     */
+    protected float $lowestCpuUsage = 0.0;
+
+    /**
+     * @var float Highest CPU usage recorded.
+     */
+    protected float $highestCpuUsage = 0.0;
 
     /**
      * Initializes the BenchmarkHandler by recording the start time, memory usage, and CPU usage.
      * Also initializes the peak and low values for memory and CPU usage.
      */
-    public function start()
+    public function start(): void
     {
         $this->startTime = microtime(true);
         $this->initialMemory = memory_get_usage();
@@ -41,7 +81,7 @@ class BenchmarkHandler
      * Stops the benchmark by recording the end time and CPU usage.
      * Also updates the peak and low values for memory and CPU usage.
      */
-    public function stop()
+    public function stop(): void
     {
         $this->endTime = microtime(true);
         $this->cpuEnd = $this->getCpuUsage();
@@ -58,7 +98,8 @@ class BenchmarkHandler
      */
     public function getInitializationTime(): float
     {
-        return $this->endTime - $this->startTime;
+        $end = $this->endTime ?: microtime(true);
+        return $end - $this->startTime;
     }
 
     /**
@@ -180,7 +221,7 @@ class BenchmarkHandler
     /**
      * Tracks the lowest and highest memory usage during the benchmarking period.
      */
-    public function updateMemoryPeak()
+    public function updateMemoryPeak(): void
     {
         $currentMemoryUsage = memory_get_usage();
 
@@ -196,7 +237,7 @@ class BenchmarkHandler
     /**
      * Tracks the lowest and highest CPU usage during the benchmarking period.
      */
-    public function updateCpuPeak()
+    public function updateCpuPeak(): void
     {
         $currentCpuUsage = $this->getCpuUsage();
 

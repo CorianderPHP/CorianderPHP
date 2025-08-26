@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Database\MySQL;
 
@@ -15,12 +16,12 @@ class MakeMySQL
     /**
      * @var string Path to the MySQL templates.
      */
-    protected $templatesPath;
+    protected string $templatesPath;
 
     /**
      * @var string Path to the config folder where the configuration file will be generated.
      */
-    protected $configPath;
+    protected string $configPath;
 
     /**
      * Constructor to initialize paths for templates and configuration files.
@@ -38,23 +39,23 @@ class MakeMySQL
      * Executes the process of creating a MySQL configuration.
      * Prompts the user for MySQL connection details and generates a config file.
      */
-    public function execute()
+    public function execute(): void
     {
         // Ask the user for MySQL connection details
         ConsoleOutput::print("Enter MySQL host:\n");
-        $dbHost = trim(fgets(STDIN));
+        $dbHost = trim((string)fgets(STDIN));
 
         ConsoleOutput::hr();
         ConsoleOutput::print("Enter MySQL database name:\n");
-        $dbName = trim(fgets(STDIN));
+        $dbName = trim((string)fgets(STDIN));
 
         ConsoleOutput::hr();
         ConsoleOutput::print("Enter MySQL user:\n");
-        $dbUser = trim(fgets(STDIN));
+        $dbUser = trim((string)fgets(STDIN));
 
         ConsoleOutput::hr();
         ConsoleOutput::print("Enter MySQL password:\n");
-        $dbPassword = trim(fgets(STDIN));
+        $dbPassword = trim((string)fgets(STDIN));
 
         // Test the MySQL connection
         try {
@@ -67,7 +68,7 @@ class MakeMySQL
             ConsoleOutput::hr();
             ConsoleOutput::print("&4[Error]&7 Connection failed: " . $e->getMessage());
             ConsoleOutput::print("Do you want to proceed anyway? (y/n):\n");
-            $confirmation = strtolower(trim(fgets(STDIN)));
+            $confirmation = strtolower(trim((string)fgets(STDIN)));
             if ($confirmation !== 'y') {
                 ConsoleOutput::print("&e[Warning]&7 Database configuration file not created.");
                 return;
@@ -86,7 +87,7 @@ class MakeMySQL
      * @param string $dbUser The MySQL user.
      * @param string $dbPassword The MySQL password.
      */
-    protected function generateConfig($dbHost, $dbName, $dbUser, $dbPassword)
+    protected function generateConfig(string $dbHost, string $dbName, string $dbUser, string $dbPassword): void
     {
         // Load the MySQL template file
         $templatePath = $this->templatesPath . '/database.php';
@@ -108,7 +109,7 @@ class MakeMySQL
      *
      * @param string $content The content of the configuration file.
      */
-    protected function saveConfig(string $content)
+    protected function saveConfig(string $content): void
     {
         // Ensure the config directory exists
         if (!is_dir($this->configPath)) {

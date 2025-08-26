@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * Template for generating API controllers.
