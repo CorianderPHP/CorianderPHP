@@ -1,8 +1,15 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * Benchmark command delegates subcommands to specific handlers allowing
+ * measurement of various framework components such as the router.
+ */
 
 namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\Commands\Benchmark\BenchmarkRouter;
 
 /**
  * Benchmark is responsible for handling benchmark-related commands such as 'benchmark:router'.
@@ -15,24 +22,24 @@ class Benchmark
      * List of valid subcommands that the 'benchmark' command supports.
      * Each subcommand corresponds to a specific resource benchmark action (e.g., router).
      *
-     * @var array
+     * @var string[]
      */
-    protected $validSubcommands = [
+    protected array $validSubcommands = [
         'router'
     ];
 
     /**
      * Instances of the subcommand handlers (e.g., BenchmarkRouter).
      *
-     * @var object|null
+     * @var BenchmarkRouter
      */
-    protected $benchmarkRouterInstance;
+    protected BenchmarkRouter $benchmarkRouterInstance;
     /**
      * Constructor for the Benchmark class.
      */
     public function __construct()
     {
-        $this->benchmarkRouterInstance = new \CorianderCore\Core\Console\Commands\Benchmark\BenchmarkRouter();
+        $this->benchmarkRouterInstance = new BenchmarkRouter();
     }
 
     /**
@@ -46,8 +53,9 @@ class Benchmark
      * - 'php coriander benchmark:router' will benchmark the router performance.
      *
      * @param array $args The arguments passed to the benchmark command, including the subcommand and resource name.
+     * @return void
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         // Ensure the command has at least one argument (the subcommand)
         if (empty($args) || !isset($args[0])) {
@@ -88,8 +96,9 @@ class Benchmark
      * This method initiates the router benchmarking process.
      *
      * @param array $args The arguments for benchmarking the router.
+     * @return void
      */
-    protected function benchmarkRouter(array $args)
+    protected function benchmarkRouter(array $args): void
     {
         // Delegate the router benchmarking task to the BenchmarkRouter class
         $this->benchmarkRouterInstance->execute($args);
@@ -97,8 +106,10 @@ class Benchmark
 
     /**
      * Lists all available benchmark: commands.
+     *
+     * @return void
      */
-    protected function listCommands()
+    protected function listCommands(): void
     {
         ConsoleOutput::print("Available benchmark commands:");
 

@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * ConsoleOutput provides formatted CLI printing using Minecraft-like
+ * color codes to enhance readability of command-line interactions.
+ */
 
 namespace CorianderCore\Core\Console;
 
@@ -37,8 +43,9 @@ class ConsoleOutput
      *  - &r: Reset formatting
      * 
      * @param string $message The message with color/style codes.
+     * @return void
      */
-    public static function print($message)
+    public static function print(string $message): void
     {
         $message = '&7' . $message;
 
@@ -55,8 +62,10 @@ class ConsoleOutput
 
     /**
      * Prints a horizontal rule (line of dashes).
+     *
+     * @return void
      */
-    public static function hr()
+    public static function hr(): void
     {
         self::print("&8-----------------------------------------");
     }

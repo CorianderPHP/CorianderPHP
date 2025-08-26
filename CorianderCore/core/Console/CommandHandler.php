@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * CommandHandler orchestrates CLI command execution by mapping command names
+ * to handler classes and delegating argument processing to each command.
+ */
 
 namespace CorianderCore\Core\Console;
 
@@ -13,9 +19,9 @@ class CommandHandler
     /**
      * Available commands and their corresponding handler classes.
      *
-     * @var array
+     * @var array<string, class-string>
      */
-    protected $commands = [
+    protected array $commands = [
         'hello' => \CorianderCore\Core\Console\Commands\Hello::class,
         'nodejs' => \CorianderCore\Core\Console\Commands\NodeJS::class,
         'make' => \CorianderCore\Core\Console\Commands\Make::class,
@@ -29,8 +35,9 @@ class CommandHandler
      * @param string $command The command name to execute
      * @param array $args The arguments passed to the command
      * @throws \Exception If the command does not exist or the command class lacks an 'execute' method.
+     * @return void
      */
-    public function handle(string $command, array $args)
+    public function handle(string $command, array $args): void
     {
         ConsoleOutput::hr();
         // Check if the command contains a colon (e.g., make:view)
@@ -82,8 +89,10 @@ class CommandHandler
 
     /**
      * Lists all available commands, including 'help'.
+     *
+     * @return void
      */
-    protected function listCommands()
+    protected function listCommands(): void
     {
         ConsoleOutput::print("Available commands:");
 

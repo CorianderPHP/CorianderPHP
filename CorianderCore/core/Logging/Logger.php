@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Logging;
 
@@ -67,7 +68,7 @@ class Logger extends AbstractLogger
      *
      * @return void
      */
-    public function log($level, $message, array $context = []): void
+    public function log(string $level, string|Stringable $message, array $context = []): void
     {
         if (!isset($this->levels[$level])) {
             return;

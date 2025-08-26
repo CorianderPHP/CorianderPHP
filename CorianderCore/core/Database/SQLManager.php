@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * SQLManager offers static CRUD helpers utilising the shared DatabaseHandler
+ * connection to minimise boilerplate across the application.
+ */
 
 namespace CorianderCore\Core\Database;
 
@@ -25,10 +31,10 @@ class SQLManager
      *
      * @param string $columns The columns to select in the SQL query.
      * @param string $from The name of the table from which to retrieve data.
-     * @param array $params Named parameters to bind to the SQL query (optional).
-     * @return array The retrieved data from the table as an associative array.
+     * @param array  $params Named parameters to bind to the SQL query (optional).
+     * @return array|false The retrieved data from the table as an associative array or false on failure.
      */
-    public static function findAll($columns, $from, $params = array())
+    public static function findAll(string $columns, string $from, array $params = []): array|false
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -50,10 +56,10 @@ class SQLManager
      * @param string $columns The columns to select in the SQL query.
      * @param string $from The name of the table from which to retrieve data.
      * @param string $where The condition to use for selecting the row.
-     * @param array $params Named parameters to bind to the SQL query (optional).
-     * @return array The retrieved row data as an associative array.
+     * @param array  $params Named parameters to bind to the SQL query (optional).
+     * @return array|false The retrieved row data as an associative array or false on failure.
      */
-    public static function findBy($columns, $from, $where, $params = array())
+    public static function findBy(string $columns, string $from, string $where, array $params = []): array|false
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -72,13 +78,13 @@ class SQLManager
     /**
      * Updates data in a table in the database based on a given condition.
      *
-     * @param string $table The name of the table to update.
-     * @param string $set The columns and values to update in the table.
-     * @param string $where The condition to use for selecting the rows to update.
-     * @param array $params Named parameters to bind to the SQL query (optional).
+     * @param string $table  The name of the table to update.
+     * @param string $set    The columns and values to update in the table.
+     * @param string $where  The condition to use for selecting the rows to update.
+     * @param array  $params Named parameters to bind to the SQL query (optional).
      * @return bool True if the update was successful, false otherwise.
      */
-    public static function update($table, $set, $where, $params = array())
+    public static function update(string $table, string $set, string $where, array $params = []): bool
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -96,14 +102,14 @@ class SQLManager
     /**
      * Inserts a new row into a table in the database.
      * 
-     * @param string $table The name of the table into which to insert the row.
-     * @param string $into The columns into which to insert values.
+     * @param string $table  The name of the table into which to insert the row.
+     * @param string $into   The columns into which to insert values.
      * @param string $values The values to insert.
-     * @param array $params Parameters to bind to the prepared statement (optional).
-     * 
+     * @param array  $params Parameters to bind to the prepared statement (optional).
+     *
      * @return bool True if the insertion was successful, false otherwise.
      */
-    public static function insertInto($table, $into, $values, $params = array())
+    public static function insertInto(string $table, string $into, string $values, array $params = []): bool
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -121,13 +127,13 @@ class SQLManager
     /**
      * Inserts a new row into a table and returns the last inserted ID.
      * 
-     * @param string $table The name of the table to insert into.
-     * @param string $into The columns to insert into.
+     * @param string $table  The name of the table to insert into.
+     * @param string $into   The columns to insert into.
      * @param string $values The values to insert.
-     * @param array $params The parameters to bind to the prepared statement.
-     * @return mixed The last inserted ID on success, false on failure.
+     * @param array  $params The parameters to bind to the prepared statement.
+     * @return string|false The last inserted ID on success, false on failure.
      */
-    public static function insertIntoAndGetId($table, $into, $values, $params = array())
+    public static function insertIntoAndGetId(string $table, string $into, string $values, array $params = []): string|false
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -146,12 +152,12 @@ class SQLManager
     /**
      * Deletes rows from a table in the database based on a given condition.
      *
-     * @param string $table The name of the table from which to delete rows.
-     * @param string $where The condition to use for selecting the rows to delete.
-     * @param array $params Named parameters to bind to the SQL query (optional).
+     * @param string $table  The name of the table from which to delete rows.
+     * @param string $where  The condition to use for selecting the rows to delete.
+     * @param array  $params Named parameters to bind to the SQL query (optional).
      * @return bool True if the deletion was successful, false otherwise.
      */
-    public static function deleteFrom($table, $where = '', $params = array())
+    public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
         try {
             $db = DatabaseHandler::getInstance(self::getLogger());
@@ -174,10 +180,10 @@ class SQLManager
      * Executes a given SQL query and retrieves a row of data from the database table.
      *
      * @param string $sqlScript The SQL query to execute.
-     * @param array $params Named parameters to bind to the SQL query (optional).
-     * @return array The retrieved row data as an associative array.
+     * @param array  $params    Named parameters to bind to the SQL query (optional).
+     * @return array|false The retrieved row data as an associative array or false on failure.
      */
-    public static function sqlScript($sqlScript, $params = array())
+    public static function sqlScript(string $sqlScript, array $params = []): array|false
     {
         $db = DatabaseHandler::getInstance(self::getLogger());
         $pdo = $db->getPDO();

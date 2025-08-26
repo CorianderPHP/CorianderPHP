@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+/*
+ * NodeJS command bridges to npm allowing execution of Node scripts from the
+ * CorianderPHP console.
+ */
 
 namespace CorianderCore\Core\Console\Commands;
 
@@ -14,8 +20,9 @@ class NodeJS
      * It captures and outputs the real-time stdout and stderr from the npm process.
      *
      * @param array $args The arguments passed to the 'nodejs' command (e.g., 'install', 'run build').
+     * @return void
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         // Check if any arguments were passed; if not, request a command.
         if (empty($args)) {

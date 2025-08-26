@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Controller;
 
@@ -13,14 +14,14 @@ use CorianderCore\Core\Router\NameFormatter;
 class MakeController
 {
     /**
-     * @var string $templatesPath The path to the directory containing controller templates.
+     * @var string The path to the directory containing controller templates.
      */
-    protected $templatesPath;
+    protected string $templatesPath;
 
     /**
-     * @var string $basePath The base path where controllers will be created.
+     * @var string The base path where controllers will be created.
      */
-    protected $basePath;
+    protected string $basePath;
 
     /**
      * Constructor for the MakeController class.
@@ -53,7 +54,7 @@ class MakeController
      *
      * @param array $args The arguments passed to the command, where the first argument is the controller name.
      */
-    public function execute(array $args)
+    public function execute(array $args): void
     {
         if (empty($args)) {
             ConsoleOutput::print("&4[Error]&7 Please specify a controller name.");
@@ -110,7 +111,7 @@ class MakeController
      *
      * @param string $directory The path to the directory.
      */
-    protected function ensureDirectoryExists(string $directory)
+    protected function ensureDirectoryExists(string $directory): void
     {
         if (!is_dir($directory)) {
             if (!mkdir($directory, 0755, true)) {
@@ -146,7 +147,7 @@ class MakeController
      * @param string $kebabCaseName The kebab-case version of the controller name for view paths.
      * @throws \Exception If the template file cannot be written.
      */
-    protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $controllerName, string $kebabCaseName)
+    protected function createFileFromTemplate(string $templateFile, string $destinationFile, string $controllerName, string $kebabCaseName): void
     {
         // Define the full path to the template file.
         $templatePath = $this->templatesPath . '/' . $templateFile;

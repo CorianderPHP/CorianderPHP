@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * Template for creating standard web controllers.
@@ -60,7 +61,7 @@ class {{controllerName}}
      * @param mixed $id The ID or slug of the resource to display.
      * @return void
      */
-    public function show($id): void
+    public function show(mixed $id): void
     {
         // Example: Fetch an item from the database
         $data = [
