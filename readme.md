@@ -40,6 +40,13 @@ To set up **CorianderPHP**, follow these steps:
    php coriander nodejs run watch-tw    # To watch and compile TailwindCSS
    ```
 
+### Logging
+
+CorianderPHP ships with a PSR-3 compliant logger. Configure it via environment variables:
+
+- `LOG_CHANNEL`: `stderr`, `stdout` or a file path (default: `stderr`)
+- `LOG_LEVEL`: minimum level to record (e.g. `debug`, `info`, `warning`; default: `warning`)
+
 ---
 
 ## Command-Line Interface (CLI)

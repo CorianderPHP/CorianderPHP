@@ -2,15 +2,20 @@
 
 namespace CorianderCore\Core\Image;
 
+use CorianderCore\Core\Logging\StaticLoggerTrait;
+
 /**
  * Handles image conversion and rendering for PNG, JPG, and JPEG files.
  * Converts images to WebP format with a customizable quality setting,
  * and generates a <picture> tag with the necessary <source> elements
  * for WebP and original image formats, along with customizable CSS classes
- * and alt attributes.
+ * and alt attributes. All issues encountered during conversion are reported
+ * through an injected PSR-3 logger.
  */
 class ImageHandler
 {
+    use StaticLoggerTrait;
+
     // Path to the image directory
     private static $imageDir = PROJECT_ROOT;
     // Subdirectory for storing WebP images
@@ -70,7 +75,7 @@ class ImageHandler
         $fullImagePath = self::$imageDir . $imagePath;
         
         if (!file_exists($fullImagePath)) {
-            error_log("Image not found: " . $fullImagePath);
+            self::getLogger()->warning('Image not found: ' . $fullImagePath);
             return false;
         }
 
@@ -89,7 +94,7 @@ class ImageHandler
 
         $imageInfo = getimagesize($fullImagePath);
         if ($imageInfo === false) {
-            error_log("Invalid image file: " . $fullImagePath);
+            self::getLogger()->warning('Invalid image file: ' . $fullImagePath);
             return false;
         }
 
@@ -102,12 +107,12 @@ class ImageHandler
                 $image = imagecreatefrompng($fullImagePath);
                 break;
             default:
-                error_log("Unsupported image type: " . $mimeType);
+                self::getLogger()->warning('Unsupported image type: ' . $mimeType);
                 return false;
         }
 
         if ($image === false) {
-            error_log("Failed to create image resource from: " . $fullImagePath);
+            self::getLogger()->error('Failed to create image resource from: ' . $fullImagePath);
             return false;
         }
 
@@ -116,7 +121,7 @@ class ImageHandler
         imagedestroy($image);
 
         if ($conversionResult === false) {
-            error_log("Failed to convert image to WebP: " . $fullImagePath);
+            self::getLogger()->error('Failed to convert image to WebP: ' . $fullImagePath);
             return false;
         }
 

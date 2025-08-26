@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Database;
 use \PDO;
 use Exception;
 use CorianderCore\Core\Database\DatabaseHandler;
+use CorianderCore\Core\Logging\StaticLoggerTrait;
 
 /**
  * Helper providing static methods for common SQL operations.
@@ -12,10 +13,13 @@ use CorianderCore\Core\Database\DatabaseHandler;
  * This class centralises simple CRUD queries using PDO. It relies on
  * {@see DatabaseHandler} for connection management and exposes convenience
  * wrappers for selecting, inserting, updating and deleting records without
- * repeatedly creating new PDO statements across the codebase.
+ * repeatedly creating new PDO statements across the codebase. Errors are
+ * surfaced through an injected PSR-3 logger.
  */
 class SQLManager
 {
+    use StaticLoggerTrait;
+
     /**
      * Retrieves all data from a table in the database.
      *
@@ -27,7 +31,7 @@ class SQLManager
     public static function findAll($columns, $from, $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             $sql = "SELECT $columns FROM $from";
             $stmt = $pdo->prepare($sql);
@@ -35,7 +39,7 @@ class SQLManager
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $data != false ? $data : false;
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::findAll Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] findAll exception', ['exception' => $e]);
             return false;
         }
     }
@@ -52,7 +56,7 @@ class SQLManager
     public static function findBy($columns, $from, $where, $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             $sql = "SELECT $columns FROM $from WHERE $where";
             $stmt = $pdo->prepare($sql);
@@ -60,7 +64,7 @@ class SQLManager
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $data != false ? $data : false;
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::findBy Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] findBy exception', ['exception' => $e]);
             return false;
         }
     }
@@ -77,13 +81,13 @@ class SQLManager
     public static function update($table, $set, $where, $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             $sql = "UPDATE $table SET $set WHERE $where";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::update Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] update exception', ['exception' => $e]);
             return false;
         }
         return true;
@@ -102,13 +106,13 @@ class SQLManager
     public static function insertInto($table, $into, $values, $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             $sql = "INSERT INTO $table $into VALUES $values";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::insertInto Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] insertInto exception', ['exception' => $e]);
             return false;
         }
         return true;
@@ -126,7 +130,7 @@ class SQLManager
     public static function insertIntoAndGetId($table, $into, $values, $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             $sql = "INSERT INTO $table $into VALUES $values";
             $stmt = $pdo->prepare($sql);
@@ -134,7 +138,7 @@ class SQLManager
             $lastInsertId = $pdo->lastInsertId();
             return $lastInsertId;
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::insertIntoAndGetId Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] insertIntoAndGetId exception', ['exception' => $e]);
             return false;
         }
     }
@@ -150,7 +154,7 @@ class SQLManager
     public static function deleteFrom($table, $where = '', $params = array())
     {
         try {
-            $db = DatabaseHandler::getInstance();
+            $db = DatabaseHandler::getInstance(self::getLogger());
             $pdo = $db->getPDO();
             if ($where === '' || empty($where)) {
                 $sql = "DELETE FROM $table";
@@ -160,7 +164,7 @@ class SQLManager
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
         } catch (Exception $e) {
-            error_log("[SQLManager.php] - SQLManager::deleteFrom Exception : $e", 0);
+            self::getLogger()->error('[SQLManager] deleteFrom exception', ['exception' => $e]);
             return false;
         }
         return true;
@@ -175,7 +179,7 @@ class SQLManager
      */
     public static function sqlScript($sqlScript, $params = array())
     {
-        $db = DatabaseHandler::getInstance();
+        $db = DatabaseHandler::getInstance(self::getLogger());
         $pdo = $db->getPDO();
         $stmt = $pdo->prepare($sqlScript);
         $stmt->execute($params);
