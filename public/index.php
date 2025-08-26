@@ -1,5 +1,4 @@
 <?php
-ob_start();
 date_default_timezone_set("Europe/Paris");
 session_start();
 
@@ -16,11 +15,12 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
 }
 
 use CorianderCore\Core\Router\Router;
-use CorianderCore\Core\Security\Csrf;
+use CorianderCore\Core\Security\CsrfMiddleware;
+use Nyholm\Psr7\ServerRequest;
 
 // Initialize the router
 $router = Router::getInstance();
-$router->before([Csrf::class, 'verify']);
+$router->addMiddleware(new CsrfMiddleware());
 
 // Custom 404 handler
 $notFound = function () {
@@ -46,6 +46,19 @@ if (file_exists($routesFile)) {
 }
 
 // Dispatch the request to the correct view or controller
-$router->dispatch();
+$request = new ServerRequest(
+    $_SERVER['REQUEST_METHOD'] ?? 'GET',
+    $_SERVER['REQUEST_URI'] ?? '/',
+    function_exists('getallheaders') ? getallheaders() : [],
+    file_get_contents('php://input'),
+    $_SERVER
+);
+$response = $router->dispatch($request);
 
-ob_end_flush();
+http_response_code($response->getStatusCode());
+foreach ($response->getHeaders() as $name => $values) {
+    foreach ($values as $value) {
+        header($name . ': ' . $value, false);
+    }
+}
+echo $response->getBody();

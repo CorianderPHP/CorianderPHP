@@ -1,6 +1,6 @@
 <?php
 
-namespace CorianderCore\Core\Router;
+namespace CorianderCore\Core\Router\Handlers;
 
 use CorianderCore\Core\Router\NameFormatter;
 
