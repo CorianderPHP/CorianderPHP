@@ -129,7 +129,7 @@ class RouterTest extends TestCase
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testCustomRouteExecution()
     {
-        $this->router->add('GET', '/about', function () {
+        $this->router->add('GET', '/about', function (ServerRequest $request) {
             echo 'About Page Content';
         });
         $request = new ServerRequest('GET', '/about');
@@ -306,8 +306,8 @@ class RouterTest extends TestCase
     public function testRouteParameterExtraction()
     {
         $captured = null;
-        $this->router->add('GET', '/user/{id}', function ($id) use (&$captured) {
-            $captured = $id;
+        $this->router->add('GET', '/user/{id}', function (ServerRequest $request) use (&$captured) {
+            $captured = $request->getAttribute('id');
         });
 
         $request = new ServerRequest('GET', '/user/123');
@@ -325,7 +325,7 @@ class RouterTest extends TestCase
         $request = new ServerRequest('POST', '/user/123');
 
         $executed = false;
-        $this->router->add('GET', '/user/{id}', function () use (&$executed) {
+        $this->router->add('GET', '/user/{id}', function (ServerRequest $request) use (&$executed) {
             $executed = true;
         });
 

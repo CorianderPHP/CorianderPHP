@@ -20,6 +20,37 @@ $router->add('GET', '/hello/{name}', function (ServerRequest $request) {
 $router->setNotFound(fn() => new \Nyholm\Psr7\Response(404, [], 'Not Found'));
 ```
 
+### Route Groups
+
+Group routes to share a common URI prefix or middleware:
+
+```php
+use Psr\Http\Server\MiddlewareInterface;
+
+$auth = new class implements MiddlewareInterface {
+    public function process($request, $handler) {
+        // authentication logic
+        return $handler->handle($request);
+    }
+};
+
+$router->group('/admin', [$auth], function (Router $r) {
+    $r->add('GET', '/dashboard', fn (ServerRequest $req) =>
+        new \Nyholm\Psr7\Response(200, [], 'Dashboard'));
+});
+```
+
+Routes inside the group inherit the `/admin` prefix and the `$auth` middleware.
+
+### Per-route Middleware
+
+Middleware can also be attached directly when registering a route:
+
+```php
+$router->add('GET', '/profile', fn (ServerRequest $r) =>
+    new \Nyholm\Psr7\Response(200, [], 'Profile'), [$auth]);
+```
+
 ## Error Handling
 
 - Register a `setNotFound` callback to handle unmatched routes gracefully.

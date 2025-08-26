@@ -19,11 +19,12 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Entry point for route dispatching.
  *
  * Workflow:
- * 1. Routes and PSR-15 middleware are registered on the Router instance
- *    (typically retrieved from a service container).
+ * 1. Routes, route groups and PSR-15 middleware are registered on the Router
+ *    instance (typically retrieved from a service container).
  * 2. A PSR-7 request is passed to {@see Router::dispatch()}.
- * 3. The request travels through the middleware queue and finally reaches
- *    {@see RouteDispatcher} which resolves the target and produces a response.
+ * 3. Global middleware run first, followed by any route-specific middleware.
+ *    The request finally reaches {@see RouteDispatcher} which resolves the
+ *    target and produces a response.
  */
 class Router
 {
@@ -34,6 +35,12 @@ class Router
      * @var MiddlewareInterface[] Middleware executed before route dispatch.
      */
     private array $middleware = [];
+
+    /**
+     * @var array<int, array{prefix:string,middleware:MiddlewareInterface[]}>
+     *      Stack of active route groups.
+     */
+    private array $groupStack = [];
 
     public function __construct()
     {
@@ -59,19 +66,81 @@ class Router
     /**
      * Register a custom route handler.
      *
-     * @param string   $method  HTTP method for the route.
-     * @param string   $pattern URI pattern, e.g. '/user/{id}'.
-     * @param callable $callback Callback executed when the route is matched.
+     * @param string                $method     HTTP method for the route.
+     * @param string                $pattern    URI pattern, e.g. '/user/{id}'.
+     * @param callable              $callback   Callback executed when matched.
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
      * @return void
      */
-    public function add(string $method, string $pattern, callable $callback): void
+    public function add(string $method, string $pattern, callable $callback, array $middleware = []): void
     {
         $pattern = trim($pattern, '/');
+
+        $prefix = trim($this->getGroupPrefix(), '/');
+        if ($prefix !== '') {
+            $pattern = trim($prefix . '/' . $pattern, '/');
+        }
+
+        $paramNames = [];
+        if (preg_match_all('#\{([^}]+)\}#', $pattern, $matches)) {
+            $paramNames = $matches[1];
+        }
+
         $regex = preg_quote($pattern, '#');
         $regex = preg_replace('#\\\{([^/]+)\\\}#', '([^/]+)', $regex);
         $regex = '#^' . $regex . '$#';
 
-        $this->registry->add(strtoupper($method), $regex, $callback);
+        $middleware = array_merge($this->getGroupMiddleware(), $middleware);
+
+        $this->registry->add(strtoupper($method), $regex, $paramNames, $callback, $middleware);
+    }
+
+    /**
+     * Group routes under a common prefix and middleware set.
+     *
+     * @param string                $prefix     Path prefix for the group.
+     * @param MiddlewareInterface[] $middleware Middleware applied to routes.
+     * @param callable              $callback   Callback that registers routes.
+     * @return void
+     */
+    public function group(string $prefix, array $middleware, callable $callback): void
+    {
+        $this->groupStack[] = [
+            'prefix' => trim($prefix, '/'),
+            'middleware' => $middleware,
+        ];
+
+        $callback($this);
+
+        array_pop($this->groupStack);
+    }
+
+    /**
+     * Retrieve the concatenated prefix from active groups.
+     */
+    private function getGroupPrefix(): string
+    {
+        $segments = [];
+        foreach ($this->groupStack as $group) {
+            if ($group['prefix'] !== '') {
+                $segments[] = $group['prefix'];
+            }
+        }
+        return implode('/', $segments);
+    }
+
+    /**
+     * Retrieve combined middleware from active groups.
+     *
+     * @return MiddlewareInterface[]
+     */
+    private function getGroupMiddleware(): array
+    {
+        $middleware = [];
+        foreach ($this->groupStack as $group) {
+            $middleware = [...$middleware, ...$group['middleware']];
+        }
+        return $middleware;
     }
 
     /**
