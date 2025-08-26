@@ -4,27 +4,28 @@ declare(strict_types=1);
 /*
  * DatabaseHandler manages a single PDO connection shared across the
  * application, supporting MySQL and SQLite with optional auto-closing.
+ *
+ * Workflow:
+ * 1. Instantiated via dependency injection (e.g. service container).
+ * 2. getPDO() exposes the underlying connection for queries.
+ * 3. close() releases the connection when no longer needed.
  */
 
 namespace CorianderCore\Core\Database;
 
 use \PDO;
-use Psr\Log\LoggerInterface;
 use CorianderCore\Core\Logging\Logger;
+use Psr\Log\LoggerInterface;
 
 /**
- * DatabaseHandler is a Singleton class responsible for managing a single
- * connection to the database using the PDO extension.
- * This implementation supports both MySQL and SQLite databases and reports
- * connection issues through an injected PSR-3 logger.
+ * DatabaseHandler manages a PDO connection using the provided logger.
+ *
+ * Instances are intended to be shared via a service container rather than
+ * accessed through a singleton. The handler supports both MySQL and SQLite
+ * connections and reports issues through the injected PSR-3 logger.
  */
 class DatabaseHandler
 {
-    /**
-     * @var DatabaseHandler|null Singleton instance of the DatabaseHandler class.
-     */
-    private static ?DatabaseHandler $instance = null;
-
     /**
      * @var LoggerInterface Logger used for reporting connection issues.
      */
@@ -41,15 +42,15 @@ class DatabaseHandler
     private static bool $autoCloseConnection = true;
 
     /**
-     * Private constructor to prevent direct instantiation.
+     * Construct a new DatabaseHandler instance.
      * Establishes a connection to the MySQL or SQLite database based on the 'DB_TYPE' constant.
      * If an unsupported database type is specified, it logs a warning and skips connection.
      *
-     * @param LoggerInterface $logger Logger instance for reporting issues.
+     * @param LoggerInterface|null $logger Logger instance for reporting issues; defaults to core Logger when null.
      */
-    private function __construct(LoggerInterface $logger)
+    public function __construct(?LoggerInterface $logger = null)
     {
-        $this->logger = $logger;
+        $this->logger = $logger ?? new Logger();
 
         // Check if the DB_TYPE constant is set and its value
         if (defined('DB_TYPE')) {
@@ -77,23 +78,6 @@ class DatabaseHandler
     }
 
     /**
-     * Retrieves the Singleton instance of the DatabaseHandler.
-     * If no instance exists, a new one will be created.
-     * 
-     * @param LoggerInterface|null $logger Optional logger to use for the instance.
-     *
-     * @return DatabaseHandler The Singleton instance of the DatabaseHandler.
-     */
-    public static function getInstance(?LoggerInterface $logger = null): DatabaseHandler
-    {
-        if (self::$instance === null) {
-            $logger = $logger ?? new Logger();
-            self::$instance = new DatabaseHandler($logger);
-        }
-        return self::$instance;
-    }
-
-    /**
      * Returns the PDO instance associated with the current database connection.
      * 
      * @return PDO|null The PDO instance for interacting with the database, or null if no connection is available.
@@ -115,7 +99,7 @@ class DatabaseHandler
     }
 
     /**
-     * Closes the database connection and resets the Singleton instance.
+     * Closes the database connection.
      * If auto-close is disabled, it simply returns without closing the connection.
      *
      * @return void
@@ -126,6 +110,5 @@ class DatabaseHandler
             return;
         }
         $this->pdo = null;
-        self::$instance = null;
     }
 }

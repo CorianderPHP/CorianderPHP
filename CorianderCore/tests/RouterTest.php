@@ -8,7 +8,7 @@ use Nyholm\Psr7\ServerRequest;
 
 class RouterTest extends TestCase
 {
-    protected $router;
+    protected Router $router;
     protected $srcCreatedDuringTest = false; // Flag to track if 'src' was created during the test
     protected $controllersCreatedDuringTest = false; // Flag to track if 'Controllers' was created
 
@@ -24,7 +24,7 @@ class RouterTest extends TestCase
     protected function setUp(): void
     {
         // Instantiate a new Router object before each test to ensure a clean state.
-        $this->router = Router::getInstance();
+        $this->router = new Router();
 
         // Check if the 'src' directory exists; if not, create it and set a flag for cleanup.
         if (!is_dir(PROJECT_ROOT . '/src')) {

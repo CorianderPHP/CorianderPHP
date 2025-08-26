@@ -2,8 +2,9 @@
 declare(strict_types=1);
 
 /*
- * SQLManager offers static CRUD helpers utilising the shared DatabaseHandler
- * connection to minimise boilerplate across the application.
+ * SQLManager offers static CRUD helpers utilising a shared DatabaseHandler
+ * provided via `setDatabaseHandler` to minimise boilerplate across the
+ * application.
  */
 
 namespace CorianderCore\Core\Database;
@@ -27,6 +28,36 @@ class SQLManager
     use StaticLoggerTrait;
 
     /**
+     * @var DatabaseHandler|null Shared database handler instance.
+     */
+    private static ?DatabaseHandler $db = null;
+
+    /**
+     * Inject a DatabaseHandler instance.
+     *
+     * @param DatabaseHandler $handler Database handler to use.
+     *
+     * @return void
+     */
+    public static function setDatabaseHandler(DatabaseHandler $handler): void
+    {
+        self::$db = $handler;
+    }
+
+    /**
+     * Retrieve the active DatabaseHandler, creating one if necessary.
+     *
+     * @return DatabaseHandler Database handler instance.
+     */
+    private static function getDatabaseHandler(): DatabaseHandler
+    {
+        if (self::$db === null) {
+            self::$db = new DatabaseHandler(self::getLogger());
+        }
+        return self::$db;
+    }
+
+    /**
      * Retrieves all data from a table in the database.
      *
      * @param string $columns The columns to select in the SQL query.
@@ -37,8 +68,7 @@ class SQLManager
     public static function findAll(string $columns, string $from, array $params = []): array|false
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             $sql = "SELECT $columns FROM $from";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -62,8 +92,7 @@ class SQLManager
     public static function findBy(string $columns, string $from, string $where, array $params = []): array|false
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             $sql = "SELECT $columns FROM $from WHERE $where";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -87,8 +116,7 @@ class SQLManager
     public static function update(string $table, string $set, string $where, array $params = []): bool
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             $sql = "UPDATE $table SET $set WHERE $where";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -112,8 +140,7 @@ class SQLManager
     public static function insertInto(string $table, string $into, string $values, array $params = []): bool
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             $sql = "INSERT INTO $table $into VALUES $values";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -136,8 +163,7 @@ class SQLManager
     public static function insertIntoAndGetId(string $table, string $into, string $values, array $params = []): string|false
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             $sql = "INSERT INTO $table $into VALUES $values";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -160,8 +186,7 @@ class SQLManager
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
         try {
-            $db = DatabaseHandler::getInstance(self::getLogger());
-            $pdo = $db->getPDO();
+            $pdo = self::getDatabaseHandler()->getPDO();
             if ($where === '' || empty($where)) {
                 $sql = "DELETE FROM $table";
             } else {
@@ -185,8 +210,7 @@ class SQLManager
      */
     public static function sqlScript(string $sqlScript, array $params = []): array|false
     {
-        $db = DatabaseHandler::getInstance(self::getLogger());
-        $pdo = $db->getPDO();
+        $pdo = self::getDatabaseHandler()->getPDO();
         $stmt = $pdo->prepare($sqlScript);
         $stmt->execute($params);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);

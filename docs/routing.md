@@ -4,15 +4,15 @@ CorianderPHP's routing system maps incoming HTTP requests to callbacks, controll
 
 ## Configuration
 
-Create a bootstrap file to register specific routes and middleware when customization is required:
+Custom routes are defined in `public/routes.php`. The front controller bootstraps the router and passes an instance to this file, so you can add routes directly:
 
 ```php
 use CorianderCore\Core\Router\Router;
 use Nyholm\Psr7\ServerRequest;
 
-$router = Router::getInstance();
+/** @var Router $router */
 
-$router->add('GET', '/hello/{name}', function(ServerRequest $request) {
+$router->add('GET', '/hello/{name}', function (ServerRequest $request) {
     $name = $request->getAttribute('name');
     return new \Nyholm\Psr7\Response(200, [], "Hello {$name}");
 });

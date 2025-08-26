@@ -1,6 +1,6 @@
 # Database Module Guide
 
-The database layer centralizes connection handling through a singleton `DatabaseHandler` and exposes helper methods via `SQLManager`.
+The database layer centralizes connection handling through `DatabaseHandler` instances registered in a service container and exposes helper methods via `SQLManager`.
 
 ## Creating Configuration via CLI
 

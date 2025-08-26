@@ -28,7 +28,7 @@ class RouterIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->router = Router::getInstance();
+        $this->router = new Router();
 
         if (!is_dir(PROJECT_ROOT . '/src')) {
             mkdir(PROJECT_ROOT . '/src', 0777, true);
