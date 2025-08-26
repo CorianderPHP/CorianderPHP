@@ -70,25 +70,4 @@ class Csrf
         return self::validate($token);
     }
 
-    /**
-     * Middleware-style hook for Router::before().
-     *
-     * @param string $uri    Requested URI.
-     * @param string $method HTTP method.
-     * @return bool False when validation fails to halt dispatch.
-     */
-    public static function verify(string $uri, string $method): bool
-    {
-        if (strtoupper($method) !== 'POST') {
-            return true;
-        }
-
-        if (!self::validateRequest()) {
-            http_response_code(403);
-            echo 'Invalid CSRF token';
-            return false;
-        }
-
-        return true;
-    }
 }

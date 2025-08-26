@@ -2,6 +2,14 @@
 
 namespace CorianderCore\Core\Router;
 
+use CorianderCore\Core\Router\Handlers\ApiControllerHandler;
+use CorianderCore\Core\Router\Handlers\NotFoundHandler;
+use CorianderCore\Core\Router\Handlers\WebControllerHandler;
+use CorianderCore\Core\Router\ViewRenderer;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * Determines whether to dispatch a Web, API, or custom route.
  */
@@ -21,38 +29,54 @@ class RouteDispatcher
      * Resolves custom routes first, then API controllers, and finally
      * web controllers or view rendering.
      *
-     * @param string $uri    The incoming request URI.
-     * @param string $method The HTTP method (GET, POST, etc.).
-     * @return void
+     * @param ServerRequestInterface $request The incoming request.
+     * @return ResponseInterface Generated response.
      */
-    public function dispatch(string $uri, string $method): void
+    public function dispatch(ServerRequestInterface $request): ResponseInterface
     {
-        $path = trim(parse_url($uri, PHP_URL_PATH), '/');
+        $path = trim($request->getUri()->getPath(), '/');
         if ($path === '') {
             $path = 'home';
         }
 
         defined('REQUESTED_VIEW') || define('REQUESTED_VIEW', $path);
 
-        $method = strtoupper($method);
+        $method = strtoupper($request->getMethod());
 
         foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $callback]) {
             if ($routeMethod === $method && preg_match($pattern, $path, $matches)) {
                 array_shift($matches);
-                call_user_func_array($callback, $matches);
-                return;
+                ob_start();
+                $result = call_user_func_array($callback, $matches);
+                $content = ob_get_clean();
+                if ($result instanceof ResponseInterface) {
+                    return $result;
+                }
+                return new Response(200, [], $content);
             }
         }
 
+        ob_start();
         if (str_starts_with($path, 'api/')) {
             if (!$this->apiHandler->handle($path, $method)) {
-                $this->notFoundHandler->handle($this->registry);
+                ob_end_clean();
+                return $this->notFoundHandler->handle($this->registry);
             }
-            return;
+            $content = ob_get_clean();
+            return new Response(200, [], $content);
         }
 
-        if (!$this->webHandler->handle($path, $method)) {
-            $this->viewRenderer->render($path) ?: $this->notFoundHandler->handle($this->registry);
+        if ($this->webHandler->handle($path, $method)) {
+            $content = ob_get_clean();
+            return new Response(200, [], $content);
         }
+
+        if ($this->viewRenderer->render($path)) {
+            $content = ob_get_clean();
+            return new Response(200, [], $content);
+        }
+
+        ob_end_clean();
+        return $this->notFoundHandler->handle($this->registry);
     }
 }

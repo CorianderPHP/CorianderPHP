@@ -6,6 +6,7 @@ use CorianderCore\Core\Benchmark\BenchmarkHandler;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Router\NameFormatter;
+use Nyholm\Psr7\ServerRequest;
 
 /**
  * BenchmarkRouter handles benchmarking related to routing performance.
@@ -38,13 +39,12 @@ class BenchmarkRouter
         // Initialize BenchmarkHandler
         $benchmark = new BenchmarkHandler();
 
+        // Build the request once to focus on router performance
+        $request = new ServerRequest('GET', "/{$route}");
+
         // Define the routing function to be benchmarked
-        $routingFunction = function() use ($router, $route) {
-            $_SERVER['REQUEST_URI'] = "/{$route}";
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-            ob_start();
-            $router->dispatch(); // Dispatch the router for each iteration
-            ob_end_clean(); // Clear the buffer to avoid output
+        $routingFunction = function() use ($router, $request) {
+            $router->dispatch($request); // Dispatch the router for each iteration
         };
 
         // Run the benchmark using the benchmarkFunction method
@@ -86,11 +86,6 @@ class BenchmarkRouter
      */
     private function routeExists(Router $router, string $route): bool
     {
-        // Check for manually added custom routes
-        if (isset($router->routes[$route])) {
-            return true;
-        }
-
         // Check for a controller matching the route name
         $controllerName = NameFormatter::toPascalCase($route) . 'Controller';
         $controllerClass = 'Controllers\\' . $controllerName;

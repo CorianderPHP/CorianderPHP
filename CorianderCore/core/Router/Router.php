@@ -2,22 +2,37 @@
 
 namespace CorianderCore\Core\Router;
 
+use CorianderCore\Core\Router\Handlers\ApiControllerHandler;
+use CorianderCore\Core\Router\Handlers\NotFoundHandler;
+use CorianderCore\Core\Router\Handlers\WebControllerHandler;
+use CorianderCore\Core\Router\Middleware\MiddlewareQueue;
 use CorianderCore\Core\Router\RouteDispatcher;
 use CorianderCore\Core\Router\RouteRegistry;
-use CorianderCore\Core\Router\NotFoundHandler;
+use CorianderCore\Core\Router\ViewRenderer;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Entry point for route dispatching.
+ *
+ * Workflow:
+ * 1. Routes and PSR-15 middleware are registered on the singleton instance.
+ * 2. A PSR-7 request is passed to {@see Router::dispatch()}.
+ * 3. The request travels through the middleware queue and finally reaches
+ *    {@see RouteDispatcher} which resolves the target and produces a response.
  */
 class Router
 {
     private static ?Router $instance = null;
     private RouteRegistry $registry;
     private RouteDispatcher $dispatcher;
+    private RequestHandlerInterface $finalHandler;
     /**
-     * @var callable[] List of middleware hooks executed before dispatch.
+     * @var MiddlewareInterface[] Middleware executed before route dispatch.
      */
-    private array $beforeHooks = [];
+    private array $middleware = [];
 
     private function __construct()
     {
@@ -29,6 +44,15 @@ class Router
             new ViewRenderer(),
             new NotFoundHandler()
         );
+
+        $this->finalHandler = new class($this->dispatcher) implements RequestHandlerInterface {
+            public function __construct(private RouteDispatcher $dispatcher) {}
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return $this->dispatcher->dispatch($request);
+            }
+        };
     }
 
     /**
@@ -74,35 +98,26 @@ class Router
     }
 
     /**
-     * Dispatch the current HTTP request to the appropriate handler.
+     * Add a PSR-15 middleware to the execution queue.
      *
-     * Uses the global request URI and method to determine the target.
-     *
+     * @param MiddlewareInterface $middleware Middleware instance to execute.
      * @return void
      */
-    public function dispatch(): void
+    public function addMiddleware(MiddlewareInterface $middleware): void
     {
-        $uri = $_SERVER['REQUEST_URI'];
-        $method = $_SERVER['REQUEST_METHOD'];
-
-        foreach ($this->beforeHooks as $hook) {
-            if ($hook($uri, $method) === false) {
-                return;
-            }
-        }
-
-        $this->dispatcher->dispatch($uri, $method);
+        $this->middleware[] = $middleware;
     }
 
     /**
-     * Register a middleware-like hook to run before dispatching.
+     * Dispatch an incoming PSR-7 request and return a response.
      *
-     * @param callable $hook Callback receiving URI and method. Return false to halt dispatch.
-     * @return void
+     * @param ServerRequestInterface $request Incoming request to handle.
+     * @return ResponseInterface Response produced by the route dispatcher.
      */
-    public function before(callable $hook): void
+    public function dispatch(ServerRequestInterface $request): ResponseInterface
     {
-        $this->beforeHooks[] = $hook;
+        $pipeline = new MiddlewareQueue($this->middleware, $this->finalHandler);
+        return $pipeline->handle($request);
     }
     
 }
