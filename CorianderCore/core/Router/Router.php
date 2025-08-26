@@ -19,14 +19,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Entry point for route dispatching.
  *
  * Workflow:
- * 1. Routes and PSR-15 middleware are registered on the singleton instance.
+ * 1. Routes and PSR-15 middleware are registered on the Router instance
+ *    (typically retrieved from a service container).
  * 2. A PSR-7 request is passed to {@see Router::dispatch()}.
  * 3. The request travels through the middleware queue and finally reaches
  *    {@see RouteDispatcher} which resolves the target and produces a response.
  */
 class Router
 {
-    private static ?Router $instance = null;
     private RouteRegistry $registry;
     private RouteDispatcher $dispatcher;
     private RequestHandlerInterface $finalHandler;
@@ -35,7 +35,7 @@ class Router
      */
     private array $middleware = [];
 
-    private function __construct()
+    public function __construct()
     {
         $this->registry = new RouteRegistry();
         $this->dispatcher = new RouteDispatcher(
@@ -54,19 +54,6 @@ class Router
                 return $this->dispatcher->dispatch($request);
             }
         };
-    }
-
-    /**
-     * Retrieve the singleton Router instance.
-     *
-     * @return self The global Router instance.
-     */
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
     }
 
     /**

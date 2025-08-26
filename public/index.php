@@ -14,12 +14,21 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
     require_once PROJECT_ROOT . '/vendor/autoload.php';
 }
 
+use CorianderCore\Core\Container\Container;
+use CorianderCore\Core\Database\DatabaseHandler;
+use CorianderCore\Core\Logging\Logger;
 use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Security\CsrfMiddleware;
 use Nyholm\Psr7\ServerRequest;
 
+// Register core services
+$container = new Container();
+$container->set(Logger::class, fn() => new Logger());
+$container->set(DatabaseHandler::class, fn(Container $c) => new DatabaseHandler($c->get(Logger::class)));
+$container->set(Router::class, fn() => new Router());
+
 // Initialize the router
-$router = Router::getInstance();
+$router = $container->get(Router::class);
 $router->addMiddleware(new CsrfMiddleware());
 
 // Custom 404 handler

@@ -34,7 +34,7 @@ class BenchmarkRouter
         $duration = isset($args[1]) ? (int)$args[1] : 1;
 
         // Initialize the Router
-        $router = Router::getInstance();
+        $router = new Router();
 
         // Verify if the route exists
         if (!$this->routeExists($router, $route)) {
