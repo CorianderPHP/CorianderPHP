@@ -17,6 +17,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class MiddlewareQueue implements RequestHandlerInterface
 {
+    /** @var int Current middleware index */
+    private int $index = 0;
+
     /**
      * @param MiddlewareInterface[] $middleware Ordered middleware list.
      */
@@ -34,11 +37,11 @@ class MiddlewareQueue implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        if (empty($this->middleware)) {
+        if ($this->index >= count($this->middleware)) {
             return $this->handler->handle($request);
         }
 
-        $middleware = array_shift($this->middleware);
-        return $middleware->process($request, new self($this->middleware, $this->handler));
+        $middleware = $this->middleware[$this->index++];
+        return $middleware->process($request, $this);
     }
 }

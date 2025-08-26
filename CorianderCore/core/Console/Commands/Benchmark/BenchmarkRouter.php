@@ -39,9 +39,11 @@ class BenchmarkRouter
         // Initialize BenchmarkHandler
         $benchmark = new BenchmarkHandler();
 
+        // Build the request once to focus on router performance
+        $request = new ServerRequest('GET', "/{$route}");
+
         // Define the routing function to be benchmarked
-        $routingFunction = function() use ($router, $route) {
-            $request = new ServerRequest('GET', "/{$route}");
+        $routingFunction = function() use ($router, $request) {
             $router->dispatch($request); // Dispatch the router for each iteration
         };
 

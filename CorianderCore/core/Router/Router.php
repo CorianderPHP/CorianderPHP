@@ -28,6 +28,7 @@ class Router
     private static ?Router $instance = null;
     private RouteRegistry $registry;
     private RouteDispatcher $dispatcher;
+    private RequestHandlerInterface $finalHandler;
     /**
      * @var MiddlewareInterface[] Middleware executed before route dispatch.
      */
@@ -43,6 +44,15 @@ class Router
             new ViewRenderer(),
             new NotFoundHandler()
         );
+
+        $this->finalHandler = new class($this->dispatcher) implements RequestHandlerInterface {
+            public function __construct(private RouteDispatcher $dispatcher) {}
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return $this->dispatcher->dispatch($request);
+            }
+        };
     }
 
     /**
@@ -106,16 +116,7 @@ class Router
      */
     public function dispatch(ServerRequestInterface $request): ResponseInterface
     {
-        $finalHandler = new class($this->dispatcher) implements RequestHandlerInterface {
-            public function __construct(private RouteDispatcher $dispatcher) {}
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->dispatcher->dispatch($request);
-            }
-        };
-
-        $pipeline = new MiddlewareQueue($this->middleware, $finalHandler);
+        $pipeline = new MiddlewareQueue($this->middleware, $this->finalHandler);
         return $pipeline->handle($request);
     }
     
