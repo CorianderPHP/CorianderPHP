@@ -8,6 +8,7 @@ use CorianderCore\Core\Router\Handlers\WebControllerHandler;
 use CorianderCore\Core\Router\Middleware\MiddlewareQueue;
 use CorianderCore\Core\Router\RouteDispatcher;
 use CorianderCore\Core\Router\RouteRegistry;
+use CorianderCore\Core\Router\ViewRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;

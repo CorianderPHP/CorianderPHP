@@ -46,13 +46,19 @@ if (file_exists($routesFile)) {
 }
 
 // Dispatch the request to the correct view or controller
+$serverParams = $_SERVER;
+$protocol = $serverParams['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
+$version = str_contains($protocol, '/') ? substr($protocol, strpos($protocol, '/') + 1) : '1.1';
+
 $request = new ServerRequest(
-    $_SERVER['REQUEST_METHOD'] ?? 'GET',
-    $_SERVER['REQUEST_URI'] ?? '/',
+    $serverParams['REQUEST_METHOD'] ?? 'GET',
+    $serverParams['REQUEST_URI'] ?? '/',
     function_exists('getallheaders') ? getallheaders() : [],
     file_get_contents('php://input'),
-    $_SERVER
+    $version,
+    $serverParams
 );
+
 $response = $router->dispatch($request);
 
 http_response_code($response->getStatusCode());

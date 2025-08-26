@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Router;
 use CorianderCore\Core\Router\Handlers\ApiControllerHandler;
 use CorianderCore\Core\Router\Handlers\NotFoundHandler;
 use CorianderCore\Core\Router\Handlers\WebControllerHandler;
+use CorianderCore\Core\Router\ViewRenderer;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
