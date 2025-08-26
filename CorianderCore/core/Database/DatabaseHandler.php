@@ -3,11 +3,14 @@
 namespace CorianderCore\Core\Database;
 
 use \PDO;
+use Psr\Log\LoggerInterface;
+use CorianderCore\Core\Logging\Logger;
 
 /**
  * DatabaseHandler is a Singleton class responsible for managing a single
  * connection to the database using the PDO extension.
- * This implementation supports both MySQL and SQLite databases.
+ * This implementation supports both MySQL and SQLite databases and reports
+ * connection issues through an injected PSR-3 logger.
  */
 class DatabaseHandler
 {
@@ -15,6 +18,11 @@ class DatabaseHandler
      * @var DatabaseHandler|null Singleton instance of the DatabaseHandler class.
      */
     private static $instance = null;
+
+    /**
+     * @var LoggerInterface Logger used for reporting connection issues.
+     */
+    private LoggerInterface $logger;
 
     /**
      * @var PDO|null The PDO instance used for database connection, or null if unsupported.
@@ -30,9 +38,13 @@ class DatabaseHandler
      * Private constructor to prevent direct instantiation.
      * Establishes a connection to the MySQL or SQLite database based on the 'DB_TYPE' constant.
      * If an unsupported database type is specified, it logs a warning and skips connection.
+     *
+     * @param LoggerInterface $logger Logger instance for reporting issues.
      */
-    private function __construct()
+    private function __construct(LoggerInterface $logger)
     {
+        $this->logger = $logger;
+
         // Check if the DB_TYPE constant is set and its value
         if (defined('DB_TYPE')) {
             switch (DB_TYPE) {
@@ -44,7 +56,7 @@ class DatabaseHandler
                     break;
                 default:
                     // Handle unsupported DB_TYPE
-                    error_log("Unsupported database type: " . DB_TYPE);
+                    $this->logger->warning('Unsupported database type: ' . DB_TYPE);
                     return; // Do not create a connection
             }
 
@@ -54,7 +66,7 @@ class DatabaseHandler
             }
         } else {
             // Handle case where DB_TYPE is not defined
-            error_log("DB_TYPE is not defined. No database connection established.");
+            $this->logger->warning('DB_TYPE is not defined. No database connection established.');
         }
     }
 
@@ -62,12 +74,15 @@ class DatabaseHandler
      * Retrieves the Singleton instance of the DatabaseHandler.
      * If no instance exists, a new one will be created.
      * 
+     * @param LoggerInterface|null $logger Optional logger to use for the instance.
+     *
      * @return DatabaseHandler The Singleton instance of the DatabaseHandler.
      */
-    public static function getInstance()
+    public static function getInstance(?LoggerInterface $logger = null)
     {
         if (self::$instance === null) {
-            self::$instance = new DatabaseHandler();
+            $logger = $logger ?? new Logger();
+            self::$instance = new DatabaseHandler($logger);
         }
         return self::$instance;
     }
