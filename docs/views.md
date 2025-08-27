@@ -28,9 +28,13 @@ Use the built-in `ImageHandler` to convert images to WebP on the fly inside a vi
 
 The helper converts the image if needed and outputs a `<picture>` tag with WebP and fallback sources.
 
+## Output Safety
+
+Variables passed to view templates are automatically escaped for HTML output to mitigate XSS attacks.
+
 ## Best Practices
 
 - Keep view logic minimal; handle business logic in controllers or services.
-- Escape dynamic output with `htmlspecialchars` to avoid XSS issues.
+- Avoid double escaping—variables provided to views are sanitized by the framework.
 - Store assets under `public/assets` and reference them with absolute paths.
 

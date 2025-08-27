@@ -1,5 +1,13 @@
 <?php
 date_default_timezone_set("Europe/Paris");
+
+$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+session_set_cookie_params([
+    'path' => '/',
+    'secure' => $secure,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 
 require_once '../config/config.php';

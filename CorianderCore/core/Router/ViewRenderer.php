@@ -4,7 +4,13 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Router;
 
 /**
- * Renders public view pages.
+ * ViewRenderer
+ *
+ * Handles locating and rendering public views with sanitized data.
+ * Workflow:
+ * 1. Escape string data for safe HTML output.
+ * 2. Extract the sanitized variables into the view scope.
+ * 3. Include shared header and footer around the view.
  */
 class ViewRenderer
 {
@@ -20,7 +26,8 @@ class ViewRenderer
      */
     public function render(string $viewPath, array $data = []): bool
     {
-        extract($data);
+        $escapedData = $this->escapeData($data);
+        extract($escapedData, EXTR_OVERWRITE);
 
         $fullViewPath = PROJECT_ROOT . '/public/public_views/' . $viewPath . '/index.php';
 
@@ -32,5 +39,22 @@ class ViewRenderer
         }
 
         return false;
+    }
+
+    /**
+     * Escape data recursively for safe HTML output.
+     *
+     * @param array $data Data to escape.
+     * @return array Escaped data.
+     */
+    private function escapeData(array $data): array
+    {
+        array_walk_recursive($data, function (&$value): void {
+            if (is_string($value)) {
+                $value = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            }
+        });
+
+        return $data;
     }
 }
