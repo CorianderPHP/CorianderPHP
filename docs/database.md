@@ -36,10 +36,11 @@ The file is automatically loaded from `config/config.php` when present. Avoid co
 
 ```php
 use CorianderCore\Core\Database\SQLManager;
+use CorianderCore\Core\Database\DatabaseException;
 
 try {
-    $users = SQLManager::findAll('*', 'users');
-} catch (\Throwable $e) {
+    $users = SQLManager::findAll(['*'], 'users');
+} catch (DatabaseException $e) {
     // handle or log error
 }
 ```
@@ -50,4 +51,50 @@ try {
 - Keep long-lived connections to a minimum; enable `DatabaseHandler::setAutoCloseConnection(false)` only when necessary.
 - Centralize complex queries in repository classes to maintain SOLID principles.
 - Close connections explicitly in long-running scripts.
+
+## Usage Examples
+
+### Selecting Records
+
+```php
+use CorianderCore\Core\Database\SQLManager;
+
+$activeUsers = SQLManager::findBy(
+    ['id', 'email'],
+    'users',
+    'status = :status',
+    ['status' => 'active']
+);
+```
+Fetches the ID and email for every user marked as active.
+
+### Inserting Records
+
+```php
+use CorianderCore\Core\Database\SQLManager;
+
+SQLManager::insertInto('users', [
+    'email' => 'john@example.com',
+    'status' => 'active',
+]);
+```
+Creates a user record with the provided email and marks it as active.
+
+### Updating Records
+
+```php
+use CorianderCore\Core\Database\SQLManager;
+
+SQLManager::update('users', ['status' => 'disabled'], 'id = :id', ['id' => 5]);
+```
+Disables the user whose ID equals `5`.
+
+### Deleting Records
+
+```php
+use CorianderCore\Core\Database\SQLManager;
+
+SQLManager::deleteFrom('users', 'status = :status', ['status' => 'inactive']);
+```
+Removes all users currently flagged as inactive.
 
