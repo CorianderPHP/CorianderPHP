@@ -12,6 +12,7 @@ namespace CorianderCore\Core\Database;
 use \PDO;
 use Exception;
 use CorianderCore\Core\Database\DatabaseHandler;
+use CorianderCore\Core\Database\DatabaseException;
 use CorianderCore\Core\Logging\StaticLoggerTrait;
 
 /**
@@ -60,118 +61,149 @@ class SQLManager
     /**
      * Retrieves all data from a table in the database.
      *
-     * @param string $columns The columns to select in the SQL query.
-     * @param string $from The name of the table from which to retrieve data.
-     * @param array  $params Named parameters to bind to the SQL query (optional).
-     * @return array|false The retrieved data from the table as an associative array or false on failure.
+     * @param array  $columns The columns to select in the SQL query.
+     * @param string $table   The table from which to retrieve data.
+     * @param array  $params  Named parameters to bind to the SQL query (optional).
+     *
+     * @return array The retrieved data from the table as an associative array.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function findAll(string $columns, string $from, array $params = []): array|false
+    public static function findAll(array $columns, string $table, array $params = []): array
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            $sql = "SELECT $columns FROM $from";
-            $stmt = $pdo->prepare($sql);
+            $pdo        = self::getDatabaseHandler()->getPDO();
+            $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
+            $table      = self::quoteIdentifier($table);
+            $sql        = sprintf('SELECT %s FROM %s', $columnList, $table);
+            $stmt       = $pdo->prepare($sql);
             $stmt->execute($params);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $data != false ? $data : false;
+
+            return $data !== false ? $data : [];
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] findAll exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute findAll query.', 0, $e);
         }
     }
 
     /**
-     * Retrieves a row from a table in the database based on a condition.
+     * Retrieves rows from a table based on a condition.
      *
-     * @param string $columns The columns to select in the SQL query.
-     * @param string $from The name of the table from which to retrieve data.
-     * @param string $where The condition to use for selecting the row.
-     * @param array  $params Named parameters to bind to the SQL query (optional).
-     * @return array|false The retrieved row data as an associative array or false on failure.
+     * @param array  $columns The columns to select in the SQL query.
+     * @param string $table   The table from which to retrieve data.
+     * @param string $where   The condition to use for selecting rows.
+     * @param array  $params  Named parameters to bind to the SQL query (optional).
+     *
+     * @return array The retrieved row data as an associative array.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function findBy(string $columns, string $from, string $where, array $params = []): array|false
+    public static function findBy(array $columns, string $table, string $where, array $params = []): array
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            $sql = "SELECT $columns FROM $from WHERE $where";
-            $stmt = $pdo->prepare($sql);
+            $pdo        = self::getDatabaseHandler()->getPDO();
+            $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
+            $table      = self::quoteIdentifier($table);
+            $sql        = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
+            $stmt       = $pdo->prepare($sql);
             $stmt->execute($params);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $data != false ? $data : false;
+
+            return $data !== false ? $data : [];
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] findBy exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute findBy query.', 0, $e);
         }
     }
 
     /**
      * Updates data in a table in the database based on a given condition.
      *
-     * @param string $table  The name of the table to update.
-     * @param string $set    The columns and values to update in the table.
-     * @param string $where  The condition to use for selecting the rows to update.
-     * @param array  $params Named parameters to bind to the SQL query (optional).
-     * @return bool True if the update was successful, false otherwise.
+     * @param string $table   The name of the table to update.
+     * @param array  $data    Associative array of column => value pairs to update.
+     * @param string $where   The condition to use for selecting the rows to update.
+     * @param array  $params  Additional named parameters to bind to the SQL query (optional).
+     *
+     * @return bool True if the update was successful.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function update(string $table, string $set, string $where, array $params = []): bool
+    public static function update(string $table, array $data, string $where, array $params = []): bool
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            $sql = "UPDATE $table SET $set WHERE $where";
+            $pdo   = self::getDatabaseHandler()->getPDO();
+            $table = self::quoteIdentifier($table);
+            $set   = [];
+            foreach ($data as $column => $value) {
+                $placeholder     = ':' . $column;
+                $set[]           = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
+                $params[$column] = $value;
+            }
+            $sql  = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
+
+            return true;
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] update exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute update query.', 0, $e);
         }
-        return true;
     }
 
     /**
      * Inserts a new row into a table in the database.
-     * 
-     * @param string $table  The name of the table into which to insert the row.
-     * @param string $into   The columns into which to insert values.
-     * @param string $values The values to insert.
-     * @param array  $params Parameters to bind to the prepared statement (optional).
      *
-     * @return bool True if the insertion was successful, false otherwise.
+     * @param string $table The name of the table into which to insert the row.
+     * @param array  $data  Associative array of column => value pairs to insert.
+     *
+     * @return bool True if the insertion was successful.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function insertInto(string $table, string $into, string $values, array $params = []): bool
+    public static function insertInto(string $table, array $data): bool
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            $sql = "INSERT INTO $table $into VALUES $values";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $pdo         = self::getDatabaseHandler()->getPDO();
+            $table       = self::quoteIdentifier($table);
+            $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
+            $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
+            $sql         = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
+            $stmt        = $pdo->prepare($sql);
+            $stmt->execute($data);
+
+            return true;
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] insertInto exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute insert query.', 0, $e);
         }
-        return true;
     }
 
     /**
      * Inserts a new row into a table and returns the last inserted ID.
-     * 
-     * @param string $table  The name of the table to insert into.
-     * @param string $into   The columns to insert into.
-     * @param string $values The values to insert.
-     * @param array  $params The parameters to bind to the prepared statement.
-     * @return string|false The last inserted ID on success, false on failure.
+     *
+     * @param string $table The name of the table to insert into.
+     * @param array  $data  Associative array of column => value pairs to insert.
+     *
+     * @return string The last inserted ID on success.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function insertIntoAndGetId(string $table, string $into, string $values, array $params = []): string|false
+    public static function insertIntoAndGetId(string $table, array $data): string
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            $sql = "INSERT INTO $table $into VALUES $values";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $lastInsertId = $pdo->lastInsertId();
-            return $lastInsertId;
+            $pdo         = self::getDatabaseHandler()->getPDO();
+            $table       = self::quoteIdentifier($table);
+            $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
+            $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
+            $sql         = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
+            $stmt        = $pdo->prepare($sql);
+            $stmt->execute($data);
+
+            return $pdo->lastInsertId();
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] insertIntoAndGetId exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute insert query.', 0, $e);
         }
     }
 
@@ -181,24 +213,27 @@ class SQLManager
      * @param string $table  The name of the table from which to delete rows.
      * @param string $where  The condition to use for selecting the rows to delete.
      * @param array  $params Named parameters to bind to the SQL query (optional).
-     * @return bool True if the deletion was successful, false otherwise.
+     *
+     * @return bool True if the deletion was successful.
+     *
+     * @throws DatabaseException If the query fails.
      */
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
         try {
-            $pdo = self::getDatabaseHandler()->getPDO();
-            if ($where === '' || empty($where)) {
-                $sql = "DELETE FROM $table";
-            } else {
-                $sql = "DELETE FROM $table WHERE $where";
-            }
-            $stmt = $pdo->prepare($sql);
+            $pdo   = self::getDatabaseHandler()->getPDO();
+            $table = self::quoteIdentifier($table);
+            $sql   = $where === ''
+                ? sprintf('DELETE FROM %s', $table)
+                : sprintf('DELETE FROM %s WHERE %s', $table, $where);
+            $stmt  = $pdo->prepare($sql);
             $stmt->execute($params);
+
+            return true;
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] deleteFrom exception', ['exception' => $e]);
-            return false;
+            throw new DatabaseException('Unable to execute delete query.', 0, $e);
         }
-        return true;
     }
 
     /**
@@ -206,14 +241,35 @@ class SQLManager
      *
      * @param string $sqlScript The SQL query to execute.
      * @param array  $params    Named parameters to bind to the SQL query (optional).
-     * @return array|false The retrieved row data as an associative array or false on failure.
+     *
+     * @return array The retrieved row data as an associative array.
+     *
+     * @throws DatabaseException If the query fails.
      */
-    public static function sqlScript(string $sqlScript, array $params = []): array|false
+    public static function sqlScript(string $sqlScript, array $params = []): array
     {
-        $pdo = self::getDatabaseHandler()->getPDO();
-        $stmt = $pdo->prepare($sqlScript);
-        $stmt->execute($params);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-        return ($data);
+        try {
+            $pdo  = self::getDatabaseHandler()->getPDO();
+            $stmt = $pdo->prepare($sqlScript);
+            $stmt->execute($params);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $data !== false ? $data : [];
+        } catch (Exception $e) {
+            self::getLogger()->error('[SQLManager] sqlScript exception', ['exception' => $e]);
+            throw new DatabaseException('Unable to execute SQL script.', 0, $e);
+        }
+    }
+
+    /**
+     * Quote an identifier such as a table or column name.
+     *
+     * @param string $identifier Identifier to quote.
+     *
+     * @return string Quoted identifier safe for interpolation in SQL.
+     */
+    private static function quoteIdentifier(string $identifier): string
+    {
+        return '`' . str_replace('`', '``', $identifier) . '`';
     }
 }
