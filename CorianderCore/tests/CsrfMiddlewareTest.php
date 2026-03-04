@@ -88,4 +88,34 @@ class CsrfMiddlewareTest extends TestCase
         $this->assertTrue($handler->called);
         $this->assertSame(200, $response->getStatusCode());
     }
+
+    /**
+     * Ensure URL-encoded POST bodies are parsed when parsedBody is missing.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testAllowsValidTokenFromUrlEncodedRawBody(): void
+    {
+        $token = Csrf::token();
+        $middleware = new CsrfMiddleware();
+        $request = new ServerRequest(
+            'POST',
+            '/test',
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            'csrf_token=' . urlencode($token)
+        );
+
+        $handler = new class implements RequestHandlerInterface {
+            public bool $called = false;
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertTrue($handler->called);
+        $this->assertSame(200, $response->getStatusCode());
+    }
 }

@@ -66,15 +66,30 @@ if (file_exists($routesFile)) {
 $serverParams = $_SERVER;
 $protocol = $serverParams['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
 $version = str_contains($protocol, '/') ? substr($protocol, strpos($protocol, '/') + 1) : '1.1';
+$headers = function_exists('getallheaders') ? getallheaders() : [];
+$rawBody = file_get_contents('php://input');
 
 $request = new ServerRequest(
     $serverParams['REQUEST_METHOD'] ?? 'GET',
     $serverParams['REQUEST_URI'] ?? '/',
-    function_exists('getallheaders') ? getallheaders() : [],
-    file_get_contents('php://input'),
+    $headers,
+    $rawBody,
     $version,
     $serverParams
 );
+
+$contentType = strtolower((string) ($headers['Content-Type'] ?? $headers['content-type'] ?? ''));
+$method = strtoupper($serverParams['REQUEST_METHOD'] ?? 'GET');
+if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+    if (str_contains($contentType, 'application/json')) {
+        $decoded = json_decode($rawBody ?: '', true);
+        if (is_array($decoded)) {
+            $request = $request->withParsedBody($decoded);
+        }
+    } elseif (!empty($_POST)) {
+        $request = $request->withParsedBody($_POST);
+    }
+}
 
 $response = $router->dispatch($request);
 
