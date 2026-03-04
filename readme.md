@@ -9,7 +9,7 @@
 - **Modular Architecture**: Extend the core with custom modules while keeping the base lightweight.
 - **Easy to Extend**: Build custom modules without modifying core files (see [Modules](docs/modules.md)).
 - **Minimal External Dependencies**: Only essential packages for logging, routing, and testing (PSR-3/7/15).
-- **CLI Tooling**: Run `php coriander` to manage views, controllers, databases and more.
+- **CLI Tooling**: Run `php coriander` to manage views, controllers, databases, and framework updates.
 - **Performance**: Lean code and efficient asset handling.
 - **NodeJS Integration**: Built-in TypeScript and TailwindCSS tooling.
 
@@ -28,7 +28,6 @@ Detailed guides live in the [`docs/`](docs) directory:
 - [NodeJS Integration](docs/nodejs.md)
 
 These guides are kept in sync with releases; review them when upgrading.
-
 
 ## Getting Started
 
@@ -60,14 +59,26 @@ Configure the PSR-3 logger using environment variables:
 
 All commands are invoked via `php coriander`:
 
-- `php coriander make:view Home` – create a view ([Views](docs/views.md)).
-- `php coriander make:controller Home` – create a controller ([Controllers](docs/controllers.md)).
-- `php coriander make:database` – interactive database setup ([Database](docs/database.md)).
-- `php coriander make:sitemap` – generate sitemap helper ([Sitemap](docs/sitemap.md)).
-- `php coriander cache controllers|all|clear` – manage caches ([Cache](docs/cache.md)).
-- `php coriander nodejs run build-ts` – compile TypeScript ([NodeJS Integration](docs/nodejs.md)).
-- `\CorianderCore\Core\Image\ImageHandler::render()` – convert images to WebP in views ([Views](docs/views.md)).
+- `php coriander make:view Home` - create a view ([Views](docs/views.md)).
+- `php coriander make:controller Home` - create a controller ([Controllers](docs/controllers.md)).
+- `php coriander make:database` - interactive database setup ([Database](docs/database.md)).
+- `php coriander make:sitemap` - generate sitemap helper ([Sitemap](docs/sitemap.md)).
+- `php coriander cache controllers|all|clear` - manage caches ([Cache](docs/cache.md)).
+- `php coriander nodejs run build-ts` - compile TypeScript ([NodeJS Integration](docs/nodejs.md)).
+- `php coriander version` - display installed framework version.
+- `php coriander update` - update framework managed files (asks confirmation by default).
+- `php coriander update --yes` - update without interactive prompt.
+- `php coriander update --dry-run` - show planned framework changes without writing files.
+- `php coriander update --force` - overwrite locally modified framework-managed files.
+- `php coriander update --clear-cache` - clear framework cache after update.
+- `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
 - Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
+
+## Framework Update Notes
+
+- Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
+- Only framework-managed paths are updated by the updater, and partial failures trigger automatic rollback.
+- Start with a first release tag such as `v0.1.0` before using `php coriander update` in other projects.
 
 ## CSRF Protection
 
@@ -94,4 +105,5 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 ## License
 
 This project is licensed under the MIT License.
+
 
