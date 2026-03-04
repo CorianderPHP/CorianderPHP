@@ -113,3 +113,4 @@ class CommandHandlerTest extends TestCase
         $this->commandHandler->handle('noExecute', []);
     }
 }
+
