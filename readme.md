@@ -92,7 +92,7 @@ CorianderPHP ships with a token-based CSRF guard. Include the token inside forms
 </form>
 ```
 
-Controllers validate tokens using `Csrf::validateRequest()` or `Csrf::validate()` for JSON payloads.
+Controllers validate tokens using `Csrf::validateRequest()` or `Csrf::validate()` for JSON payloads. The middleware also accepts tokens from parsed bodies and standard `application/x-www-form-urlencoded`/`application/json` request bodies.
 
 ## Development Status
 
@@ -105,5 +105,6 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 ## License
 
 This project is licensed under the MIT License.
+
 
 
