@@ -339,4 +339,38 @@ class RouterTest extends TestCase
         $this->assertFalse($executed);
         $this->assertTrue($notFoundCalled);
     }
+    /**
+     * Test that an explicit POST action in the URI has priority over the store method.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testPostRequestPrefersExplicitActionOverStoreMethod()
+    {
+        $request = new ServerRequest('POST', '/test-controller/delete');
+
+        $controllerCode = <<<PHP
+        <?php
+        namespace Controllers;
+        class TestController
+        {
+            public function store()
+            {
+                echo 'Store action output';
+            }
+
+            public function delete()
+            {
+                echo 'Delete action output';
+            }
+        }
+        PHP;
+
+        $controllerFile = PROJECT_ROOT . '/src/Controllers/TestController.php';
+        file_put_contents($controllerFile, $controllerCode);
+
+        $response = $this->router->dispatch($request);
+        $output = (string) $response->getBody();
+
+        $this->assertStringContainsString('Delete action output', $output);
+        $this->assertStringNotContainsString('Store action output', $output);
+    }
 }

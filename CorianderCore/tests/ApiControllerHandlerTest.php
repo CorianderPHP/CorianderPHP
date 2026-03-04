@@ -123,4 +123,45 @@ class ApiControllerHandlerTest extends TestCase
         $this->assertFalse($result, 'Handler should return false for missing method.');
         $this->assertSame([], SampleController::$calls, 'No method should be invoked when missing.');
     }
+    /**
+     * Ensure API controllers can be loaded from src/ApiControllers even when
+     * they are not preloaded by autoload.
+     */
+    public function testLoadsApiControllerFromProjectFileWhenNotPreloaded(): void
+    {
+        $apiDir = PROJECT_ROOT . '/src/ApiControllers';
+        $apiDirCreated = false;
+        if (!is_dir($apiDir)) {
+            mkdir($apiDir, 0777, true);
+            $apiDirCreated = true;
+        }
+
+        $controllerFile = $apiDir . '/FileBackedController.php';
+        file_put_contents($controllerFile, <<<'PHP'
+<?php
+namespace ApiControllers;
+
+class FileBackedController
+{
+    public function get(): void
+    {
+        // no-op, invocation success is validated via handler return value
+    }
+}
+PHP
+        );
+
+        try {
+            $handler = new ApiControllerHandler();
+            $result = $handler->handle('api/file-backed', 'GET');
+            $this->assertTrue($result, 'Handler should include src/ApiControllers file and dispatch.');
+        } finally {
+            if (file_exists($controllerFile)) {
+                unlink($controllerFile);
+            }
+            if ($apiDirCreated && is_dir($apiDir)) {
+                rmdir($apiDir);
+            }
+        }
+    }
 }

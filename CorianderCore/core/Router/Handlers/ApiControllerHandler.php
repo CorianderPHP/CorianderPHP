@@ -28,7 +28,7 @@ class ApiControllerHandler
         $controllerName = NameFormatter::toPascalCase($segments[0] ?? '');
         $controllerClass = 'ApiControllers\\' . $controllerName . 'Controller';
 
-        if (!class_exists($controllerClass)) {
+        if (!$this->controllerExists($controllerClass)) {
             return false;
         }
 
@@ -50,5 +50,25 @@ class ApiControllerHandler
 
         call_user_func_array([$controller, $action], $params);
         return true;
+    }
+
+    private function controllerExists(string $controllerClass): bool
+    {
+        if (class_exists($controllerClass)) {
+            return true;
+        }
+
+        $controllerFile = $this->resolveControllerFile($controllerClass);
+        if (file_exists($controllerFile)) {
+            require_once $controllerFile;
+        }
+
+        return class_exists($controllerClass);
+    }
+
+    private function resolveControllerFile(string $controllerClass): string
+    {
+        $shortName = substr(strrchr($controllerClass, '\\'), 1);
+        return PROJECT_ROOT . '/src/ApiControllers/' . $shortName . '.php';
     }
 }

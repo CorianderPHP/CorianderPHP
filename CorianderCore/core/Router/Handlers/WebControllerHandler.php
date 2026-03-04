@@ -94,6 +94,12 @@ class WebControllerHandler
         $action = $segments[1] ?? 'index';
         $params = array_slice($segments, 2);
 
+        // If an explicit action is requested in the URI, it takes precedence.
+        if ($action !== 'index' && method_exists($controller, $action)) {
+            call_user_func_array([$controller, $action], $params);
+            return true;
+        }
+
         if ($method === 'POST' && method_exists($controller, 'store')) {
             call_user_func_array([$controller, 'store'], $params);
             return true;
