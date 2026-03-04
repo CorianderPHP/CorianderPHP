@@ -59,6 +59,22 @@ class SQLManager
     }
 
     /**
+     * Retrieve a valid PDO connection or throw a domain exception.
+     *
+     * @return PDO
+     *
+     * @throws DatabaseException When no database connection is configured.
+     */
+    private static function requirePdo(): PDO
+    {
+        $pdo = self::getDatabaseHandler()->getPDO();
+        if ($pdo === null) {
+            throw new DatabaseException('No active database connection. Check database configuration.');
+        }
+
+        return $pdo;
+    }
+    /**
      * Retrieves all data from a table in the database.
      *
      * @param array  $columns The columns to select in the SQL query.
@@ -72,7 +88,7 @@ class SQLManager
     public static function findAll(array $columns, string $table, array $params = []): array
     {
         try {
-            $pdo        = self::getDatabaseHandler()->getPDO();
+            $pdo        = self::requirePdo();
             $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
             $table      = self::quoteIdentifier($table);
             $sql        = sprintf('SELECT %s FROM %s', $columnList, $table);
@@ -102,7 +118,7 @@ class SQLManager
     public static function findBy(array $columns, string $table, string $where, array $params = []): array
     {
         try {
-            $pdo        = self::getDatabaseHandler()->getPDO();
+            $pdo        = self::requirePdo();
             $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
             $table      = self::quoteIdentifier($table);
             $sql        = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
@@ -132,7 +148,7 @@ class SQLManager
     public static function update(string $table, array $data, string $where, array $params = []): bool
     {
         try {
-            $pdo   = self::getDatabaseHandler()->getPDO();
+            $pdo   = self::requirePdo();
             $table = self::quoteIdentifier($table);
             $set   = [];
             foreach ($data as $column => $value) {
@@ -164,7 +180,7 @@ class SQLManager
     public static function insertInto(string $table, array $data): bool
     {
         try {
-            $pdo         = self::getDatabaseHandler()->getPDO();
+            $pdo         = self::requirePdo();
             $table       = self::quoteIdentifier($table);
             $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
             $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
@@ -192,7 +208,7 @@ class SQLManager
     public static function insertIntoAndGetId(string $table, array $data): string
     {
         try {
-            $pdo         = self::getDatabaseHandler()->getPDO();
+            $pdo         = self::requirePdo();
             $table       = self::quoteIdentifier($table);
             $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
             $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
@@ -221,7 +237,7 @@ class SQLManager
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
         try {
-            $pdo   = self::getDatabaseHandler()->getPDO();
+            $pdo   = self::requirePdo();
             $table = self::quoteIdentifier($table);
             $sql   = $where === ''
                 ? sprintf('DELETE FROM %s', $table)
@@ -249,7 +265,7 @@ class SQLManager
     public static function sqlScript(string $sqlScript, array $params = []): array
     {
         try {
-            $pdo  = self::getDatabaseHandler()->getPDO();
+            $pdo  = self::requirePdo();
             $stmt = $pdo->prepare($sqlScript);
             $stmt->execute($params);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -273,3 +289,5 @@ class SQLManager
         return '`' . str_replace('`', '``', $identifier) . '`';
     }
 }
+
+

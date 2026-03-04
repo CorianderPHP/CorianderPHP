@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="CorianderCore/autoload.php"
+<phpunit bootstrap="CorianderCore/Tests/bootstrap.php"
     colors="true"
     displayDetailsOnTestsThatTriggerDeprecations="true"
     displayDetailsOnTestsThatTriggerNotices="true"
@@ -9,7 +9,8 @@
 >
     <testsuites>
         <testsuite name="CorianderPHP Test Suite">
-            <directory suffix="Test.php">CorianderCore/tests</directory>
+            <directory suffix="Test.php">CorianderCore/Tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>
+

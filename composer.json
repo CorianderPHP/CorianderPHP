@@ -30,7 +30,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "CorianderCore\\Tests\\": "CorianderCore/tests/"
+            "CorianderCore\\Tests\\": "CorianderCore/Tests/"
         }
     },
     "scripts": {
@@ -43,3 +43,4 @@
     "minimum-stability": "stable",
     "prefer-stable": true
 }
+
