@@ -228,13 +228,15 @@ class GitHubReleaseService
      */
     private function extractStatusCode(array $headers): int
     {
+        $statusCode = 0;
+
         foreach ($headers as $header) {
             if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $matches)) {
-                return (int) $matches[1];
+                $statusCode = (int) $matches[1];
             }
         }
 
-        return 0;
+        return $statusCode;
     }
 
     /**
@@ -253,3 +255,4 @@ class GitHubReleaseService
         return null;
     }
 }
+
