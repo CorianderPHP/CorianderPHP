@@ -12,6 +12,10 @@ use CorianderCore\Core\Console\ConsoleOutput;
 
 class NodeJS
 {
+    public function __construct(private ?string $npmExecutableOverride = null)
+    {
+    }
+
     /**
      * Executes the provided Node.js (npm) command.
      *
@@ -122,6 +126,10 @@ class NodeJS
 
     private function resolveNpmExecutable(): string
     {
+        if (is_string($this->npmExecutableOverride) && trim($this->npmExecutableOverride) !== '') {
+            return $this->npmExecutableOverride;
+        }
+
         if (DIRECTORY_SEPARATOR !== '\\') {
             return 'npm';
         }

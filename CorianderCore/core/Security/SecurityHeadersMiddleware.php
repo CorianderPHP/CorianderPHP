@@ -78,6 +78,11 @@ class SecurityHeadersMiddleware implements MiddlewareInterface
         }
 
         $forwardedProto = strtolower($request->getHeaderLine('X-Forwarded-Proto'));
-        return $forwardedProto === 'https';
+        if ($forwardedProto === '') {
+            return false;
+        }
+
+        $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
+        return $firstHop === 'https';
     }
 }

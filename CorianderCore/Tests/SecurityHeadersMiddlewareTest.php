@@ -42,4 +42,19 @@ class SecurityHeadersMiddlewareTest extends TestCase
 
         $this->assertSame('SAMEORIGIN', $response->getHeaderLine('X-Frame-Options'));
     }
+
+    public function testUsesFirstForwardedProtoWhenMultipleValuesAreProvided(): void
+    {
+        $middleware = new SecurityHeadersMiddleware();
+        $request = new ServerRequest('GET', 'http://example.test/path', ['X-Forwarded-Proto' => 'https, http']);
+
+        $response = $middleware->process($request, new class implements RequestHandlerInterface {
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+            {
+                return new Response(200, [], 'ok');
+            }
+        });
+
+        $this->assertSame('max-age=31536000; includeSubDomains', $response->getHeaderLine('Strict-Transport-Security'));
+    }
 }

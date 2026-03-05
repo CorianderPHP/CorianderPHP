@@ -20,7 +20,7 @@ use CorianderCore\Core\Security\Csrf;
  * This class handles the logic and routes related to the {{controllerName}}.
  * Methods in this class manage route actions, view rendering, and interactions with models.
  */
-class {{controllerName}}
+class ControllerTemplatePlaceholder
 {
     /**
      * Handles view rendering.
@@ -101,4 +101,5 @@ class {{controllerName}}
         $this->view->render('{{kebabControllerName}}/success', $data);
     }
 }
+
 

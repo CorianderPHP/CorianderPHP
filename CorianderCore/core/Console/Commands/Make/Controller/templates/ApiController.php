@@ -17,12 +17,10 @@ use CorianderCore\Core\Security\Csrf;
  *
  * Handles API requests for the {{controllerName}} resource.
  */
-class {{controllerName}}
+class ControllerTemplatePlaceholder
 {
     /**
      * Handles GET requests to /api/{{kebabControllerName}}.
-     *
-     * @return void
      */
     public function get(): void
     {
@@ -32,8 +30,6 @@ class {{controllerName}}
 
     /**
      * Handles POST requests to /api/{{kebabControllerName}}.
-     *
-     * @return void
      */
     public function post(): void
     {
@@ -44,6 +40,7 @@ class {{controllerName}}
             echo json_encode(['error' => 'Invalid CSRF token']);
             return;
         }
+
         header('Content-Type: application/json');
         echo json_encode(['message' => 'Data received', 'data' => $input]);
     }
@@ -52,15 +49,12 @@ class {{controllerName}}
     // Example: Handling subpath actions
     // -------------------------------------------------------------------
     //
-    // The following optional methods demonstrate how to handle
-    // sub-routes such as:
-    //
-    // GET  /api/{{kebabControllerName}}/stats      → get_stats()
-    // GET  /api/{{kebabControllerName}}/stats/123  → get_stats(123)
-    // POST /api/{{kebabControllerName}}/summary    → post_summary()
+    // The following optional methods demonstrate how to handle sub-routes:
+    // GET  /api/{{kebabControllerName}}/stats      -> get_stats()
+    // GET  /api/{{kebabControllerName}}/stats/123  -> get_stats(123)
+    // POST /api/{{kebabControllerName}}/summary    -> post_summary()
     //
     // Uncomment and customize as needed.
-    //
     // -------------------------------------------------------------------
 
     /*
@@ -70,7 +64,7 @@ class {{controllerName}}
         echo json_encode([
             'status' => 'OK',
             'action' => 'get_stats',
-            'id'     => $id
+            'id' => $id,
         ]);
     }
 
@@ -81,7 +75,7 @@ class {{controllerName}}
         echo json_encode([
             'status' => 'OK',
             'action' => 'post_summary',
-            'data'   => $input
+            'data' => $input,
         ]);
     }
     */
