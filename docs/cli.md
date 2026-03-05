@@ -13,6 +13,8 @@ php coriander <command> [arguments]
 Examples:
 
 - `php coriander make:view Home`
+- `php coriander make:migration CreateUsersTable`
+- `php coriander migrate:status`
 - `php coriander cache controllers`
 - `php coriander nodejs run build-ts`
 - `php coriander version`
@@ -67,6 +69,49 @@ php coriander update --yes --clear-cache
 php coriander update --yes --backup-dir=backups/custom
 ```
 
+### `make:migration`
+
+Create a timestamped migration file under `database/migrations`.
+
+```bash
+php coriander make:migration CreateUsersTable
+```
+
+### `migrate`
+
+Apply pending migrations tracked in the `migrations` table.
+
+```bash
+php coriander migrate
+```
+
+Flags:
+
+- `--dry-run`: show pending migrations without applying them.
+- `--allow-changed`: allow running when an already-applied migration file checksum changed (local/dev only).
+
+### `migrate:status`
+
+Show migration status (`applied` or `pending`) and batch numbers.
+
+```bash
+php coriander migrate:status
+```
+
+### `migrate:rollback`
+
+Rollback latest migration batch (or multiple batches).
+
+```bash
+php coriander migrate:rollback
+php coriander migrate:rollback --step=2
+```
+
+Flags:
+
+- `--step=N`: rollback N latest batches (default: `1`).
+- `--dry-run`: preview rollback targets without changing the database.
+
 ## Error Handling
 
 - Commands print diagnostic messages prefixed with `[Error]` or `[Warning]` when something goes wrong.
@@ -78,3 +123,6 @@ php coriander update --yes --backup-dir=backups/custom
 - Inspect output carefully; many commands provide hints for missing dependencies or misconfigurations.
 - Rebuild caches (`php coriander cache controllers`) after adding controllers or clearing the `cache/` directory.
 - Use `php coriander update --dry-run` before production updates.
+- In shared/production environments, do not edit applied migration files.
+
+

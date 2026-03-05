@@ -29,6 +29,7 @@ class CommandHandler
         'cache' => \CorianderCore\Core\Console\Commands\Cache::class,
         'version' => \CorianderCore\Core\Console\Commands\Version::class,
         'update' => \CorianderCore\Core\Console\Commands\Update::class,
+        'migrate' => \CorianderCore\Core\Console\Commands\Migrate::class,
     ];
 
     /**
@@ -107,5 +108,7 @@ class CommandHandler
         }
     }
 }
+
+
 
 

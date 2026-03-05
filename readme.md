@@ -67,6 +67,10 @@ All commands are invoked via `php coriander`:
 - `php coriander make:view Home` - create a view ([Views](docs/views.md)).
 - `php coriander make:controller Home` - create a controller ([Controllers](docs/controllers.md)).
 - `php coriander make:database` - interactive database setup ([Database](docs/database.md)).
+- `php coriander make:migration CreateUsersTable` - create a migration file ([Database](docs/database.md)).
+- `php coriander migrate` - apply pending migrations ([Database](docs/database.md)).
+- `php coriander migrate:status` - view migration state ([Database](docs/database.md)).
+- `php coriander migrate:rollback --step=1` - rollback latest migration batch ([Database](docs/database.md)).
 - `php coriander make:sitemap` - generate sitemap helper ([Sitemap](docs/sitemap.md)).
 - `php coriander cache controllers|all|clear` - manage caches ([Cache](docs/cache.md)).
 - `php coriander nodejs run build-ts` - compile TypeScript ([NodeJS Integration](docs/nodejs.md)).
