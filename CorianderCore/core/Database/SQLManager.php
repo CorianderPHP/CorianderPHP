@@ -145,6 +145,7 @@ class SQLManager
      */
     public static function findBy(array $columns, string $table, string $where, array $params = []): array
     {
+        @trigger_error('SQLManager::findBy() is deprecated. Use findWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $columnList = self::buildColumnList($columns);
@@ -188,6 +189,7 @@ class SQLManager
      */
     public static function update(string $table, array $data, string $where, array $params = []): bool
     {
+        @trigger_error('SQLManager::update() is deprecated. Use updateWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
@@ -291,6 +293,7 @@ class SQLManager
      */
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
+        @trigger_error('SQLManager::deleteFrom() is deprecated. Use deleteWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
