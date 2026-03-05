@@ -108,5 +108,38 @@ class ApiRequestLimitsMiddlewareTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('stream-data', $capturedBody);
     }
+    public function testSeekableBodyErrorsDoNotBreakRequestFlow(): void
+    {
+        $middleware = new ApiRequestLimitsMiddleware(10, 5);
+        $stream = new class implements StreamInterface {
+            public function __toString(): string { return ''; }
+            public function close(): void {}
+            public function detach() { return null; }
+            public function getSize(): ?int { return null; }
+            public function tell(): int { throw new \RuntimeException('tell failed'); }
+            public function eof(): bool { return true; }
+            public function isSeekable(): bool { return true; }
+            public function seek($offset, $whence = SEEK_SET): void { throw new \RuntimeException('seek failed'); }
+            public function rewind(): void { throw new \RuntimeException('rewind failed'); }
+            public function isWritable(): bool { return false; }
+            public function write($string): int { throw new \RuntimeException('not writable'); }
+            public function isReadable(): bool { return true; }
+            public function read($length): string { return ''; }
+            public function getContents(): string { return ''; }
+            public function getMetadata($key = null) { return null; }
+        };
+
+        $request = new ServerRequest('POST', '/api/items', [], $stream);
+
+        $response = $middleware->process($request, new class implements RequestHandlerInterface {
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+            {
+                return new Response(200, [], 'ok');
+            }
+        });
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('ok', (string) $response->getBody());
+    }
 }
 
