@@ -56,7 +56,8 @@ class Logger extends AbstractLogger
     public function __construct(?string $channel = null, ?string $minLevel = null)
     {
         $this->channel = $channel ?? getenv('LOG_CHANNEL') ?: 'stderr';
-        $this->minLevel = $minLevel ?? getenv('LOG_LEVEL') ?: LogLevel::WARNING;
+        $configuredLevel = strtolower(trim($minLevel ?? getenv('LOG_LEVEL') ?: LogLevel::WARNING));
+        $this->minLevel = isset($this->levels[$configuredLevel]) ? $configuredLevel : LogLevel::WARNING;
     }
 
     /**
