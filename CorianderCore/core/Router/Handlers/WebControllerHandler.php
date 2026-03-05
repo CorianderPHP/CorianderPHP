@@ -7,6 +7,8 @@ use CorianderCore\Core\Router\NameFormatter;
 use CorianderCore\Core\Router\Services\ControllerCacheService;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
+use ReflectionMethod;
+use ReflectionException;
 
 /**
  * Handles dispatching to web controllers by resolving controller class and action from a URL path.
@@ -118,21 +120,49 @@ class WebControllerHandler
     private function dispatchAction(object $controller, array $segments, string $method): array
     {
         $action = $segments[1] ?? 'index';
+        if (!$this->isValidActionName($action)) {
+            return [false, null];
+        }
+
         $params = array_slice($segments, 2);
 
-        if ($action !== 'index' && method_exists($controller, $action)) {
+        if ($action !== 'index' && $this->isPublicInvokableAction($controller, $action)) {
             return [true, call_user_func_array([$controller, $action], $params)];
         }
 
-        if ($method === 'POST' && method_exists($controller, 'store')) {
+        if ($method === 'POST' && $this->isPublicInvokableAction($controller, 'store')) {
             return [true, call_user_func_array([$controller, 'store'], $params)];
         }
 
-        if (method_exists($controller, $action)) {
+        if ($this->isPublicInvokableAction($controller, $action)) {
             return [true, call_user_func_array([$controller, $action], $params)];
         }
 
         return [false, null];
+    }
+
+    private function isValidActionName(string $action): bool
+    {
+        if ($action === '' || str_starts_with($action, '_')) {
+            return false;
+        }
+
+        return preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $action) === 1;
+    }
+
+    private function isPublicInvokableAction(object $controller, string $action): bool
+    {
+        if (!method_exists($controller, $action)) {
+            return false;
+        }
+
+        try {
+            $method = new ReflectionMethod($controller, $action);
+        } catch (ReflectionException) {
+            return false;
+        }
+
+        return $method->isPublic() && !$method->isStatic();
     }
 
     /**
