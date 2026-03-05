@@ -81,4 +81,23 @@ class SQLManagerTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('bob', $rows[0]['name']);
     }
+
+    public function testBuildColumnListSupportsQualifiedWildcard(): void
+    {
+        $method = new \ReflectionMethod(SQLManager::class, 'buildColumnList');
+        $method->setAccessible(true);
+
+        $columnList = $method->invoke(null, ['users.*', 'users.name']);
+
+        $this->assertSame('`users`.*, `users`.`name`', $columnList);
+    }
+
+    public function testQuoteIdentifierRejectsEmptyIdentifier(): void
+    {
+        $method = new \ReflectionMethod(SQLManager::class, 'quoteIdentifier');
+        $method->setAccessible(true);
+
+        $this->expectException(DatabaseException::class);
+        $method->invoke(null, '');
+    }
 }
