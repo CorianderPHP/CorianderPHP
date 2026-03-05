@@ -27,6 +27,11 @@ class WebControllerHandler
      */
     private ControllerCacheService $cacheService;
 
+
+    /**
+     * @var callable(string):object
+     */
+    private $controllerFactory;
     /**
      * Cache for existence checks to avoid redundant filesystem lookups.
      *
@@ -34,9 +39,10 @@ class WebControllerHandler
      */
     private array $controllerExistenceCache = [];
 
-    public function __construct(?ControllerCacheService $cacheService = null)
+    public function __construct(?ControllerCacheService $cacheService = null, ?callable $controllerFactory = null)
     {
-        $this->cacheService = $cacheService ?? ControllerCacheService::getInstance();
+        $this->cacheService = $cacheService ?? new ControllerCacheService();
+        $this->controllerFactory = $controllerFactory ?? static fn(string $className): object => new $className();
     }
 
     /**
@@ -63,7 +69,8 @@ class WebControllerHandler
             return null;
         }
 
-        $controller = new $controllerClass();
+        $factory = $this->controllerFactory;
+        $controller = $factory($controllerClass);
 
         ob_start();
         [$handled, $result] = $this->dispatchAction($controller, $segments, $method);
@@ -198,3 +205,4 @@ class WebControllerHandler
         return $this->controllerExistenceCache[$controllerClass] = false;
     }
 }
+
