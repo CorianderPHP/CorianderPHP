@@ -52,6 +52,8 @@ class ViewRenderer
             return false;
         }
 
+        $__corianderRequestedView = $normalizedPath;
+
         require_once $viewsRoot . '/header.php';
         require_once $fullViewPath;
         require_once $viewsRoot . '/footer.php';

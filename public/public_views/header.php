@@ -1,5 +1,6 @@
 <?php
-$metaDataPath = PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/metadata.php';
+$requestedView = isset($__corianderRequestedView) ? $__corianderRequestedView : 'home';
+$metaDataPath = PROJECT_ROOT . '/public/public_views/' . $requestedView . '/metadata.php';
 if (file_exists($metaDataPath)) {
     require_once $metaDataPath;
 }
@@ -30,7 +31,7 @@ if (file_exists($metaDataPath)) {
             <nav class="md:max-w-screen-2xl w-full mx-auto relative flex justify-end md:h-16 h-14 pointer-events-auto">
                 <div class="flex sm:tracking-1 md:justify-end justify-around w-full">
                     <div class="w-auto flex">
-                        <a href="/home" title="Go to the Home Page" class="relative md:mr-12 block m-auto after:absolute after:content-[''] after:-bottom-[2px] md:after:-bottom-1 after:h-[2px] md:after:h-[3px] after:inset-x-0 after:mx-auto after:bg-dark-green dark:after:bg-peach <?= REQUESTED_VIEW === 'home' ? "after:w-full" : "after:w-0 hover:after:w-full after:transition-['width']" ?>">Home</a>
+                        <a href="/home" title="Go to the Home Page" class="relative md:mr-12 block m-auto after:absolute after:content-[''] after:-bottom-[2px] md:after:-bottom-1 after:h-[2px] md:after:h-[3px] after:inset-x-0 after:mx-auto after:bg-dark-green dark:after:bg-peach <?= $requestedView === 'home' ? "after:w-full" : "after:w-0 hover:after:w-full after:transition-['width']" ?>">Home</a>
                     </div>
                 </div>
             </nav>

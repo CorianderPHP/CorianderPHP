@@ -42,8 +42,11 @@ View resolution only accepts normalized relative paths under `public/public_view
 
 This prevents path traversal and accidental inclusion of files outside the view root.
 
+Shared templates now use an internally normalized requested-view value for metadata and asset resolution, instead of raw request path data.
+
 ## Best Practices
 
 - Keep view logic minimal; handle business logic in controllers or services.
 - Avoid double escaping; variables provided to views are sanitized by the framework.
 - Store assets under `public/assets` and reference them with absolute paths.
+

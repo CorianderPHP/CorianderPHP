@@ -8,9 +8,10 @@
 </footer>
 
 <?php
-if (file_exists(PROJECT_ROOT . '/public/public_views/' . REQUESTED_VIEW . '/index.php') && file_exists(PROJECT_ROOT . '/public/assets/js/' . REQUESTED_VIEW . '/index.js')) {
+$requestedView = isset($__corianderRequestedView) ? $__corianderRequestedView : 'home';
+if (file_exists(PROJECT_ROOT . '/public/public_views/' . $requestedView . '/index.php') && file_exists(PROJECT_ROOT . '/public/assets/js/' . $requestedView . '/index.js')) {
 ?>
-    <script type="module" src="/public/assets/js/<?= REQUESTED_VIEW ?>/index.js?<?php echo filemtime(PROJECT_ROOT . '/public/assets/js/' . REQUESTED_VIEW . '/index.js'); ?>" defer></script>
+    <script type="module" src="/public/assets/js/<?= $requestedView ?>/index.js?<?php echo filemtime(PROJECT_ROOT . '/public/assets/js/' . $requestedView . '/index.js'); ?>" defer></script>
 <?php
 }
 ?>
