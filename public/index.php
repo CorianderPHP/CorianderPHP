@@ -10,9 +10,6 @@ use CorianderCore\Core\Security\CsrfMiddleware;
 use CorianderCore\Core\Security\SecurityHeadersMiddleware;
 use Nyholm\Psr7\ServerRequest;
 
-$appTimezone = getenv('APP_TIMEZONE');
-TimezoneBootstrap::applyFromEnvironment(is_string($appTimezone) ? $appTimezone : null);
-
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 session_set_cookie_params([
     'path' => '/',
@@ -31,6 +28,9 @@ if (file_exists(PROJECT_ROOT . '/CorianderCore/autoload.php')) {
 if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
     require_once PROJECT_ROOT . '/vendor/autoload.php';
 }
+
+$appTimezone = getenv('APP_TIMEZONE');
+TimezoneBootstrap::applyFromEnvironment(is_string($appTimezone) ? $appTimezone : null);
 
 try {
     $container = new Container();
