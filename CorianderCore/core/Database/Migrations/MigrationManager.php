@@ -30,7 +30,8 @@ class MigrationManager
 
         $records = $this->getAppliedRecords();
         $files = $this->discoverMigrationFiles();
-        $this->assertNoChangedAppliedMigrations($records, $files, $allowChanged);
+        $checksumChanges = $this->collectAppliedChecksumChanges($records, $files);
+        $this->assertNoChangedAppliedMigrations($checksumChanges, $allowChanged);
 
         $pending = [];
         foreach ($files as $file) {
@@ -148,7 +149,8 @@ class MigrationManager
         $records = $this->getAppliedRecords();
         $files = $this->discoverMigrationFiles();
 
-        $this->assertNoChangedAppliedMigrations($records, $files, $allowChanged);
+        $checksumChanges = $this->collectAppliedChecksumChanges($records, $files);
+        $this->assertNoChangedAppliedMigrations($checksumChanges, $allowChanged);
 
         $status = [];
         foreach ($files as $file) {
@@ -158,7 +160,7 @@ class MigrationManager
                 'status' => $record ? 'applied' : 'pending',
                 'batch' => $record ? (int) $record['batch'] : null,
                 'executed_at' => $record['executed_at'] ?? null,
-                'changed' => $record ? ((string) $record['checksum'] !== $this->calculateChecksum($file['path'])) : false,
+                'changed' => $record ? ($checksumChanges[$file['filename']] ?? false) : false,
             ];
         }
 
@@ -334,26 +336,46 @@ class MigrationManager
     /**
      * @param array<string, array{filename: string, batch: int, checksum: string, executed_at: string}> $records
      * @param list<array{filename: string, path: string}> $files
+     * @return array<string,bool>
      */
-    private function assertNoChangedAppliedMigrations(array $records, array $files, bool $allowChanged): void
+    private function collectAppliedChecksumChanges(array $records, array $files): array
     {
         $pathsByFilename = [];
         foreach ($files as $file) {
             $pathsByFilename[$file['filename']] = $file['path'];
         }
 
+        $changes = [];
         foreach ($records as $filename => $record) {
             if (!isset($pathsByFilename[$filename])) {
                 continue;
             }
 
             $checksum = $this->calculateChecksum($pathsByFilename[$filename]);
-            if ($record['checksum'] !== $checksum && !$allowChanged) {
-                throw new RuntimeException(
-                    "Migration checksum mismatch detected for '{$filename}'. " .
-                    "Use --allow-changed only in local development if you intentionally edited an applied migration."
-                );
+            $changes[$filename] = $record['checksum'] !== $checksum;
+        }
+
+        return $changes;
+    }
+
+    /**
+     * @param array<string,bool> $checksumChanges
+     */
+    private function assertNoChangedAppliedMigrations(array $checksumChanges, bool $allowChanged): void
+    {
+        if ($allowChanged) {
+            return;
+        }
+
+        foreach ($checksumChanges as $filename => $changed) {
+            if (!$changed) {
+                continue;
             }
+
+            throw new RuntimeException(
+                "Migration checksum mismatch detected for '{$filename}'. " .
+                "Use --allow-changed only in local development if you intentionally edited an applied migration."
+            );
         }
     }
 
@@ -450,3 +472,8 @@ class MigrationManager
         return $this->lockName;
     }
 }
+
+
+
+
+
