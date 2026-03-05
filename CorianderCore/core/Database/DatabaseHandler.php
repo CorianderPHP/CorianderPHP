@@ -61,7 +61,11 @@ class DatabaseHandler
         try {
             switch (DB_TYPE) {
                 case 'mysql':
-                    $this->pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
+                    $port = defined('DB_PORT') ? DB_PORT : null;
+                    $charset = defined('DB_CHARSET') ? (string) DB_CHARSET : '';
+                    $dsn = self::buildMysqlDsn((string) DB_HOST, (string) DB_NAME, $port, $charset);
+
+                    $this->pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
                     break;
                 case 'sqlite':
                     $this->pdo = new PDO('sqlite:' . DB_NAME);
@@ -80,6 +84,23 @@ class DatabaseHandler
             $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
+    }
+
+    /**
+     * Build a MySQL DSN string using framework defaults.
+     */
+    public static function buildMysqlDsn(string $host, string $database, int|string|null $port = null, ?string $charset = null): string
+    {
+        $dsn = 'mysql:host=' . $host;
+
+        $normalizedPort = is_numeric($port) ? (int) $port : 0;
+        if ($normalizedPort > 0) {
+            $dsn .= ';port=' . $normalizedPort;
+        }
+
+        $normalizedCharset = is_string($charset) && $charset !== '' ? $charset : 'utf8mb4';
+
+        return $dsn . ';dbname=' . $database . ';charset=' . $normalizedCharset;
     }
 
     /**

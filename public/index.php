@@ -1,6 +1,6 @@
 <?php
-date_default_timezone_set('Europe/Paris');
 
+use CorianderCore\Core\Bootstrap\TimezoneBootstrap;
 use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Logging\Logger;
@@ -28,6 +28,9 @@ if (file_exists(PROJECT_ROOT . '/CorianderCore/autoload.php')) {
 if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
     require_once PROJECT_ROOT . '/vendor/autoload.php';
 }
+
+$appTimezone = getenv('APP_TIMEZONE');
+TimezoneBootstrap::applyFromEnvironment(is_string($appTimezone) ? $appTimezone : null);
 
 try {
     $container = new Container();
