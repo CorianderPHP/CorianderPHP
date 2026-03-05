@@ -55,7 +55,7 @@ $router->add('GET', '/profile', fn (ServerRequest $r) =>
 
 - Route callbacks and controller actions can return a `ResponseInterface`; status code, headers, and body are preserved.
 - API controller actions may return arrays, which are automatically encoded as JSON responses.
-- If an API action returns text output, it is returned with a JSON content type by default.
+- If an API action returns text output that is not valid JSON, it is wrapped as `{"data":"..."}` and returned as JSON.
 
 ## Error Handling
 
@@ -78,3 +78,4 @@ $router->add('POST', '/user', function(ServerRequest $request) {
 - Leverage PSR-15 middleware for cross-cutting concerns such as authentication or CSRF protection on mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`).
 - Use URL parameters instead of query strings for cleaner, cache-friendly routes.
 - Avoid defining routes unless necessary; controllers are mapped automatically.
+
