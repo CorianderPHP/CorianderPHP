@@ -1,9 +1,51 @@
 <?php
 declare(strict_types=1);
 
+function corianderDeleteDirectoryRecursive(string $directory): void
+{
+    if (!is_dir($directory)) {
+        return;
+    }
+
+    $items = scandir($directory);
+    if ($items === false) {
+        return;
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $path = $directory . DIRECTORY_SEPARATOR . $item;
+        if (is_dir($path)) {
+            corianderDeleteDirectoryRecursive($path);
+        } elseif (file_exists($path)) {
+            @unlink($path);
+        }
+    }
+
+    @rmdir($directory);
+}
+
+function corianderCleanupTestTempArtifacts(string $testsRoot): void
+{
+    $tmpEntries = glob($testsRoot . '/_tmp*', GLOB_NOSORT) ?: [];
+    foreach ($tmpEntries as $entry) {
+        if (is_dir($entry)) {
+            corianderDeleteDirectoryRecursive($entry);
+        } elseif (is_file($entry)) {
+            @unlink($entry);
+        }
+    }
+}
+
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', dirname(__DIR__, 2));
 }
+
+$testsRoot = PROJECT_ROOT . '/CorianderCore/Tests';
+corianderCleanupTestTempArtifacts($testsRoot);
 
 $config = PROJECT_ROOT . '/config/config.php';
 if (file_exists($config)) {
@@ -15,7 +57,7 @@ if (!defined('DB_TYPE')) {
 }
 
 if (!defined('DB_NAME')) {
-    $testDbPath = PROJECT_ROOT . '/CorianderCore/Tests/_tmp_test.sqlite';
+    $testDbPath = $testsRoot . '/_tmp_test.sqlite';
     $testDbDir = dirname($testDbPath);
     if (!is_dir($testDbDir)) {
         mkdir($testDbDir, 0777, true);
@@ -32,3 +74,7 @@ $coreAutoload = PROJECT_ROOT . '/CorianderCore/autoload.php';
 if (file_exists($coreAutoload)) {
     require_once $coreAutoload;
 }
+
+register_shutdown_function(static function () use ($testsRoot): void {
+    corianderCleanupTestTempArtifacts($testsRoot);
+});
