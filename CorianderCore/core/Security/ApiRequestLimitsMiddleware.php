@@ -97,12 +97,15 @@ class ApiRequestLimitsMiddleware implements MiddlewareInterface
             return null;
         }
 
-        $currentPosition = $body->tell();
-        $body->seek(0, SEEK_END);
-        $endPosition = $body->tell();
-        $body->seek($currentPosition);
-
-        return $endPosition;
+        try {
+            $currentPosition = $body->tell();
+            $body->seek(0, SEEK_END);
+            $endPosition = $body->tell();
+            $body->seek($currentPosition);
+            return $endPosition;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function isApiRequest(ServerRequestInterface $request): bool
@@ -136,4 +139,3 @@ class ApiRequestLimitsMiddleware implements MiddlewareInterface
         return new Response(413, ['Content-Type' => 'application/json; charset=utf-8'], $payload);
     }
 }
-

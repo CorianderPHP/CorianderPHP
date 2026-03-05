@@ -26,7 +26,7 @@ class ViewRenderer
      */
     public function render(string $viewPath, array $data = []): bool
     {
-        $normalizedPath = $this->normalizeViewPath($viewPath);
+        $normalizedPath = SafePath::normalizeRelativePath($viewPath);
         if ($normalizedPath === null) {
             return false;
         }
@@ -78,31 +78,4 @@ class ViewRenderer
         return $data;
     }
 
-    /**
-     * Normalize and validate a view path to prevent traversal and invalid segments.
-     */
-    private function normalizeViewPath(string $viewPath): ?string
-    {
-        if (str_contains($viewPath, "\0")) {
-            return null;
-        }
-
-        $path = str_replace('\\', '/', trim($viewPath));
-        if ($path === '' || str_starts_with($path, '/')) {
-            return null;
-        }
-
-        if (preg_match('/^[a-zA-Z]:\//', $path) === 1) {
-            return null;
-        }
-
-        $segments = explode('/', trim($path, '/'));
-        foreach ($segments as $segment) {
-            if ($segment === '' || $segment === '.' || $segment === '..') {
-                return null;
-            }
-        }
-
-        return implode('/', $segments);
-    }
 }

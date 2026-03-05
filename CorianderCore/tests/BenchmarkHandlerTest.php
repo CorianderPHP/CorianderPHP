@@ -296,4 +296,9 @@ class BenchmarkHandlerTest extends TestCase
     //     $this->assertGreaterThan(0, $result['total_iterations'], "Total iterations should be greater than zero.");
     //     $this->assertGreaterThan(0, $result['average_iterations_per_second'], "Average iterations per second should be greater than zero.");
     // }
+    public function testCpuCoreCountIsAtLeastOne(): void
+    {
+        $this->assertGreaterThanOrEqual(1, $this->benchmarkHandler->getCpuCores());
+    }
 }
+

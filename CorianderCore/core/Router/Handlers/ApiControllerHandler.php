@@ -6,14 +6,22 @@ namespace CorianderCore\Core\Router\Handlers;
 use CorianderCore\Core\Router\NameFormatter;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
-use ReflectionException;
-use ReflectionMethod;
 
 /**
  * Handles dispatching to API controllers based on RESTful methods and subpaths.
  */
 class ApiControllerHandler
 {
+    /**
+     * @var callable(string):object
+     */
+    private $controllerFactory;
+
+    public function __construct(?callable $controllerFactory = null)
+    {
+        $this->controllerFactory = $controllerFactory ?? static fn(string $className): object => new $className();
+    }
+
     /**
      * Dispatch an API request to the appropriate controller action.
      *
@@ -44,7 +52,8 @@ class ApiControllerHandler
             return null;
         }
 
-        $controller = new $controllerClass();
+        $factory = $this->controllerFactory;
+        $controller = $factory($controllerClass);
 
         $action = strtolower($method);
         if (isset($segments[1]) && $segments[1] !== '') {
@@ -54,7 +63,7 @@ class ApiControllerHandler
 
         $params = array_slice($segments, 2);
 
-        if (!$this->isPublicInvokableAction($controller, $action)) {
+        if (!ControllerActionInspector::isPublicInvokable($controller, $action)) {
             return null;
         }
 
@@ -82,22 +91,28 @@ class ApiControllerHandler
             return new Response(204, ['Content-Type' => 'application/json; charset=utf-8']);
         }
 
-        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $content);
+        $trimmedContent = trim($content);
+        if ($this->isJsonPayload($trimmedContent)) {
+            return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $trimmedContent);
+        }
+
+        $encoded = json_encode(['data' => $content], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($encoded)) {
+            $encoded = '{"data":""}';
+        }
+
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $encoded);
     }
 
-    private function isPublicInvokableAction(object $controller, string $action): bool
+
+    private function isJsonPayload(string $payload): bool
     {
-        if (!method_exists($controller, $action)) {
+        if ($payload === '') {
             return false;
         }
 
-        try {
-            $method = new ReflectionMethod($controller, $action);
-        } catch (ReflectionException) {
-            return false;
-        }
-
-        return $method->isPublic() && !$method->isStatic();
+        json_decode($payload, true);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     private function controllerExists(string $controllerClass): bool

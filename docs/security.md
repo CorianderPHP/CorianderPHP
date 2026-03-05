@@ -14,10 +14,17 @@ This page summarizes framework-level security behavior and recommended usage pat
 
 ## CSRF Protection
 
-- CSRF middleware validates mutating methods: `POST`, `PUT`, `PATCH`, `DELETE`.
+- CSRF middleware validates mutating methods: `POST`, `PUT`, `PATCH`, `DELETE` (except `/api/*` by default).
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
-- For JSON/API requests, include token in JSON body as `csrf_token`.
+- For JSON/API requests, include token in JSON body as `csrf_token` when API enforcement is enabled (`CSRF_ENFORCE_API=1`).
 
+## Proxy and TLS Detection
+
+When CorianderPHP runs behind a reverse proxy/load balancer, HTTPS detection for secure cookies relies on `TRUSTED_PROXIES`.
+
+- `TRUSTED_PROXIES` accepts a comma-separated list of IPs/CIDRs (default: `127.0.0.1,::1`).
+- Proxy headers (`X-Forwarded-Proto`, `Forwarded`, etc.) are trusted only when `REMOTE_ADDR` matches this allowlist.
+- Example: `TRUSTED_PROXIES=127.0.0.1,::1,10.0.0.0/8,192.168.0.0/16`
 ## Response Security Headers
 
 `SecurityHeadersMiddleware` is enabled by default and injects a secure baseline:
@@ -78,3 +85,5 @@ CorianderPHP hardens framework-level defaults, but application code remains resp
 - authorization checks
 - output encoding in non-framework rendering paths
 - secure secret management and environment configuration
+
+

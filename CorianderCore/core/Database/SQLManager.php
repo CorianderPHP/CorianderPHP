@@ -145,6 +145,7 @@ class SQLManager
      */
     public static function findBy(array $columns, string $table, string $where, array $params = []): array
     {
+        @trigger_error('SQLManager::findBy() is deprecated. Use findWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $columnList = self::buildColumnList($columns);
@@ -188,6 +189,7 @@ class SQLManager
      */
     public static function update(string $table, array $data, string $where, array $params = []): bool
     {
+        @trigger_error('SQLManager::update() is deprecated. Use updateWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
@@ -291,6 +293,7 @@ class SQLManager
      */
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
+        @trigger_error('SQLManager::deleteFrom() is deprecated. Use deleteWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
             $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
@@ -390,9 +393,7 @@ class SQLManager
 
             if (str_ends_with($column, '.*')) {
                 $prefix = substr($column, 0, -2);
-                if ($prefix !== '' && preg_match('/^[a-zA-Z0-9_]+$/', $prefix) === 1) {
-                    return self::quoteIdentifier($prefix) . '.*';
-                }
+                return self::quoteIdentifier($prefix) . '.*';
             }
 
             return self::quoteIdentifier($column);
@@ -408,6 +409,21 @@ class SQLManager
      */
     private static function quoteIdentifier(string $identifier): string
     {
-        return '`' . str_replace('`', '``', $identifier) . '`';
+        $trimmed = trim($identifier);
+        if ($trimmed === '') {
+            throw new DatabaseException('Identifier cannot be empty.');
+        }
+
+        $parts = explode('.', $trimmed);
+        $quotedParts = [];
+        foreach ($parts as $part) {
+            if ($part === '') {
+                throw new DatabaseException('Identifier contains an empty segment.');
+            }
+            $quotedParts[] = '`' . str_replace('`', '``', $part) . '`';
+        }
+
+        return implode('.', $quotedParts);
     }
 }
+

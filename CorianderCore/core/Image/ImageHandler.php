@@ -44,11 +44,21 @@ class ImageHandler
      */
     public static function render(string $imagePath, string $altText = '', string $pictureClass = '', string $imgClass = '', int $quality = 80): string
     {
+        $normalizedPath = self::normalizeImagePath($imagePath);
+        if ($normalizedPath === null) {
+            self::getLogger()->warning('Rejected unsafe image path: ' . $imagePath);
+            return '';
+        }
+
         // Convert the image to WebP format if it doesn't already exist
-        $webpPath = self::convertToWebP($imagePath, $quality);
+        $webpPath = self::convertToWebP($normalizedPath, $quality);
 
         // Generate the paths for the original image and WebP image
-        $fullImagePath = self::$imageDir . $imagePath;
+        $fullImagePath = self::resolveFullImagePath($normalizedPath);
+        if ($fullImagePath === null) {
+            self::getLogger()->warning('Unable to resolve image path: ' . $normalizedPath);
+            return '';
+        }
 
         // Check if the original image exists to get dimensions; otherwise, set default dimensions
         $imageSize = @getimagesize($fullImagePath);
@@ -57,20 +67,29 @@ class ImageHandler
             [$width, $height] = $imageSize;
         }
 
+        $safePictureClass = self::escapeHtmlAttribute($pictureClass);
+        $safeImgClass = self::escapeHtmlAttribute($imgClass);
+        $safeAltText = self::escapeHtmlAttribute($altText);
+
         // Prepare the HTML for the <picture> element
-        $pictureHTML = "<picture class=\"$pictureClass\">";
-        
+        $pictureHTML = "<picture class=\"{$safePictureClass}\">";
+
         if ($webpPath) {
-            $webpRelativePath = self::getRelativePath($webpPath);
-            $pictureHTML .= "<source srcset=\"$webpRelativePath\" type=\"image/webp\" />";
+            $webpRelativePath = self::escapeHtmlAttribute(self::getWebPRelativePath($normalizedPath, $quality));
+            $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
         }
-        
-        $originalRelativePath = self::getRelativePath($fullImagePath);
-        $pictureHTML .= "<source srcset=\"$originalRelativePath\" type=\"image/" . pathinfo($imagePath, PATHINFO_EXTENSION) . "\" />";
-        $pictureHTML .= "<img alt='$altText' width=\"$width\" height=\"$height\" class=\"$imgClass\" src=\"$originalRelativePath\" />";
-        
+
+        $originalRelativePath = self::escapeHtmlAttribute($normalizedPath);
+        $originalExtension = strtolower((string) pathinfo($normalizedPath, PATHINFO_EXTENSION));
+        $safeOriginalType = preg_replace('/[^a-z0-9.+-]/', '', $originalExtension);
+        $safeWidth = $width !== '' ? (string) (int) $width : '';
+        $safeHeight = $height !== '' ? (string) (int) $height : '';
+
+        $pictureHTML .= "<source srcset=\"{$originalRelativePath}\" type=\"image/{$safeOriginalType}\" />";
+        $pictureHTML .= "<img alt=\"{$safeAltText}\" width=\"{$safeWidth}\" height=\"{$safeHeight}\" class=\"{$safeImgClass}\" src=\"{$originalRelativePath}\" />";
+
         $pictureHTML .= "</picture>";
-        
+
         return $pictureHTML;
     }
 
@@ -83,14 +102,24 @@ class ImageHandler
      */
     public static function convertToWebP(string $imagePath, int $quality = 80): string|false
     {
-        $fullImagePath = self::$imageDir . $imagePath;
-        
+        $normalizedPath = self::normalizeImagePath($imagePath);
+        if ($normalizedPath === null) {
+            self::getLogger()->warning('Rejected unsafe image path: ' . $imagePath);
+            return false;
+        }
+
+        $fullImagePath = self::resolveFullImagePath($normalizedPath);
+        if ($fullImagePath === null) {
+            self::getLogger()->warning('Unable to resolve image path: ' . $normalizedPath);
+            return false;
+        }
+
         if (!file_exists($fullImagePath)) {
             self::getLogger()->warning('Image not found: ' . $fullImagePath);
             return false;
         }
 
-        $webpPath = self::getWebPPath($imagePath, $quality);
+        $webpPath = self::getWebPPath($normalizedPath, $quality);
 
         // If WebP file already exists, no need to convert
         if (file_exists($webpPath)) {
@@ -151,18 +180,71 @@ class ImageHandler
     private static function getWebPPath(string $imagePath, int $quality): string
     {
         $imagePathInfo = pathinfo($imagePath);
-        return self::$imageDir . $imagePathInfo['dirname'] . '/' . self::$webpDir . $imagePathInfo['filename'] . "_{$quality}.webp";
+        $directory = trim((string) ($imagePathInfo['dirname'] ?? ''), '/');
+        $basePath = self::normalizeBaseDirectory() . ($directory !== '' ? $directory . '/' : '');
+
+        return $basePath . self::$webpDir . $imagePathInfo['filename'] . "_{$quality}.webp";
     }
 
-    /**
-     * Returns the relative path of the image from the base directory.
-     *
-     * @param string $fullPath The full path to the image.
-     * @return string The relative path.
-     */
-    private static function getRelativePath(string $fullPath): string
+    private static function getWebPRelativePath(string $imagePath, int $quality): string
     {
-        return str_replace(self::$imageDir, '', $fullPath);
+        $imagePathInfo = pathinfo($imagePath);
+        $directory = trim((string) ($imagePathInfo['dirname'] ?? ''), '/');
+        $basePath = '/' . ($directory !== '' ? $directory . '/' : '');
+
+        return $basePath . self::$webpDir . $imagePathInfo['filename'] . "_{$quality}.webp";
+    }
+
+    private static function resolveFullImagePath(string $imagePath): ?string
+    {
+        $fullPath = self::normalizeBaseDirectory() . ltrim($imagePath, '/');
+        $resolved = realpath($fullPath);
+        if ($resolved === false) {
+            return null;
+        }
+
+        $baseDirectory = rtrim(realpath(self::normalizeBaseDirectory()) ?: self::normalizeBaseDirectory(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (!str_starts_with($resolved, $baseDirectory)) {
+            return null;
+        }
+
+        return $resolved;
+    }
+
+    private static function normalizeImagePath(string $imagePath): ?string
+    {
+        if ($imagePath === '' || str_contains($imagePath, "\0")) {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', trim($imagePath));
+        $segments = explode('/', ltrim($path, '/'));
+        $normalized = [];
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                return null;
+            }
+            $normalized[] = $segment;
+        }
+
+        if ($normalized === []) {
+            return null;
+        }
+
+        return '/' . implode('/', $normalized);
+    }
+
+    private static function normalizeBaseDirectory(): string
+    {
+        return rtrim(str_replace('\\', '/', self::$imageDir), '/') . '/';
+    }
+
+    private static function escapeHtmlAttribute(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
-

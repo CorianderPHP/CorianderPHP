@@ -321,9 +321,8 @@ final class FrameworkFileSyncService
     {
         $relativePath = $this->toRelativeProjectPath($destinationFile);
         $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
-        $scopeSegment = $backupScope !== null && trim($backupScope) !== ''
-            ? '/' . trim(str_replace('\\', '/', $backupScope), '/')
-            : '';
+        $normalizedScope = $this->normalizeBackupScope($backupScope);
+        $scopeSegment = $normalizedScope !== '' ? '/' . $normalizedScope : '';
 
         $backupPath = $this->projectRoot . '/' . $baseDirectory . $scopeSegment . '/' . $relativePath . '.bak';
         $suffix = 0;
@@ -564,7 +563,11 @@ final class FrameworkFileSyncService
     private function resolveBackupScopePath(string $scope, ?string $backupDirectory = null): string
     {
         $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
-        $normalizedScope = trim(str_replace('\\', '/', $scope), '/');
+        $normalizedScope = $this->normalizeBackupScope($scope);
+        if ($normalizedScope === '') {
+            throw new RuntimeException('Backup scope cannot be empty.');
+        }
+
         return $this->projectRoot . '/' . $baseDirectory . '/' . $normalizedScope;
     }
     private function deleteTemporaryDirectory(string $directory): void
@@ -608,7 +611,7 @@ final class FrameworkFileSyncService
             throw new RuntimeException('Backup directory contains invalid null-byte characters.');
         }
 
-        $normalized = str_replace('\\', '/', trim($backupDirectory));
+        $normalized = str_replace("\\", "/", trim($backupDirectory));
         if ($normalized === '') {
             return 'backups/coriander';
         }
@@ -631,9 +634,34 @@ final class FrameworkFileSyncService
         return implode('/', $segments);
     }
 
-    /**
-     * @param array<int, array{type:string,destination:string,backup_absolute:string|null}> $appliedOperations
-     */
+    private function normalizeBackupScope(?string $scope): string
+    {
+        if ($scope === null) {
+            return '';
+        }
+
+        if (str_contains($scope, "\0")) {
+            throw new RuntimeException('Backup scope contains invalid null-byte characters.');
+        }
+
+        $normalized = str_replace("\\", "/", trim($scope));
+        if ($normalized === '') {
+            return '';
+        }
+
+        if (str_starts_with($normalized, '/') || preg_match('/^[A-Za-z]:\//', $normalized) === 1) {
+            throw new RuntimeException('Backup scope must be relative to the backup directory.');
+        }
+
+        $segments = array_values(array_filter(explode('/', trim($normalized, '/')), static fn(string $segment): bool => $segment !== ''));
+        foreach ($segments as $segment) {
+            if ($segment === '.' || $segment === '..') {
+                throw new RuntimeException('Backup scope cannot contain path traversal segments.');
+            }
+        }
+
+        return implode('/', $segments);
+    }
     private function rollbackAppliedOperations(array $appliedOperations): ?string
     {
         $restoreFailures = [];
@@ -673,6 +701,7 @@ final class FrameworkFileSyncService
         return $normalizedAbsolute;
     }
 }
+
 
 
 

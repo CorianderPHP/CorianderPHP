@@ -9,10 +9,10 @@ use CorianderCore\Core\Utils\DirectoryHandler;
 /**
  * Class ImageHandlerTest
  *
- * This test class verifies the functionality of the ImageHandler class, 
- * including converting images to WebP format and rendering a <picture> 
+ * This test class verifies the functionality of the ImageHandler class,
+ * including converting images to WebP format and rendering a <picture>
  * element with WebP and original image sources.
- * 
+ *
  * Requirements:
  * - PHP GD extension must be enabled to run the tests.
  * - The test will skip with a message if the GD extension is not available.
@@ -49,7 +49,7 @@ class ImageHandlerTest extends TestCase
         self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp";
     }
 
-    
+
     protected function setUp(): void
     {
         // Check if GD extension is enabled
@@ -58,7 +58,7 @@ class ImageHandlerTest extends TestCase
                 'The GD extension is not enabled. Please enable it in your php.ini file. Current php.ini: ' . php_ini_loaded_file()
             );
         }
-        
+
         self::$testImageDir = self::$testPath . '/assets/';
         self::$testImagePath = '/CorianderCore/tests/_tmp/assets/test_image.png';
         self::$webpDir = 'webp/';
@@ -79,7 +79,7 @@ class ImageHandlerTest extends TestCase
             imagedestroy($image);
         }
     }
-    
+
     /**
      * tearDownAfterClass
      *
@@ -136,6 +136,20 @@ class ImageHandlerTest extends TestCase
 
         $this->assertStringContainsString('<picture class="picture-class">', $html, 'Picture tag was not rendered correctly.');
         $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/webp/test_image_80.webp" type="image/webp"', $html, 'WebP source tag was not rendered correctly.');
-        $this->assertStringContainsString('<img alt=\'Test Image\' width="100" height="100" class="img-class" src="/CorianderCore/tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
+        $this->assertStringContainsString('<img alt="Test Image" width="100" height="100" class="img-class" src="/CorianderCore/tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
+    }
+
+    public function testRejectsTraversalPaths(): void
+    {
+        $this->assertFalse(
+            ImageHandler::convertToWebP('/../../windows/system32/drivers/etc/hosts', 80),
+            'Traversal paths must be rejected.'
+        );
+
+        $this->assertSame(
+            '',
+            ImageHandler::render('/../../windows/system32/drivers/etc/hosts'),
+            'Render should return empty output for rejected traversal paths.'
+        );
     }
 }

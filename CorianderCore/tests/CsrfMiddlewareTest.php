@@ -202,4 +202,27 @@ class CsrfMiddlewareTest extends TestCase
 
         $this->assertSame(403, $response->getStatusCode());
     }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testDoesNotUseGlobalPostFallback(): void
+    {
+        $token = Csrf::token();
+        $_POST['csrf_token'] = $token;
+
+        $middleware = new CsrfMiddleware(null, true);
+        $request = new ServerRequest('POST', '/test', ['Content-Type' => 'application/json'], '{}');
+        $handler = new class implements RequestHandlerInterface {
+            public bool $called = false;
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertFalse($handler->called);
+        $this->assertSame(403, $response->getStatusCode());
+    }
 }

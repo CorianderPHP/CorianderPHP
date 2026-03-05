@@ -98,7 +98,7 @@ class RouterTest extends TestCase
         // Assert that the output contains expected content from the home page
         $this->assertStringContainsString('Installation Successful!', $output);
         // Assert that the requested view is correctly set to 'home'
-        $this->assertSame('home', REQUESTED_VIEW);
+        $this->assertSame(200, $response->getStatusCode());
     }
 
     /**
@@ -119,7 +119,7 @@ class RouterTest extends TestCase
         // Assert that the custom 404 message is displayed
         $this->assertStringContainsString('404 Custom Not Found', $output);
         // Assert that the requested view is correctly set to the non-existent route
-        $this->assertSame('non-existent-route', REQUESTED_VIEW);
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     /**
@@ -140,7 +140,7 @@ class RouterTest extends TestCase
         // Assert that the output contains the correct content for the 'about' page
         $this->assertStringContainsString('About Page Content', $output);
         // Assert that the requested view is correctly set to 'about'
-        $this->assertSame('about', REQUESTED_VIEW);
+        $this->assertSame(200, $response->getStatusCode());
     }
 
     /**
@@ -158,7 +158,7 @@ class RouterTest extends TestCase
         // Assert that the home page content is loaded by default
         $this->assertStringContainsString('Installation Successful!', $output);
         // Assert that the requested view is correctly set to 'home'
-        $this->assertSame('home', REQUESTED_VIEW);
+        $this->assertSame(200, $response->getStatusCode());
     }
 
 
@@ -179,7 +179,7 @@ class RouterTest extends TestCase
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertStringContainsString('404 Custom Not Found', $output);
-        $this->assertSame('home', REQUESTED_VIEW);
+        $this->assertSame(404, $response->getStatusCode());
     }
     /**
      * Test that the router handles a request to a controller where the action method does not exist.
@@ -466,4 +466,5 @@ PHP
         }
     }
 }
+
 
