@@ -89,7 +89,14 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         $contentType = strtolower($request->getHeaderLine('Content-Type'));
-        $rawBody = (string) $request->getBody();
+        if (!str_contains($contentType, 'application/x-www-form-urlencoded') && !str_contains($contentType, 'application/json')) {
+            return null;
+        }
+
+        $rawBody = $this->readRequestBody($request);
+        if ($rawBody === '') {
+            return null;
+        }
 
         if (str_contains($contentType, 'application/x-www-form-urlencoded')) {
             $formBody = [];
@@ -106,11 +113,26 @@ class CsrfMiddleware implements MiddlewareInterface
             }
         }
 
-        if (isset($_POST['csrf_token']) && is_string($_POST['csrf_token'])) {
-            return $_POST['csrf_token'];
+        return null;
+    }
+
+    private function readRequestBody(ServerRequestInterface $request): string
+    {
+        $body = $request->getBody();
+
+        if (!$body->isSeekable()) {
+            return (string) $body;
         }
 
-        return null;
+        try {
+            $position = $body->tell();
+            $body->rewind();
+            $contents = $body->getContents();
+            $body->seek($position);
+            return $contents;
+        } catch (\Throwable) {
+            return (string) $body;
+        }
     }
 
     private function requiresValidation(string $method): bool
