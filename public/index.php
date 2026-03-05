@@ -11,7 +11,40 @@ use CorianderCore\Core\Security\SecurityHeadersMiddleware;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
-$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+/**
+ * Detect whether the original client connection should be treated as HTTPS.
+ *
+ * Supports direct HTTPS and common reverse proxy headers.
+ */
+function corianderIsSecureRequest(array $serverParams): bool
+{
+    $https = strtolower((string) ($serverParams['HTTPS'] ?? ''));
+    if ($https !== '' && $https !== 'off' && $https !== '0') {
+        return true;
+    }
+
+    $forwardedProto = strtolower((string) ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? ''));
+    if ($forwardedProto !== '') {
+        $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
+        if ($firstHop === 'https') {
+            return true;
+        }
+    }
+
+    $forwardedSsl = strtolower((string) ($serverParams['HTTP_X_FORWARDED_SSL'] ?? ''));
+    if ($forwardedSsl === 'on') {
+        return true;
+    }
+
+    $frontEndHttps = strtolower((string) ($serverParams['HTTP_FRONT_END_HTTPS'] ?? ''));
+    if ($frontEndHttps === 'on') {
+        return true;
+    }
+
+    return (string) ($serverParams['SERVER_PORT'] ?? '') === '443';
+}
+
+$secure = corianderIsSecureRequest($_SERVER);
 session_set_cookie_params([
     'path' => '/',
     'secure' => $secure,
@@ -118,4 +151,3 @@ try {
 
     echo 'Internal Server Error';
 }
-
