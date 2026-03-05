@@ -4,6 +4,7 @@ namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Core\Router\Router;
+use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
 class RouterTest extends TestCase
@@ -372,5 +373,81 @@ class RouterTest extends TestCase
 
         $this->assertStringContainsString('Delete action output', $output);
         $this->assertStringNotContainsString('Store action output', $output);
+    }
+
+    /**
+     * Test that a controller action can return a PSR-7 response with custom status.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testWebControllerResponseStatusIsPreserved(): void
+    {
+        $request = new ServerRequest('GET', '/test-controller');
+
+        $controllerCode = <<<'PHP'
+<?php
+namespace Controllers;
+
+use Nyholm\Psr7\Response;
+
+class TestController
+{
+    public function index(): Response
+    {
+        return new Response(201, [], 'Created');
+    }
+}
+PHP;
+
+        $controllerFile = PROJECT_ROOT . '/src/Controllers/TestController.php';
+        file_put_contents($controllerFile, $controllerCode);
+
+        $response = $this->router->dispatch($request);
+
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame('Created', (string) $response->getBody());
+    }
+
+    /**
+     * Test that API controller responses preserve explicit status and headers.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testApiControllerResponseStatusAndHeadersArePreserved(): void
+    {
+        $apiDir = PROJECT_ROOT . '/src/ApiControllers';
+        if (!is_dir($apiDir)) {
+            mkdir($apiDir, 0777, true);
+        }
+
+        $controllerFile = $apiDir . '/StatusController.php';
+        file_put_contents($controllerFile, <<<'PHP'
+<?php
+namespace ApiControllers;
+
+use Nyholm\Psr7\Response;
+
+class StatusController
+{
+    public function get(): Response
+    {
+        return new Response(202, ['Content-Type' => 'application/json'], '{"accepted":true}');
+    }
+}
+PHP
+        );
+
+        try {
+            $response = $this->router->dispatch(new ServerRequest('GET', '/api/status'));
+
+            $this->assertSame(202, $response->getStatusCode());
+            $this->assertSame('application/json', $response->getHeaderLine('Content-Type'));
+            $this->assertSame('{"accepted":true}', (string) $response->getBody());
+        } finally {
+            if (file_exists($controllerFile)) {
+                unlink($controllerFile);
+            }
+            if (is_dir($apiDir) && count(array_diff(scandir($apiDir), ['.', '..'])) === 0) {
+                rmdir($apiDir);
+            }
+        }
     }
 }

@@ -604,8 +604,31 @@ final class FrameworkFileSyncService
 
     private function normalizeBackupDirectory(string $backupDirectory): string
     {
-        $normalized = trim(str_replace('\\', '/', $backupDirectory), '/');
-        return $normalized !== '' ? $normalized : 'backups/coriander';
+        if (str_contains($backupDirectory, "\0")) {
+            throw new RuntimeException('Backup directory contains invalid null-byte characters.');
+        }
+
+        $normalized = str_replace('\\', '/', trim($backupDirectory));
+        if ($normalized === '') {
+            return 'backups/coriander';
+        }
+
+        if (str_starts_with($normalized, '/') || preg_match('/^[a-zA-Z]:\//', $normalized) === 1) {
+            throw new RuntimeException('Backup directory must be a relative path inside the project.');
+        }
+
+        $segments = array_values(array_filter(explode('/', trim($normalized, '/')), static fn(string $segment): bool => $segment !== ''));
+        if ($segments === []) {
+            return 'backups/coriander';
+        }
+
+        foreach ($segments as $segment) {
+            if ($segment === '.' || $segment === '..') {
+                throw new RuntimeException('Backup directory cannot contain path traversal segments.');
+            }
+        }
+
+        return implode('/', $segments);
     }
 
     /**

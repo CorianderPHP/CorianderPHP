@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Database;
 
-use \PDO;
+use PDO;
 use Exception;
 use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Database\DatabaseException;
@@ -74,26 +74,36 @@ class SQLManager
 
         return $pdo;
     }
+
     /**
-     * Retrieves all data from a table in the database.
+     * Retrieves data from a table in the database.
      *
-     * @param array  $columns The columns to select in the SQL query.
-     * @param string $table   The table from which to retrieve data.
-     * @param array  $params  Named parameters to bind to the SQL query (optional).
+     * Supported signatures:
+     * - findAll('users')
+     * - findAll(['id', 'email'], 'users')
+     *
+     * Not recommended wildcard form:
+     * - findAll(['*'], 'users')
+     *
+     * @param array|string    $columnsOrTable Columns list or table name.
+     * @param string|null     $table          Table name when first argument is a columns list.
+     * @param array           $params         Named parameters to bind to the SQL query (optional).
      *
      * @return array The retrieved data from the table as an associative array.
      *
      * @throws DatabaseException If the query fails.
      */
-    public static function findAll(array $columns, string $table, array $params = []): array
+    public static function findAll(array|string $columnsOrTable, ?string $table = null, array $params = []): array
     {
         try {
-            $pdo        = self::requirePdo();
-            $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
-            $table      = self::quoteIdentifier($table);
-            $sql        = sprintf('SELECT %s FROM %s', $columnList, $table);
-            $stmt       = $pdo->prepare($sql);
-            $stmt->execute($params);
+            [$columns, $resolvedTable, $resolvedParams] = self::resolveFindAllArguments($columnsOrTable, $table, $params);
+
+            $pdo = self::requirePdo();
+            $columnList = self::buildColumnList($columns);
+            $resolvedTable = self::quoteIdentifier($resolvedTable);
+            $sql = sprintf('SELECT %s FROM %s', $columnList, $resolvedTable);
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($resolvedParams);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return $data !== false ? $data : [];
@@ -102,7 +112,23 @@ class SQLManager
             throw new DatabaseException('Unable to execute findAll query.', 0, $e);
         }
     }
+    /**
+     * @param array|string $columnsOrTable
+     * @param string|null $table
+     * @return array{0:array<int,string>,1:string,2:array<string,mixed>}
+     */
+    private static function resolveFindAllArguments(array|string $columnsOrTable, ?string $table, array $params): array
+    {
+        if (is_string($columnsOrTable)) {
+            return [['*'], $columnsOrTable, $params];
+        }
 
+        if ($table === null || $table === '') {
+            throw new DatabaseException('Table name is required when providing explicit column list.');
+        }
+
+        return [$columnsOrTable, $table, $params];
+    }
     /**
      * Retrieves rows from a table based on a condition.
      *
@@ -114,15 +140,17 @@ class SQLManager
      * @return array The retrieved row data as an associative array.
      *
      * @throws DatabaseException If the query fails.
+     *
+     * @deprecated Use findWhere() for simple equality conditions.
      */
     public static function findBy(array $columns, string $table, string $where, array $params = []): array
     {
         try {
-            $pdo        = self::requirePdo();
-            $columnList = implode(', ', array_map([self::class, 'quoteIdentifier'], $columns));
-            $table      = self::quoteIdentifier($table);
-            $sql        = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
-            $stmt       = $pdo->prepare($sql);
+            $pdo = self::requirePdo();
+            $columnList = self::buildColumnList($columns);
+            $table = self::quoteIdentifier($table);
+            $sql = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -132,7 +160,6 @@ class SQLManager
             throw new DatabaseException('Unable to execute findBy query.', 0, $e);
         }
     }
-
 
     /**
      * Retrieves rows from a table using an equality-based condition map.
@@ -144,6 +171,7 @@ class SQLManager
         [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
         return self::findBy($columns, $table, $whereClause, $params);
     }
+
     /**
      * Updates data in a table in the database based on a given condition.
      *
@@ -155,19 +183,21 @@ class SQLManager
      * @return bool True if the update was successful.
      *
      * @throws DatabaseException If the query fails.
+     *
+     * @deprecated Use updateWhere() for simple equality conditions.
      */
     public static function update(string $table, array $data, string $where, array $params = []): bool
     {
         try {
-            $pdo   = self::requirePdo();
+            $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
-            $set   = [];
+            $set = [];
             foreach ($data as $column => $value) {
-                $placeholder     = ':' . $column;
-                $set[]           = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
+                $placeholder = ':' . $column;
+                $set[] = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
                 $params[$column] = $value;
             }
-            $sql  = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
+            $sql = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
 
@@ -177,7 +207,6 @@ class SQLManager
             throw new DatabaseException('Unable to execute update query.', 0, $e);
         }
     }
-
 
     /**
      * Updates rows in a table using an equality-based condition map.
@@ -190,6 +219,7 @@ class SQLManager
         [$whereClause, $whereParams] = self::buildWhereFromArray($conditions, 'w_');
         return self::update($table, $data, $whereClause, $whereParams);
     }
+
     /**
      * Inserts a new row into a table in the database.
      *
@@ -203,12 +233,12 @@ class SQLManager
     public static function insertInto(string $table, array $data): bool
     {
         try {
-            $pdo         = self::requirePdo();
-            $table       = self::quoteIdentifier($table);
-            $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
+            $pdo = self::requirePdo();
+            $table = self::quoteIdentifier($table);
+            $columns = array_map([self::class, 'quoteIdentifier'], array_keys($data));
             $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
-            $sql         = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
-            $stmt        = $pdo->prepare($sql);
+            $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($data);
 
             return true;
@@ -231,12 +261,12 @@ class SQLManager
     public static function insertIntoAndGetId(string $table, array $data): string
     {
         try {
-            $pdo         = self::requirePdo();
-            $table       = self::quoteIdentifier($table);
-            $columns     = array_map([self::class, 'quoteIdentifier'], array_keys($data));
+            $pdo = self::requirePdo();
+            $table = self::quoteIdentifier($table);
+            $columns = array_map([self::class, 'quoteIdentifier'], array_keys($data));
             $placeholders = array_map(fn($col) => ':' . $col, array_keys($data));
-            $sql         = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
-            $stmt        = $pdo->prepare($sql);
+            $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $table, implode(', ', $columns), implode(', ', $placeholders));
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($data);
 
             return $pdo->lastInsertId();
@@ -256,16 +286,18 @@ class SQLManager
      * @return bool True if the deletion was successful.
      *
      * @throws DatabaseException If the query fails.
+     *
+     * @deprecated Use deleteWhere() for simple equality conditions.
      */
     public static function deleteFrom(string $table, string $where = '', array $params = []): bool
     {
         try {
-            $pdo   = self::requirePdo();
+            $pdo = self::requirePdo();
             $table = self::quoteIdentifier($table);
-            $sql   = $where === ''
+            $sql = $where === ''
                 ? sprintf('DELETE FROM %s', $table)
                 : sprintf('DELETE FROM %s WHERE %s', $table, $where);
-            $stmt  = $pdo->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
 
             return true;
@@ -274,7 +306,6 @@ class SQLManager
             throw new DatabaseException('Unable to execute delete query.', 0, $e);
         }
     }
-
 
     /**
      * Deletes rows in a table using an equality-based condition map.
@@ -286,6 +317,7 @@ class SQLManager
         [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
         return self::deleteFrom($table, $whereClause, $params);
     }
+
     /**
      * Executes a given SQL query and retrieves a row of data from the database table.
      *
@@ -299,7 +331,7 @@ class SQLManager
     public static function sqlScript(string $sqlScript, array $params = []): array
     {
         try {
-            $pdo  = self::requirePdo();
+            $pdo = self::requirePdo();
             $stmt = $pdo->prepare($sqlScript);
             $stmt->execute($params);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -310,7 +342,6 @@ class SQLManager
             throw new DatabaseException('Unable to execute SQL script.', 0, $e);
         }
     }
-
 
     /**
      * Build a safe equality-based WHERE clause from an associative array.
@@ -343,6 +374,31 @@ class SQLManager
 
         return [implode(' AND ', $clauses), $params];
     }
+
+    /**
+     * Build a safe select list from requested columns.
+     *
+     * @param array<int,string> $columns
+     */
+    private static function buildColumnList(array $columns): string
+    {
+        return implode(', ', array_map(static function ($column): string {
+            $column = (string) $column;
+            if ($column === '*') {
+                return '*';
+            }
+
+            if (str_ends_with($column, '.*')) {
+                $prefix = substr($column, 0, -2);
+                if ($prefix !== '' && preg_match('/^[a-zA-Z0-9_]+$/', $prefix) === 1) {
+                    return self::quoteIdentifier($prefix) . '.*';
+                }
+            }
+
+            return self::quoteIdentifier($column);
+        }, $columns));
+    }
+
     /**
      * Quote an identifier such as a table or column name.
      *
@@ -355,5 +411,3 @@ class SQLManager
         return '`' . str_replace('`', '``', $identifier) . '`';
     }
 }
-
-

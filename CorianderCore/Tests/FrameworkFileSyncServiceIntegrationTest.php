@@ -103,6 +103,14 @@ class FrameworkFileSyncServiceIntegrationTest extends TestCase
         $this->assertSame('latest-backup-1', (string) file_get_contents($destination));
         $this->assertFileDoesNotExist($addedFile);
     }
+
+    public function testConstructorRejectsTraversalBackupDirectory(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('path traversal');
+
+        new FrameworkFileSyncService($this->root, ['CorianderCore'], '../outside');
+    }
     private function deleteDirectory(string $directory): void
     {
         if (!is_dir($directory)) {

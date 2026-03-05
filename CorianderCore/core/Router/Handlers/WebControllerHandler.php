@@ -5,6 +5,8 @@ namespace CorianderCore\Core\Router\Handlers;
 
 use CorianderCore\Core\Router\NameFormatter;
 use CorianderCore\Core\Router\Services\ControllerCacheService;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Handles dispatching to web controllers by resolving controller class and action from a URL path.
@@ -44,16 +46,40 @@ class WebControllerHandler
      */
     public function handle(string $path, string $method): bool
     {
+        return $this->dispatch($path, $method) !== null;
+    }
+
+    /**
+     * Dispatch a web controller action and return a response when handled.
+     */
+    public function dispatch(string $path, string $method): ?ResponseInterface
+    {
         $segments = explode('/', $path);
         $controllerClass = $this->resolveControllerClass($segments[0] ?? '');
 
         if (!$this->controllerExists($controllerClass)) {
-            return false;
+            return null;
         }
 
         $controller = new $controllerClass();
 
-        return $this->dispatchAction($controller, $segments, $method);
+        ob_start();
+        [$handled, $result] = $this->dispatchAction($controller, $segments, $method);
+        $content = (string) ob_get_clean();
+
+        if (!$handled) {
+            return null;
+        }
+
+        if ($result instanceof ResponseInterface) {
+            return $result;
+        }
+
+        if (is_string($result) || $result instanceof \Stringable) {
+            $content .= (string) $result;
+        }
+
+        return new Response(200, [], $content);
     }
 
     /**
@@ -87,30 +113,26 @@ class WebControllerHandler
      * @param object $controller The controller instance.
      * @param array<int, string> $segments The URI path segments.
      * @param string $method The HTTP method (GET, POST, etc.).
-     * @return bool True if the action was successfully dispatched.
+     * @return array{0:bool,1:mixed} [handled, action result]
      */
-    private function dispatchAction(object $controller, array $segments, string $method): bool
+    private function dispatchAction(object $controller, array $segments, string $method): array
     {
         $action = $segments[1] ?? 'index';
         $params = array_slice($segments, 2);
 
-        // If an explicit action is requested in the URI, it takes precedence.
         if ($action !== 'index' && method_exists($controller, $action)) {
-            call_user_func_array([$controller, $action], $params);
-            return true;
+            return [true, call_user_func_array([$controller, $action], $params)];
         }
 
         if ($method === 'POST' && method_exists($controller, 'store')) {
-            call_user_func_array([$controller, 'store'], $params);
-            return true;
+            return [true, call_user_func_array([$controller, 'store'], $params)];
         }
 
         if (method_exists($controller, $action)) {
-            call_user_func_array([$controller, $action], $params);
-            return true;
+            return [true, call_user_func_array([$controller, $action], $params)];
         }
 
-        return false;
+        return [false, null];
     }
 
     /**

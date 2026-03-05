@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Database;
 
-use \PDO;
+use PDO;
+use PDOException;
 use CorianderCore\Core\Logging\Logger;
 use Psr\Log\LoggerInterface;
 
@@ -52,34 +53,38 @@ class DatabaseHandler
     {
         $this->logger = $logger ?? new Logger();
 
-        // Check if the DB_TYPE constant is set and its value
-        if (defined('DB_TYPE')) {
+        if (!defined('DB_TYPE')) {
+            $this->logger->warning('DB_TYPE is not defined. No database connection established.');
+            return;
+        }
+
+        try {
             switch (DB_TYPE) {
                 case 'mysql':
-                    $this->pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
+                    $this->pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
                     break;
                 case 'sqlite':
-                    $this->pdo = new PDO("sqlite:" . DB_NAME);
+                    $this->pdo = new PDO('sqlite:' . DB_NAME);
                     break;
                 default:
-                    // Handle unsupported DB_TYPE
                     $this->logger->warning('Unsupported database type: ' . DB_TYPE);
-                    return; // Do not create a connection
+                    return;
             }
+        } catch (PDOException $exception) {
+            $this->pdo = null;
+            $this->logger->error('Database connection failed.', ['exception' => $exception]);
+            return;
+        }
 
-            if ($this->pdo !== null) {
-                $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-                $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            }
-        } else {
-            // Handle case where DB_TYPE is not defined
-            $this->logger->warning('DB_TYPE is not defined. No database connection established.');
+        if ($this->pdo !== null) {
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
     }
 
     /**
      * Returns the PDO instance associated with the current database connection.
-     * 
+     *
      * @return PDO|null The PDO instance for interacting with the database, or null if no connection is available.
      */
     public function getPDO(): ?PDO

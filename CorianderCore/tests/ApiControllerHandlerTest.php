@@ -1,6 +1,8 @@
 <?php
 namespace ApiControllers;
 
+use Nyholm\Psr7\Response;
+
 /**
  * Stub controller for ApiControllerHandler tests.
  */
@@ -13,26 +15,24 @@ class SampleController
      */
     public static array $calls = [];
 
-    /**
-     * Handle GET requests.
-     *
-     * @param mixed ...$params Parameters passed from URI.
-     * @return void
-     */
     public function get(...$params): void
     {
         self::$calls[] = ['get', $params];
     }
 
-    /**
-     * Handle POST create action.
-     *
-     * @param mixed ...$params Parameters passed from URI.
-     * @return void
-     */
     public function post_create(...$params): void
     {
         self::$calls[] = ['post_create', $params];
+    }
+
+    public function get_payload(): array
+    {
+        return ['ok' => true];
+    }
+
+    public function get_response(): Response
+    {
+        return new Response(201, ['Content-Type' => 'application/json'], '{"created":true}');
     }
 }
 
@@ -47,9 +47,6 @@ use PHPUnit\Framework\TestCase;
  */
 class ApiControllerHandlerTest extends TestCase
 {
-    /**
-     * Ensure PROJECT_ROOT constant is defined for autoloading.
-     */
     public static function setUpBeforeClass(): void
     {
         if (!defined('PROJECT_ROOT')) {
@@ -57,19 +54,11 @@ class ApiControllerHandlerTest extends TestCase
         }
     }
 
-    /**
-     * Reset stub call history.
-     */
     protected function setUp(): void
     {
         SampleController::$calls = [];
     }
 
-    /**
-     * Test controller/method resolution for basic GET routes.
-     *
-     * @return void
-     */
     public function testControllerMethodResolutionForBasicRoutes(): void
     {
         $handler = new ApiControllerHandler();
@@ -81,11 +70,6 @@ class ApiControllerHandlerTest extends TestCase
         ], SampleController::$calls, 'GET dispatch should call get without parameters.');
     }
 
-    /**
-     * Check parameter handling from URI and POST sub-action resolution.
-     *
-     * @return void
-     */
     public function testParamHandlingFromUri(): void
     {
         $handler = new ApiControllerHandler();
@@ -97,11 +81,6 @@ class ApiControllerHandlerTest extends TestCase
         ], SampleController::$calls, 'POST dispatch should pass URI parameters.');
     }
 
-    /**
-     * Verify fallback behavior when the controller is missing.
-     *
-     * @return void
-     */
     public function testFallbackWhenControllerMissing(): void
     {
         $handler = new ApiControllerHandler();
@@ -110,11 +89,6 @@ class ApiControllerHandlerTest extends TestCase
         $this->assertFalse($result, 'Handler should return false for missing controller.');
     }
 
-    /**
-     * Verify fallback behavior when the method is missing.
-     *
-     * @return void
-     */
     public function testFallbackWhenMethodMissing(): void
     {
         $handler = new ApiControllerHandler();
@@ -123,6 +97,29 @@ class ApiControllerHandlerTest extends TestCase
         $this->assertFalse($result, 'Handler should return false for missing method.');
         $this->assertSame([], SampleController::$calls, 'No method should be invoked when missing.');
     }
+
+    public function testDispatchReturnsJsonResponseForArrayPayload(): void
+    {
+        $handler = new ApiControllerHandler();
+        $response = $handler->dispatch('api/sample/payload', 'GET');
+
+        $this->assertNotNull($response);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('application/json; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('{"ok":true}', (string) $response->getBody());
+    }
+
+    public function testDispatchKeepsControllerProvidedResponse(): void
+    {
+        $handler = new ApiControllerHandler();
+        $response = $handler->dispatch('api/sample/response', 'GET');
+
+        $this->assertNotNull($response);
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('{"created":true}', (string) $response->getBody());
+    }
+
     /**
      * Ensure API controllers can be loaded from src/ApiControllers even when
      * they are not preloaded by autoload.

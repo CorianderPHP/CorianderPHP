@@ -1,5 +1,12 @@
 <?php
-date_default_timezone_set("Europe/Paris");
+date_default_timezone_set('Europe/Paris');
+
+use CorianderCore\Core\Container\Container;
+use CorianderCore\Core\Database\DatabaseHandler;
+use CorianderCore\Core\Logging\Logger;
+use CorianderCore\Core\Router\Router;
+use CorianderCore\Core\Security\CsrfMiddleware;
+use Nyholm\Psr7\ServerRequest;
 
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 session_set_cookie_params([
@@ -12,91 +19,91 @@ session_start();
 
 require_once '../config/config.php';
 
-// Check if CorianderCore's autoloader exists and include it
 if (file_exists(PROJECT_ROOT . '/CorianderCore/autoload.php')) {
     require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
 }
 
-// Check if Composer's autoloader exists and include it
 if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
     require_once PROJECT_ROOT . '/vendor/autoload.php';
 }
 
-use CorianderCore\Core\Container\Container;
-use CorianderCore\Core\Database\DatabaseHandler;
-use CorianderCore\Core\Logging\Logger;
-use CorianderCore\Core\Router\Router;
-use CorianderCore\Core\Security\CsrfMiddleware;
-use Nyholm\Psr7\ServerRequest;
+try {
+    $container = new Container();
+    $container->set(Logger::class, fn() => new Logger());
+    $container->set(DatabaseHandler::class, fn(Container $c) => new DatabaseHandler($c->get(Logger::class)));
+    $container->set(Router::class, fn() => new Router());
 
-// Register core services
-$container = new Container();
-$container->set(Logger::class, fn() => new Logger());
-$container->set(DatabaseHandler::class, fn(Container $c) => new DatabaseHandler($c->get(Logger::class)));
-$container->set(Router::class, fn() => new Router());
+    $router = $container->get(Router::class);
+    $router->addMiddleware(new CsrfMiddleware());
 
-// Initialize the router
-$router = $container->get(Router::class);
-$router->addMiddleware(new CsrfMiddleware());
+    $notFound = function () {
+        $notFoundView = 'notfound';
 
-// Custom 404 handler
-$notFound = function () {
-    $notFoundView = "notfound";
+        $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
 
-    $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
-
-    // If a metadata.php file exists, include it to override defaults
-    if (file_exists($metaDataFile)) {
-        include $metaDataFile;
-    }
-
-    require_once PROJECT_ROOT . '/public/public_views/header.php';
-    require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
-    require_once PROJECT_ROOT . '/public/public_views/footer.php';
-};
-$router->setNotFound($notFound);
-
-// Load project-specific routes if available
-$routesFile = __DIR__ . '/routes.php';
-if (file_exists($routesFile)) {
-    require $routesFile;
-}
-
-// Dispatch the request to the correct view or controller
-$serverParams = $_SERVER;
-$protocol = $serverParams['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
-$version = str_contains($protocol, '/') ? substr($protocol, strpos($protocol, '/') + 1) : '1.1';
-$headers = function_exists('getallheaders') ? getallheaders() : [];
-$rawBody = file_get_contents('php://input');
-
-$request = new ServerRequest(
-    $serverParams['REQUEST_METHOD'] ?? 'GET',
-    $serverParams['REQUEST_URI'] ?? '/',
-    $headers,
-    $rawBody,
-    $version,
-    $serverParams
-);
-
-$contentType = strtolower((string) ($headers['Content-Type'] ?? $headers['content-type'] ?? ''));
-$method = strtoupper($serverParams['REQUEST_METHOD'] ?? 'GET');
-if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
-    if (str_contains($contentType, 'application/json')) {
-        $decoded = json_decode($rawBody ?: '', true);
-        if (is_array($decoded)) {
-            $request = $request->withParsedBody($decoded);
+        if (file_exists($metaDataFile)) {
+            include $metaDataFile;
         }
-    } elseif (!empty($_POST)) {
-        $request = $request->withParsedBody($_POST);
-    }
-}
 
-$response = $router->dispatch($request);
+        require_once PROJECT_ROOT . '/public/public_views/header.php';
+        require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
+        require_once PROJECT_ROOT . '/public/public_views/footer.php';
+    };
+    $router->setNotFound($notFound);
 
-http_response_code($response->getStatusCode());
-foreach ($response->getHeaders() as $name => $values) {
-    foreach ($values as $value) {
-        header($name . ': ' . $value, false);
+    $routesFile = __DIR__ . '/routes.php';
+    if (file_exists($routesFile)) {
+        require $routesFile;
     }
+
+    $serverParams = $_SERVER;
+    $protocol = $serverParams['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
+    $version = str_contains($protocol, '/') ? substr($protocol, strpos($protocol, '/') + 1) : '1.1';
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+    $rawBody = file_get_contents('php://input');
+
+    $request = new ServerRequest(
+        $serverParams['REQUEST_METHOD'] ?? 'GET',
+        $serverParams['REQUEST_URI'] ?? '/',
+        $headers,
+        $rawBody,
+        $version,
+        $serverParams
+    );
+
+    $contentType = strtolower((string) ($headers['Content-Type'] ?? $headers['content-type'] ?? ''));
+    $method = strtoupper($serverParams['REQUEST_METHOD'] ?? 'GET');
+    if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        if (str_contains($contentType, 'application/json')) {
+            $decoded = json_decode($rawBody ?: '', true);
+            if (is_array($decoded)) {
+                $request = $request->withParsedBody($decoded);
+            }
+        } elseif (!empty($_POST)) {
+            $request = $request->withParsedBody($_POST);
+        }
+    }
+
+    $response = $router->dispatch($request);
+
+    http_response_code($response->getStatusCode());
+    foreach ($response->getHeaders() as $name => $values) {
+        foreach ($values as $value) {
+            header($name . ': ' . $value, false);
+        }
+    }
+    echo $response->getBody();
+} catch (Throwable $exception) {
+    try {
+        (new Logger())->error('Unhandled application exception.', ['exception' => $exception]);
+    } catch (Throwable) {
+        // Avoid cascading failures while handling an already-failed request.
+    }
+
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+    }
+
+    echo 'Internal Server Error';
 }
-echo $response->getBody();

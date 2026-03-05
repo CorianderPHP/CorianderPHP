@@ -31,7 +31,7 @@ The file is automatically loaded from `config/config.php` when present. Avoid co
 
 ## Error Handling
 
-- `DatabaseHandler` logs warnings if required constants are missing or an unsupported driver is used.
+- `DatabaseHandler` logs warnings if required constants are missing, unsupported drivers are used, or the connection cannot be established.
 - Wrap query calls in `try/catch` blocks and log exceptions to avoid exposing details:
 
 ```php
@@ -39,7 +39,7 @@ use CorianderCore\Core\Database\SQLManager;
 use CorianderCore\Core\Database\DatabaseException;
 
 try {
-    $users = SQLManager::findAll(['*'], 'users');
+    $users = SQLManager::findAll('users');
 } catch (DatabaseException $e) {
     // handle or log error
 }
@@ -49,11 +49,16 @@ try {
 
 - Use prepared statements and parameter binding to prevent SQL injection.
 - Prefer `findWhere`, `updateWhere`, and `deleteWhere` when your conditions are simple equality checks.
+- `findBy`, `update`, and `deleteFrom` remain available for advanced SQL conditions but are deprecated for routine use.
 - Keep long-lived connections to a minimum; enable `DatabaseHandler::setAutoCloseConnection(false)` only when necessary.
 - Centralize complex queries in repository classes to maintain SOLID principles.
 - Close connections explicitly in long-running scripts.
 
 ## Usage Examples
+
+Use `findAll(['col1', 'col2'], $table)` when you want an explicit column list.
+`findAll($table)` is the concise all-columns signature.
+`findAll(['*'], $table)` remains available for compatibility but is not recommended.
 
 ### Selecting Records
 
@@ -100,7 +105,7 @@ Removes all users currently flagged as inactive.
 
 ## Advanced Conditions
 
-For non-equality expressions (`IN`, range queries, SQL functions), use the lower-level methods with explicit placeholders:
+For non-equality expressions (`IN`, range queries, SQL functions), use the lower-level methods with explicit placeholders (deprecated for routine use):
 
 ```php
 SQLManager::findBy(

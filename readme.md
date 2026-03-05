@@ -54,6 +54,10 @@ Configure the PSR-3 logger using environment variables:
 
 - `LOG_CHANNEL`: `stderr`, `stdout` or a file path (default: `stderr`)
 - `LOG_LEVEL`: minimum level to record (default: `warning`)
+Database note: prefer `findWhere`, `updateWhere`, and `deleteWhere`; raw-string helpers `findBy`, `update`, and `deleteFrom` are deprecated for routine usage.
+Use `findAll(['col1', 'col2'], $table)` to request specific columns.
+Use `findAll($table)` for all columns.
+`findAll(['*'], $table)` remains supported for compatibility but is not recommended.
 
 ## CLI Quick Reference
 
@@ -71,7 +75,7 @@ All commands are invoked via `php coriander`:
 - `php coriander update --dry-run` - show planned framework changes without writing files.
 - `php coriander update --force` - overwrite locally modified framework-managed files.
 - `php coriander update --clear-cache` - clear framework cache after update.
-- `php coriander update --backup-dir=backups/custom` - override backup output directory for this run.
+- `php coriander update --backup-dir=backups/custom` - override backup output directory for this run (relative path only, no `..`).
 - `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
 - `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
 - Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
