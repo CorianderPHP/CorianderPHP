@@ -393,9 +393,7 @@ class SQLManager
 
             if (str_ends_with($column, '.*')) {
                 $prefix = substr($column, 0, -2);
-                if ($prefix !== '' && preg_match('/^[a-zA-Z0-9_]+$/', $prefix) === 1) {
-                    return self::quoteIdentifier($prefix) . '.*';
-                }
+                return self::quoteIdentifier($prefix) . '.*';
             }
 
             return self::quoteIdentifier($column);
@@ -411,6 +409,21 @@ class SQLManager
      */
     private static function quoteIdentifier(string $identifier): string
     {
-        return '`' . str_replace('`', '``', $identifier) . '`';
+        $trimmed = trim($identifier);
+        if ($trimmed === '') {
+            throw new DatabaseException('Identifier cannot be empty.');
+        }
+
+        $parts = explode('.', $trimmed);
+        $quotedParts = [];
+        foreach ($parts as $part) {
+            if ($part === '') {
+                throw new DatabaseException('Identifier contains an empty segment.');
+            }
+            $quotedParts[] = '`' . str_replace('`', '``', $part) . '`';
+        }
+
+        return implode('.', $quotedParts);
     }
 }
+
