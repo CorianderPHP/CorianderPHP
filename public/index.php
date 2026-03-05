@@ -116,6 +116,26 @@ function corianderIsSecureRequest(array $serverParams): bool
     return (string) ($serverParams['SERVER_PORT'] ?? '') === '443';
 }
 
+
+function corianderCreateNotFoundHandler(): callable
+{
+    return static function (): Response {
+        $notFoundView = 'notfound';
+
+        $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
+
+        if (file_exists($metaDataFile)) {
+            include $metaDataFile;
+        }
+
+        ob_start();
+        require_once PROJECT_ROOT . '/public/public_views/header.php';
+        require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
+        require_once PROJECT_ROOT . '/public/public_views/footer.php';
+
+        return new Response(404, [], (string) ob_get_clean());
+    };
+}
 require_once '../config/config.php';
 
 $secure = corianderIsSecureRequest($_SERVER);
@@ -149,23 +169,7 @@ try {
     $router->addMiddleware(new ApiRequestLimitsMiddleware());
     $router->addMiddleware(new CsrfMiddleware());
 
-    $notFound = function () {
-        $notFoundView = 'notfound';
-
-        $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
-
-        if (file_exists($metaDataFile)) {
-            include $metaDataFile;
-        }
-
-        ob_start();
-        require_once PROJECT_ROOT . '/public/public_views/header.php';
-        require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
-        require_once PROJECT_ROOT . '/public/public_views/footer.php';
-
-        return new Response(404, [], (string) ob_get_clean());
-    };
-    $router->setNotFound($notFound);
+    $router->setNotFound(corianderCreateNotFoundHandler());
 
     $routesFile = __DIR__ . '/routes.php';
     if (file_exists($routesFile)) {
@@ -223,5 +227,6 @@ try {
 
     echo 'Internal Server Error';
 }
+
 
 
