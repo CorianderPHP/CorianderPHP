@@ -23,22 +23,27 @@ function corianderIsSecureRequest(array $serverParams): bool
         return true;
     }
 
-    $forwardedProto = strtolower((string) ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? ''));
-    if ($forwardedProto !== '') {
-        $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
-        if ($firstHop === 'https') {
+    $remoteAddr = (string) ($serverParams['REMOTE_ADDR'] ?? '');
+    $trustedProxy = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+
+    if ($trustedProxy) {
+        $forwardedProto = strtolower((string) ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($forwardedProto !== '') {
+            $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
+            if ($firstHop === 'https') {
+                return true;
+            }
+        }
+
+        $forwardedSsl = strtolower((string) ($serverParams['HTTP_X_FORWARDED_SSL'] ?? ''));
+        if ($forwardedSsl === 'on') {
             return true;
         }
-    }
 
-    $forwardedSsl = strtolower((string) ($serverParams['HTTP_X_FORWARDED_SSL'] ?? ''));
-    if ($forwardedSsl === 'on') {
-        return true;
-    }
-
-    $frontEndHttps = strtolower((string) ($serverParams['HTTP_FRONT_END_HTTPS'] ?? ''));
-    if ($frontEndHttps === 'on') {
-        return true;
+        $frontEndHttps = strtolower((string) ($serverParams['HTTP_FRONT_END_HTTPS'] ?? ''));
+        if ($frontEndHttps === 'on') {
+            return true;
+        }
     }
 
     return (string) ($serverParams['SERVER_PORT'] ?? '') === '443';
@@ -151,3 +156,4 @@ try {
 
     echo 'Internal Server Error';
 }
+
