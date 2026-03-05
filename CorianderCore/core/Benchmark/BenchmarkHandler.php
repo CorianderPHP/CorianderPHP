@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Benchmark;
 
+use InvalidArgumentException;
+
 /**
  * BenchmarkHandler is responsible for measuring key performance indicators
  * such as initialization speed, memory usage, throughput, latency, CPU usage, and file inclusion tracking.
@@ -120,7 +122,12 @@ class BenchmarkHandler
      */
     public function getThroughput(int $operations): float
     {
-        return $operations / $this->getInitializationTime();
+        $elapsed = $this->getInitializationTime();
+        if ($operations <= 0 || $elapsed <= 0.0) {
+            return 0.0;
+        }
+
+        return $operations / $elapsed;
     }
 
     /**
@@ -131,6 +138,10 @@ class BenchmarkHandler
      */
     public function getLatency(int $operations): float
     {
+        if ($operations <= 0) {
+            return 0.0;
+        }
+
         return $this->getInitializationTime() / $operations;
     }
 
@@ -164,6 +175,10 @@ class BenchmarkHandler
      */
     public function getAverageCpuUsagePerOperation(int $operations): float
     {
+        if ($operations <= 0) {
+            return 0.0;
+        }
+
         return $this->getTotalCpuUsage() / $operations;
     }
 
@@ -299,6 +314,10 @@ class BenchmarkHandler
      */
     public function benchmarkFunction(callable $function, int $duration): array
     {
+        if ($duration <= 0) {
+            throw new InvalidArgumentException('Benchmark duration must be greater than 0 seconds.');
+        }
+
         // Initialize benchmark
         $this->start();
 
@@ -350,3 +369,4 @@ class BenchmarkHandler
         ];
     }
 }
+
