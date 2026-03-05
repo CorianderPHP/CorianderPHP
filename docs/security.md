@@ -16,7 +16,31 @@ This page summarizes framework-level security behavior and recommended usage pat
 
 - CSRF middleware validates mutating methods: `POST`, `PUT`, `PATCH`, `DELETE`.
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
-- For JSON/API requests, validate token with the provided CSRF helpers and include token in body or expected header flow.
+- For JSON/API requests, include token in JSON body as `csrf_token`.
+
+## Response Security Headers
+
+`SecurityHeadersMiddleware` is enabled by default and injects a secure baseline:
+
+- `Content-Security-Policy`
+- `X-Content-Type-Options`
+- `X-Frame-Options`
+- `Referrer-Policy`
+- `Permissions-Policy`
+- `Cross-Origin-Opener-Policy`
+- `Cross-Origin-Resource-Policy`
+- `Strict-Transport-Security` (HTTPS requests)
+
+Environment flag:
+
+- `SECURITY_HEADERS_ENABLED=0` to disable (not recommended).
+
+## API Request Limits
+
+`ApiRequestLimitsMiddleware` is enabled by default for `/api/*` endpoints.
+
+- Rejects payloads above `API_MAX_BODY_BYTES` (default: `1048576` bytes).
+- Applies request execution/input timeout via `API_TIMEOUT_SECONDS` (default: `15`).
 
 ## SQL Safety
 
@@ -30,13 +54,21 @@ This page summarizes framework-level security behavior and recommended usage pat
 ## Updater Safety
 
 - Update archives are checked for unsafe archive paths before extraction (zip-slip defense).
-- Updater source is restricted to expected GitHub release/repository patterns.
-- Backup directory override (`--backup-dir`) must be a safe relative path (no traversal segments or absolute paths).
+- Updater source is restricted to expected GitHub download hosts.
+- Updater repository is restricted by allowlist:
+  - default: `CorianderPHP/CorianderPHP`
+  - override with `CORIANDER_UPDATE_ALLOWED_REPOS=owner/repo,owner/repo2`
+- Updater command can be hardened with:
+  - `CORIANDER_UPDATER_AUTH_TOKEN` (requires `--auth-token=...`)
+  - `CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR` (default: `5`)
+  - `CORIANDER_UPDATER_ENABLED=0` (global disable)
+  - `CORIANDER_UPDATER_ALLOW_PRODUCTION=1` (explicit production opt-in)
 
-## Error Handling
+## Logging and Error Handling
 
 - Runtime bootstrap and database initialization are wrapped to avoid leaking raw failures.
-- In production, ensure `display_errors=0` and use logging/monitoring for diagnostics.
+- Logger supports structured JSON output and file rotation for production logs.
+- In production, keep `display_errors=0` and rely on logs/monitoring.
 
 ## Project Responsibilities
 

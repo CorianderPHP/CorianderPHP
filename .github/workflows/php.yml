@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +35,12 @@ jobs:
 
     - name: Install Composer dependencies
       run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+
+    - name: Dependency audit
+      run: composer audit --no-interaction
+
+    - name: Static analysis (syntax)
+      run: find . -path ./vendor -prune -o -name "*.php" -print0 | xargs -0 -n1 php -d display_errors=1 -l
 
     - name: Run tests with PHPUnit
       run: composer test

@@ -50,6 +50,7 @@ Behavior:
 - Prints a summary of planned/applied/skipped changes.
 - Retries transient GitHub API failures and reports rate-limit errors clearly.
 - Validates `--backup-dir` as a safe relative path (no absolute paths or `..` traversal segments).
+- Enforces updater policy guard (environment, optional auth token, optional rate limit).
 
 #### Flags
 
@@ -58,6 +59,16 @@ Behavior:
 - `--force`: overwrite files detected as locally modified.
 - `--clear-cache`: run `php coriander cache clear` after update.
 - `--backup-dir=backups/custom`: override backup output directory for this run (must stay inside project).
+- `--auth-token=<token>`: required only when `CORIANDER_UPDATER_AUTH_TOKEN` is configured.
+
+Updater environment variables:
+
+- `CORIANDER_UPDATER_ENABLED` (`1`/`0`, default `1`)
+- `CORIANDER_UPDATER_ALLOW_PRODUCTION` (`1` to allow in `APP_ENV=production`, default deny)
+- `CORIANDER_UPDATER_AUTH_TOKEN` (shared token for guarded environments)
+- `CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR` (default `5`)
+- `CORIANDER_UPDATER_RATE_LIMIT_FILE` (optional custom state file)
+- `CORIANDER_UPDATE_ALLOWED_REPOS` (repo allowlist, comma separated)
 
 Examples:
 
@@ -67,6 +78,7 @@ php coriander update --dry-run
 php coriander update --yes --force
 php coriander update --yes --clear-cache
 php coriander update --yes --backup-dir=backups/custom
+php coriander update --yes --auth-token=your-token
 ```
 
 ### `make:migration`
@@ -124,5 +136,3 @@ Flags:
 - Rebuild caches (`php coriander cache controllers`) after adding controllers or clearing the `cache/` directory.
 - Use `php coriander update --dry-run` before production updates.
 - In shared/production environments, do not edit applied migration files.
-
-

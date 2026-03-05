@@ -31,7 +31,11 @@ class NodeJS
             return;
         }
 
-        $command = array_merge(['npm'], array_values($args));
+        if ($this->isWatchCommand($args)) {
+            ConsoleOutput::print('&2Starting watcher...&7 Press Ctrl+C to stop.');
+        }
+
+        $command = array_merge([$this->resolveNpmExecutable()], array_values($args));
 
         $descriptors = [
             0 => ['pipe', 'r'],
@@ -46,25 +50,99 @@ class NodeJS
         }
 
         fclose($pipes[0]);
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
 
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
+        $this->streamProcessOutput($process, $pipes[1], $pipes[2]);
 
         fclose($pipes[1]);
         fclose($pipes[2]);
 
         $exitCode = proc_close($process);
-
-        if (is_string($stdout) && $stdout !== '') {
-            echo $stdout;
-        }
-
-        if (is_string($stderr) && $stderr !== '') {
-            echo $stderr;
-        }
-
         if ($exitCode !== 0) {
             ConsoleOutput::print('&4[Error]&7 npm command failed with exit code ' . (string) $exitCode . '.');
         }
+    }
+
+    /**
+     * @param resource $process
+     * @param resource $stdoutPipe
+     * @param resource $stderrPipe
+     */
+    private function streamProcessOutput($process, $stdoutPipe, $stderrPipe): void
+    {
+        while (true) {
+            $read = [$stdoutPipe, $stderrPipe];
+            $write = null;
+            $except = null;
+            $changed = @stream_select($read, $write, $except, 0, 200000);
+
+            if ($changed === false) {
+                break;
+            }
+
+            foreach ($read as $pipe) {
+                $chunk = stream_get_contents($pipe);
+                if (!is_string($chunk) || $chunk === '') {
+                    continue;
+                }
+
+                echo $chunk;
+            }
+
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                $remainingStdout = stream_get_contents($stdoutPipe);
+                if (is_string($remainingStdout) && $remainingStdout !== '') {
+                    echo $remainingStdout;
+                }
+
+                $remainingStderr = stream_get_contents($stderrPipe);
+                if (is_string($remainingStderr) && $remainingStderr !== '') {
+                    echo $remainingStderr;
+                }
+
+                break;
+            }
+        }
+    }
+
+    /**
+     * @param array<int,string> $args
+     */
+    private function isWatchCommand(array $args): bool
+    {
+        if (($args[0] ?? null) !== 'run') {
+            return false;
+        }
+
+        $script = strtolower((string) ($args[1] ?? ''));
+        return str_contains($script, 'watch');
+    }
+
+    private function resolveNpmExecutable(): string
+    {
+        if (DIRECTORY_SEPARATOR !== '\\') {
+            return 'npm';
+        }
+
+        $candidates = [];
+        $programFiles = getenv('ProgramFiles');
+        if (is_string($programFiles) && $programFiles !== '') {
+            $candidates[] = rtrim($programFiles, '\\/') . '\\nodejs\\npm.cmd';
+        }
+
+        $programFilesX86 = getenv('ProgramFiles(x86)');
+        if (is_string($programFilesX86) && $programFilesX86 !== '') {
+            $candidates[] = rtrim($programFilesX86, '\\/') . '\\nodejs\\npm.cmd';
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return 'npm.cmd';
     }
 }

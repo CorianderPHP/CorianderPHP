@@ -3,28 +3,31 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands;
 
-use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\Commands\Update\UpdateOptions;
+use CorianderCore\Core\Console\Commands\Update\UpdateOutputPresenter;
 use CorianderCore\Core\Console\Services\Updater\FrameworkUpdateService;
 use CorianderCore\Core\Console\Services\Updater\PostUpdateTasksService;
+use CorianderCore\Core\Console\Services\Updater\UpdaterAccessGuard;
 
 class Update
 {
-    private FrameworkUpdateService $updateService;
-    private PostUpdateTasksService $postUpdateTasksService;
-
     /**
      * @var callable(string):bool
      */
     private $confirmationPrompt;
 
     public function __construct(
-        ?FrameworkUpdateService $updateService = null,
+        private ?FrameworkUpdateService $updateService = null,
         ?callable $confirmationPrompt = null,
-        ?PostUpdateTasksService $postUpdateTasksService = null
+        private ?PostUpdateTasksService $postUpdateTasksService = null,
+        private ?UpdaterAccessGuard $accessGuard = null,
+        private ?UpdateOutputPresenter $presenter = null,
     ) {
-        $this->updateService = $updateService ?? new FrameworkUpdateService();
+        $this->updateService ??= new FrameworkUpdateService();
+        $this->postUpdateTasksService ??= new PostUpdateTasksService();
+        $this->accessGuard ??= new UpdaterAccessGuard();
+        $this->presenter ??= new UpdateOutputPresenter();
         $this->confirmationPrompt = $confirmationPrompt ?? [$this, 'promptUserConfirmation'];
-        $this->postUpdateTasksService = $postUpdateTasksService ?? new PostUpdateTasksService();
     }
 
     /**
@@ -32,148 +35,95 @@ class Update
      */
     public function execute(array $args = []): void
     {
-        $assumeYes = in_array('--yes', $args, true);
-        $dryRun = in_array('--dry-run', $args, true);
-        $force = in_array('--force', $args, true);
-        $clearCache = in_array('--clear-cache', $args, true);
-        $rollback = in_array('--rollback', $args, true);
-        $backupDirectory = $this->extractOptionValue($args, '--backup-dir');
+        $sanitizedArgs = $this->accessGuard->assertCanRun($args);
+        $options = UpdateOptions::fromArgs($sanitizedArgs);
 
-
-        if ($rollback) {
-            if ($dryRun) {
-                ConsoleOutput::print('&e--dry-run has no effect with --rollback.');
-            }
-
-            if (!$assumeYes) {
-                $confirmed = ($this->confirmationPrompt)('Rollback latest framework backup now? [y/N]: ');
-                if (!$confirmed) {
-                    ConsoleOutput::print('&eRollback cancelled.');
-                    return;
-                }
-            }
-
-            $result = $this->updateService->rollbackLatestBackup($backupDirectory);
-            ConsoleOutput::print('Rollback scope: &8' . $result['scope']);
-            ConsoleOutput::print('Restored files: &2' . (string) $result['restored_count']);
-            foreach ($result['restored_files'] as $restoredFile) {
-                ConsoleOutput::print('&8- restored: ' . $restoredFile);
-            }
-
-            $postTaskResults = $this->postUpdateTasksService->run($clearCache);
-            $this->printPostTaskResult('composer dump-autoload', $postTaskResults['composer_dump_autoload']);
-
-            if ($clearCache && $postTaskResults['cache_clear'] !== null) {
-                $this->printPostTaskResult('cache clear', $postTaskResults['cache_clear']);
-            }
-
-            ConsoleOutput::print('&2Rollback completed successfully.');
+        if ($options->rollback) {
+            $this->executeRollback($options);
             return;
         }
+
+        $this->executeUpdate($options);
+    }
+
+    private function executeRollback(UpdateOptions $options): void
+    {
+        if ($options->dryRun) {
+            $this->presenter->printRollbackDryRunWarning();
+        }
+
+        if (!$options->assumeYes && !$this->confirm('Rollback latest framework backup now? [y/N]: ')) {
+            $this->presenter->printRollbackCancelled();
+            return;
+        }
+
+        $result = $this->updateService->rollbackLatestBackup($options->backupDirectory);
+        $this->presenter->printRollbackResult($result);
+
+        $postTaskResults = $this->postUpdateTasksService->run($options->clearCache);
+        $this->presenter->printPostTaskResult('composer dump-autoload', $postTaskResults['composer_dump_autoload']);
+
+        if ($options->clearCache && $postTaskResults['cache_clear'] !== null) {
+            $this->presenter->printPostTaskResult('cache clear', $postTaskResults['cache_clear']);
+        }
+
+        $this->presenter->printRollbackSuccess();
+    }
+
+    private function executeUpdate(UpdateOptions $options): void
+    {
         $localVersion = $this->updateService->getLocalVersion();
         $latestRelease = $this->updateService->fetchLatestRelease();
         $latestVersion = $latestRelease['tag'];
         $backupScope = $localVersion . '-to-' . $latestVersion;
 
-        ConsoleOutput::print('Current version: &8' . $localVersion);
-        ConsoleOutput::print('Latest version: &2' . $latestVersion);
+        $this->presenter->printVersions($localVersion, $latestVersion);
 
         if (!$this->updateService->isUpdateAvailable($localVersion, $latestVersion)) {
-            ConsoleOutput::print('&2Framework is already up to date.');
+            $this->presenter->printAlreadyUpToDate();
             return;
         }
 
-        if ($dryRun) {
-            ConsoleOutput::print('&eDry run enabled: no files will be changed.');
-        } elseif (!$assumeYes) {
-            $confirmed = ($this->confirmationPrompt)('A new version is available. Update now? [y/N]: ');
-            if (!$confirmed) {
-                ConsoleOutput::print('&eUpdate cancelled.');
-                return;
-            }
-        }
-
-        $result = $this->updateService->runUpdate($latestRelease['zip_url'], $dryRun, $force, true, $backupScope, $backupDirectory);
-
-        $label = $dryRun ? 'Would add' : 'Planned add';
-        ConsoleOutput::print($label . ': &2' . (string) $result['add_count']);
-
-        $label = $dryRun ? 'Would update' : 'Planned update';
-        ConsoleOutput::print($label . ': &2' . (string) $result['update_count']);
-
-        ConsoleOutput::print('Unchanged: &8' . (string) $result['unchanged_count']);
-
-        if (!empty($result['missing_paths'])) {
-            ConsoleOutput::print('&eWarning:&7 missing managed paths in archive: &8' . implode(', ', $result['missing_paths']));
-        }
-
-        foreach ($result['operations'] as $operation) {
-            $action = $dryRun ? 'would ' . $operation['type'] : 'plan ' . $operation['type'];
-            ConsoleOutput::print('&8- ' . $action . ': ' . $operation['relative_path']);
-        }
-
-        if ($dryRun) {
-            ConsoleOutput::print('&eNo changes applied (--dry-run).');
+        if ($options->dryRun) {
+            $this->presenter->printDryRunEnabled();
+        } elseif (!$options->assumeYes && !$this->confirm('A new version is available. Update now? [y/N]: ')) {
+            $this->presenter->printUpdateCancelled();
             return;
         }
 
-        ConsoleOutput::print('Applied add: &2' . (string) $result['applied_add_count']);
-        ConsoleOutput::print('Applied update: &2' . (string) $result['applied_update_count']);
+        $result = $this->updateService->runUpdate(
+            $latestRelease['zip_url'],
+            $options->dryRun,
+            $options->force,
+            true,
+            $backupScope,
+            $options->backupDirectory,
+        );
 
-        if ($result['skipped_local_changes_count'] > 0) {
-            ConsoleOutput::print('&eSkipped local changes: &7' . (string) $result['skipped_local_changes_count']);
-            foreach ($result['skipped_local_changes'] as $skippedPath) {
-                ConsoleOutput::print('&8- skipped: ' . $skippedPath);
-            }
-            if (!$force) {
-                ConsoleOutput::print('&eUse --force to overwrite skipped local changes.');
-            }
+        $this->presenter->printPlan($result, $options->dryRun);
+
+        if ($options->dryRun) {
+            $this->presenter->printDryRunNoChanges();
+            return;
         }
 
-        ConsoleOutput::print('Backups created: &2' . (string) $result['backup_count']);
+        $this->presenter->printAppliedSummary($result, $options->force);
 
-        $postTaskResults = $this->postUpdateTasksService->run($clearCache);
-        $this->printPostTaskResult('composer dump-autoload', $postTaskResults['composer_dump_autoload']);
+        $postTaskResults = $this->postUpdateTasksService->run($options->clearCache);
+        $this->presenter->printPostTaskResult('composer dump-autoload', $postTaskResults['composer_dump_autoload']);
 
-        if ($clearCache && $postTaskResults['cache_clear'] !== null) {
-            $this->printPostTaskResult('cache clear', $postTaskResults['cache_clear']);
+        if ($options->clearCache && $postTaskResults['cache_clear'] !== null) {
+            $this->presenter->printPostTaskResult('cache clear', $postTaskResults['cache_clear']);
         }
 
-        ConsoleOutput::print('&2Framework update completed successfully.');
+        $this->presenter->printUpdateSuccess();
     }
 
-    /**
-     * @param array{success: bool, exit_code: int, output: string} $taskResult
-     */
-    private function printPostTaskResult(string $taskName, array $taskResult): void
+    private function confirm(string $message): bool
     {
-        if ($taskResult['success']) {
-            ConsoleOutput::print('&2Post-task succeeded:&7 ' . $taskName);
-            return;
-        }
-
-        ConsoleOutput::print('&ePost-task failed:&7 ' . $taskName . ' (exit ' . $taskResult['exit_code'] . ')');
-        if ($taskResult['output'] !== '') {
-            ConsoleOutput::print('&8' . $taskResult['output']);
-        }
+        return (bool) ($this->confirmationPrompt)($message);
     }
 
-    /**
-     * @param array<int, string> $args
-     */
-    private function extractOptionValue(array $args, string $option): ?string
-    {
-        foreach ($args as $arg) {
-            if (!str_starts_with($arg, $option . '=')) {
-                continue;
-            }
-
-            $value = trim(substr($arg, strlen($option) + 1));
-            return $value !== '' ? $value : null;
-        }
-
-        return null;
-    }
     private function promptUserConfirmation(string $message): bool
     {
         fwrite(STDOUT, $message);
@@ -186,4 +136,3 @@ class Update
         return $normalized === 'y' || $normalized === 'yes';
     }
 }
-

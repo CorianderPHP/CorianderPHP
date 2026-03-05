@@ -10,6 +10,7 @@ class GitHubReleaseService
     private const API_BASE = 'https://api.github.com/repos/';
     private const MAX_RETRIES = 3;
     private const ALLOWED_DOWNLOAD_HOSTS = ['github.com', 'api.github.com', 'codeload.github.com'];
+    private const DEFAULT_ALLOWED_REPOSITORIES = ['CorianderPHP/CorianderPHP'];
 
     private string $repository;
 
@@ -79,11 +80,15 @@ class GitHubReleaseService
         throw new RuntimeException($lastFailure);
     }
 
-
     private function assertRepositoryIsAllowed(string $repository): void
     {
         if (preg_match('/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/', $repository) !== 1) {
             throw new RuntimeException('Invalid GitHub repository format. Expected "owner/repository".');
+        }
+
+        $allowedRepositories = $this->resolveAllowedRepositories();
+        if (!in_array(strtolower($repository), array_map('strtolower', $allowedRepositories), true)) {
+            throw new RuntimeException('Repository is not allowed for updater usage. Allowed repositories: ' . implode(', ', $allowedRepositories));
         }
     }
 
@@ -105,6 +110,7 @@ class GitHubReleaseService
             throw new RuntimeException('Update archive URL host is not allowed.');
         }
     }
+
     private function buildZipUrl(string $tag): string
     {
         return 'https://github.com/' . $this->repository . '/archive/refs/tags/' . rawurlencode($tag) . '.zip';
@@ -136,6 +142,30 @@ class GitHubReleaseService
         }
 
         return rtrim($matches[1], '/');
+    }
+
+    /**
+     * @return string[]
+     */
+    private function resolveAllowedRepositories(): array
+    {
+        $configured = getenv('CORIANDER_UPDATE_ALLOWED_REPOS');
+        if (!is_string($configured) || trim($configured) === '') {
+            return self::DEFAULT_ALLOWED_REPOSITORIES;
+        }
+
+        $parts = array_filter(array_map('trim', explode(',', $configured)), static fn(string $value): bool => $value !== '');
+        if ($parts === []) {
+            return self::DEFAULT_ALLOWED_REPOSITORIES;
+        }
+
+        foreach ($parts as $entry) {
+            if (preg_match('/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/', $entry) !== 1) {
+                throw new RuntimeException('Invalid repository in CORIANDER_UPDATE_ALLOWED_REPOS: ' . $entry);
+            }
+        }
+
+        return array_values(array_unique($parts));
     }
 
     /**
@@ -286,4 +316,3 @@ class GitHubReleaseService
         return null;
     }
 }
-

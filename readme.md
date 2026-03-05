@@ -55,6 +55,10 @@ Configure the PSR-3 logger using environment variables:
 
 - `LOG_CHANNEL`: `stderr`, `stdout` or a file path (default: `stderr`)
 - `LOG_LEVEL`: minimum level to record (default: `warning`)
+- `LOG_FORMAT`: `line` or `json` (default: `json` in production)
+- `LOG_MAX_FILE_BYTES`: rotate file channel at this size (default: `10485760`)
+- `LOG_MAX_FILES`: number of rotated files to keep (default: `5`)
+
 Database note: prefer `findWhere`, `updateWhere`, and `deleteWhere`; raw-string helpers `findBy`, `update`, and `deleteFrom` are deprecated for routine usage.
 Use `findAll(['col1', 'col2'], $table)` to request specific columns.
 Use `findAll($table)` for all columns.
@@ -81,6 +85,7 @@ All commands are invoked via `php coriander`:
 - `php coriander update --force` - overwrite locally modified framework-managed files.
 - `php coriander update --clear-cache` - clear framework cache after update.
 - `php coriander update --backup-dir=backups/custom` - override backup output directory for this run (relative path only, no `..`).
+- `php coriander update --auth-token=<token>` - provide updater token when guard is enabled.
 - `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
 - `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
 - Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
@@ -88,6 +93,7 @@ All commands are invoked via `php coriander`:
 ## Framework Update Notes
 
 - Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
+- Updater execution can be restricted with environment policy (`CORIANDER_UPDATER_ENABLED`, `CORIANDER_UPDATER_ALLOW_PRODUCTION`, optional `CORIANDER_UPDATER_AUTH_TOKEN`, and rate-limit controls).
 - Only framework-managed paths are updated by the updater, and partial failures trigger automatic rollback.
 - Backups are written under `backups/coriander/<from-version>-to-<to-version>/` by default (configurable via `CORIANDER_UPDATE_BACKUP_DIR` in `config/config.php`).
 - Rollback restores from the most recent backup scope detected in the configured backup directory.
@@ -120,10 +126,3 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 ## License
 
 This project is licensed under the MIT License.
-
-
-
-
-
-
-

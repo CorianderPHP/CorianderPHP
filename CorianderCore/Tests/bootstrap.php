@@ -65,6 +65,10 @@ if (!defined('DB_NAME')) {
     define('DB_NAME', $testDbPath);
 }
 
+// Prevent updater guard from rate-limiting repeated test invocations.
+putenv('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR=0');
+putenv('CORIANDER_UPDATER_ALLOW_PRODUCTION=1');
+
 $composerAutoload = PROJECT_ROOT . '/vendor/autoload.php';
 if (file_exists($composerAutoload)) {
     require_once $composerAutoload;
