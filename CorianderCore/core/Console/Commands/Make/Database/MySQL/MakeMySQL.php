@@ -59,7 +59,7 @@ class MakeMySQL
 
         // Test the MySQL connection
         try {
-            $dsn = "mysql:host=$dbHost;dbname=$dbName";
+            $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
             $pdo = new PDO($dsn, $dbUser, $dbPassword);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             ConsoleOutput::hr();
@@ -120,3 +120,4 @@ class MakeMySQL
         file_put_contents($this->configPath . '/database.php', $content);
     }
 }
+

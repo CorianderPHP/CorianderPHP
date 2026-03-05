@@ -22,6 +22,8 @@ Create `config/database.php` with the required constants:
 
 define('DB_TYPE', 'mysql');          // or 'sqlite'
 define('DB_HOST', 'localhost');
+define('DB_PORT', 3306);
+define('DB_CHARSET', 'utf8mb4');
 define('DB_NAME', 'app');
 define('DB_USER', 'user');
 define('DB_PASSWORD', 'secret');
@@ -157,5 +159,6 @@ SQLManager::findBy(
     ['from' => '2026-01-01', 's1' => 'active', 's2' => 'pending']
 );
 ```
+
 
 

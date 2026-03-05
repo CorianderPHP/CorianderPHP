@@ -61,7 +61,16 @@ class DatabaseHandler
         try {
             switch (DB_TYPE) {
                 case 'mysql':
-                    $this->pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
+                    $dsn = 'mysql:host=' . DB_HOST;
+
+                    if (defined('DB_PORT') && (int) DB_PORT > 0) {
+                        $dsn .= ';port=' . (int) DB_PORT;
+                    }
+
+                    $charset = defined('DB_CHARSET') && DB_CHARSET !== '' ? DB_CHARSET : 'utf8mb4';
+                    $dsn .= ';dbname=' . DB_NAME . ';charset=' . $charset;
+
+                    $this->pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
                     break;
                 case 'sqlite':
                     $this->pdo = new PDO('sqlite:' . DB_NAME);

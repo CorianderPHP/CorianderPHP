@@ -1,5 +1,4 @@
 <?php
-date_default_timezone_set('Europe/Paris');
 
 use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
@@ -9,6 +8,11 @@ use CorianderCore\Core\Security\ApiRequestLimitsMiddleware;
 use CorianderCore\Core\Security\CsrfMiddleware;
 use CorianderCore\Core\Security\SecurityHeadersMiddleware;
 use Nyholm\Psr7\ServerRequest;
+
+$appTimezone = getenv('APP_TIMEZONE');
+if (is_string($appTimezone) && $appTimezone !== '' && in_array($appTimezone, timezone_identifiers_list(), true)) {
+    date_default_timezone_set($appTimezone);
+}
 
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 session_set_cookie_params([

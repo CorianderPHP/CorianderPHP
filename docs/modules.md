@@ -3,7 +3,7 @@
 Modules extend the framework with reusable packages. They live under `CorianderCore/modules` and are autoloaded via the `CorianderCore\\Modules` namespace defined in Composer:
 
 ```php
-'CorianderCore\\Modules\\' => PROJECT_ROOT . '/CorianderCore/Modules/',
+'CorianderCore\\Modules\\' => PROJECT_ROOT . '/CorianderCore/modules/',
 ```
 
 ## Example: ImageDataExtractor Module
@@ -11,10 +11,10 @@ Modules extend the framework with reusable packages. They live under `CorianderC
 Create the module directory:
 
 ```bash
-mkdir -p CorianderCore/Modules/ImageDataExtractor
+mkdir -p CorianderCore/modules/ImageDataExtractor
 ```
 
-Then create `CorianderCore/Modules/ImageDataExtractor/Extractor.php` with:
+Then create `CorianderCore/modules/ImageDataExtractor/Extractor.php` with:
 
 ```php
 <?php
@@ -37,3 +37,4 @@ The framework's autoloader discovers modules automatically, so the `CorianderCor
 - Keep modules self-contained; they should not depend on application-specific code.
 - Use descriptive namespaces and follow PSR-4 conventions.
 - Document module APIs and include tests to ease reuse.
+

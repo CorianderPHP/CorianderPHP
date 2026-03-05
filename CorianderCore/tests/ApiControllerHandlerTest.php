@@ -36,6 +36,14 @@ class SampleController
     }
 }
 
+
+class SampleRestrictedController
+{
+    protected function get_secret(): void
+    {
+        // Intentionally non-public to verify dispatch safety.
+    }
+}
 namespace CorianderCore\Tests;
 
 use ApiControllers\SampleController;
@@ -98,6 +106,14 @@ class ApiControllerHandlerTest extends TestCase
         $this->assertSame([], SampleController::$calls, 'No method should be invoked when missing.');
     }
 
+
+    public function testFallbackWhenActionExistsButIsNotPublic(): void
+    {
+        $handler = new ApiControllerHandler();
+
+        $this->assertFalse($handler->handle('api/sample-restricted/secret', 'GET'));
+        $this->assertNull($handler->dispatch('api/sample-restricted/secret', 'GET'));
+    }
     public function testDispatchReturnsJsonResponseForArrayPayload(): void
     {
         $handler = new ApiControllerHandler();
@@ -162,3 +178,4 @@ PHP
         }
     }
 }
+
