@@ -14,9 +14,9 @@ This page summarizes framework-level security behavior and recommended usage pat
 
 ## CSRF Protection
 
-- CSRF middleware validates mutating methods: `POST`, `PUT`, `PATCH`, `DELETE`.
+- CSRF middleware validates mutating methods: `POST`, `PUT`, `PATCH`, `DELETE` (except `/api/*` by default).
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
-- For JSON/API requests, include token in JSON body as `csrf_token`.
+- For JSON/API requests, include token in JSON body as `csrf_token` when API enforcement is enabled (`CSRF_ENFORCE_API=1`).
 
 ## Response Security Headers
 
@@ -78,3 +78,4 @@ CorianderPHP hardens framework-level defaults, but application code remains resp
 - authorization checks
 - output encoding in non-framework rendering paths
 - secure secret management and environment configuration
+
