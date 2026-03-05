@@ -189,11 +189,33 @@ class BenchmarkHandler
      */
     public function getCpuCores(): int
     {
-        if (stripos(PHP_OS, 'WIN') === 0) {
-            // Windows command to get the number of CPU cores
-            return (int)shell_exec('wmic cpu get NumberOfCores | findstr /r /r "[0-9]"');
+        $windowsCores = getenv('NUMBER_OF_PROCESSORS');
+        if (is_string($windowsCores) && ctype_digit($windowsCores) && (int) $windowsCores > 0) {
+            return (int) $windowsCores;
         }
-        return (int)shell_exec('nproc');
+
+        $procCpuInfo = '/proc/cpuinfo';
+        if (is_readable($procCpuInfo)) {
+            $content = (string) file_get_contents($procCpuInfo);
+            preg_match_all('/^processor\s*:/m', $content, $matches);
+            if (!empty($matches[0])) {
+                return count($matches[0]);
+            }
+        }
+
+        $cpuPresent = '/sys/devices/system/cpu/present';
+        if (is_readable($cpuPresent)) {
+            $content = trim((string) file_get_contents($cpuPresent));
+            if (preg_match('/^(\d+)-(\d+)$/', $content, $matches) === 1) {
+                $start = (int) $matches[1];
+                $end = (int) $matches[2];
+                if ($end >= $start) {
+                    return ($end - $start) + 1;
+                }
+            }
+        }
+
+        return 1;
     }
 
     /**
@@ -369,4 +391,6 @@ class BenchmarkHandler
         ];
     }
 }
+
+
 
