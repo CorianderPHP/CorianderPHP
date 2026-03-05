@@ -1,5 +1,6 @@
 <?php
 
+use CorianderCore\Core\Bootstrap\TimezoneBootstrap;
 use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Logging\Logger;
@@ -10,9 +11,7 @@ use CorianderCore\Core\Security\SecurityHeadersMiddleware;
 use Nyholm\Psr7\ServerRequest;
 
 $appTimezone = getenv('APP_TIMEZONE');
-if (is_string($appTimezone) && $appTimezone !== '' && in_array($appTimezone, timezone_identifiers_list(), true)) {
-    date_default_timezone_set($appTimezone);
-}
+TimezoneBootstrap::applyFromEnvironment(is_string($appTimezone) ? $appTimezone : null);
 
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 session_set_cookie_params([

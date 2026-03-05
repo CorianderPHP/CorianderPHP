@@ -61,14 +61,9 @@ class DatabaseHandler
         try {
             switch (DB_TYPE) {
                 case 'mysql':
-                    $dsn = 'mysql:host=' . DB_HOST;
-
-                    if (defined('DB_PORT') && (int) DB_PORT > 0) {
-                        $dsn .= ';port=' . (int) DB_PORT;
-                    }
-
-                    $charset = defined('DB_CHARSET') && DB_CHARSET !== '' ? DB_CHARSET : 'utf8mb4';
-                    $dsn .= ';dbname=' . DB_NAME . ';charset=' . $charset;
+                    $port = defined('DB_PORT') ? DB_PORT : null;
+                    $charset = defined('DB_CHARSET') ? (string) DB_CHARSET : '';
+                    $dsn = self::buildMysqlDsn((string) DB_HOST, (string) DB_NAME, $port, $charset);
 
                     $this->pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
                     break;
@@ -89,6 +84,23 @@ class DatabaseHandler
             $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
+    }
+
+    /**
+     * Build a MySQL DSN string using framework defaults.
+     */
+    public static function buildMysqlDsn(string $host, string $database, int|string|null $port = null, ?string $charset = null): string
+    {
+        $dsn = 'mysql:host=' . $host;
+
+        $normalizedPort = is_numeric($port) ? (int) $port : 0;
+        if ($normalizedPort > 0) {
+            $dsn .= ';port=' . $normalizedPort;
+        }
+
+        $normalizedCharset = is_string($charset) && $charset !== '' ? $charset : 'utf8mb4';
+
+        return $dsn . ';dbname=' . $database . ';charset=' . $normalizedCharset;
     }
 
     /**
