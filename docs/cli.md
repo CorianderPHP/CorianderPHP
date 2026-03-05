@@ -42,9 +42,12 @@ Behavior:
 - Asks for confirmation in interactive mode.
 - Updates only managed framework paths (`CorianderCore` and `coriander`).
 - Protects local modified files by skipping them unless `--force` is used.
-- Creates `.bak` backups before overwriting managed files.`r`n- Automatically rolls back applied files if an update operation fails mid-way.
+- Creates `.bak` backups before overwriting managed files.
+- Automatically rolls back applied files if an update operation fails mid-way.
 - Runs post-update tasks (`composer dump-autoload`).
-- Prints a summary of planned/applied/skipped changes.`r`n- Retries transient GitHub API failures and reports rate-limit errors clearly.
+- Prints a summary of planned/applied/skipped changes.
+- Retries transient GitHub API failures and reports rate-limit errors clearly.
+- Validates `--backup-dir` as a safe relative path (no absolute paths or `..` traversal segments).
 
 #### Flags
 
@@ -52,6 +55,7 @@ Behavior:
 - `--dry-run`: preview the update plan without writing files.
 - `--force`: overwrite files detected as locally modified.
 - `--clear-cache`: run `php coriander cache clear` after update.
+- `--backup-dir=backups/custom`: override backup output directory for this run (must stay inside project).
 
 Examples:
 
@@ -60,6 +64,7 @@ php coriander update --yes
 php coriander update --dry-run
 php coriander update --yes --force
 php coriander update --yes --clear-cache
+php coriander update --yes --backup-dir=backups/custom
 ```
 
 ## Error Handling
@@ -73,4 +78,3 @@ php coriander update --yes --clear-cache
 - Inspect output carefully; many commands provide hints for missing dependencies or misconfigurations.
 - Rebuild caches (`php coriander cache controllers`) after adding controllers or clearing the `cache/` directory.
 - Use `php coriander update --dry-run` before production updates.
-

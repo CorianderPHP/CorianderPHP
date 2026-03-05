@@ -51,6 +51,12 @@ $router->add('GET', '/profile', fn (ServerRequest $r) =>
     new \Nyholm\Psr7\Response(200, [], 'Profile'), [$auth]);
 ```
 
+### Response Handling
+
+- Route callbacks and controller actions can return a `ResponseInterface`; status code, headers, and body are preserved.
+- API controller actions may return arrays, which are automatically encoded as JSON responses.
+- If an API action returns text output, it is returned with a JSON content type by default.
+
 ## Error Handling
 
 - Register a `setNotFound` callback to handle unmatched routes gracefully.

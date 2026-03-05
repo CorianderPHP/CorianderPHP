@@ -61,7 +61,7 @@ class RouteDispatcher
                     {
                         ob_start();
                         $result = call_user_func($this->callback, $request);
-                        $content = ob_get_clean();
+                        $content = (string) ob_get_clean();
                         if ($result instanceof ResponseInterface) {
                             return $result;
                         }
@@ -79,23 +79,22 @@ class RouteDispatcher
             }
         }
 
-        ob_start();
         if (str_starts_with($path, 'api/')) {
-            if (!$this->apiHandler->handle($path, $method)) {
-                ob_end_clean();
+            $response = $this->apiHandler->dispatch($path, $method);
+            if ($response === null) {
                 return $this->notFoundHandler->handle($this->registry);
             }
-            $content = ob_get_clean();
-            return new Response(200, [], $content);
+            return $response;
         }
 
-        if ($this->webHandler->handle($path, $method)) {
-            $content = ob_get_clean();
-            return new Response(200, [], $content);
+        $webResponse = $this->webHandler->dispatch($path, $method);
+        if ($webResponse !== null) {
+            return $webResponse;
         }
 
+        ob_start();
         if ($this->viewRenderer->render($path)) {
-            $content = ob_get_clean();
+            $content = (string) ob_get_clean();
             return new Response(200, [], $content);
         }
 

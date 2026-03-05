@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Database\DatabaseException;
+use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Database\SQLManager;
 use PHPUnit\Framework\TestCase;
 
@@ -37,5 +38,47 @@ class SQLManagerTest extends TestCase
 
         $this->assertSame('`a-b` = :w_a_b AND `a_b` = :w_a_b_1', $clause);
         $this->assertSame(['w_a_b' => 1, 'w_a_b_1' => 2], $params);
+    }
+
+    public function testFindAllSupportsWildcardColumn(): void
+    {
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+        $pdo->exec("INSERT INTO users (name) VALUES ('alice')");
+
+        $handler = new DatabaseHandler();
+        $reflection = new \ReflectionClass($handler);
+        $pdoProperty = $reflection->getProperty('pdo');
+        $pdoProperty->setAccessible(true);
+        $pdoProperty->setValue($handler, $pdo);
+
+        SQLManager::setDatabaseHandler($handler);
+
+        $rows = SQLManager::findAll(['*'], 'users');
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('alice', $rows[0]['name']);
+    }
+
+    public function testFindAllSupportsTableOnlySignature(): void
+    {
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+        $pdo->exec("INSERT INTO users (name) VALUES ('bob')");
+
+        $handler = new DatabaseHandler();
+        $reflection = new \ReflectionClass($handler);
+        $pdoProperty = $reflection->getProperty('pdo');
+        $pdoProperty->setAccessible(true);
+        $pdoProperty->setValue($handler, $pdo);
+
+        SQLManager::setDatabaseHandler($handler);
+
+        $rows = SQLManager::findAll('users');
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('bob', $rows[0]['name']);
     }
 }

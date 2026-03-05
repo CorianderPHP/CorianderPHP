@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Router\Handlers;
 
 use CorianderCore\Core\Router\NameFormatter;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Handles dispatching to API controllers based on RESTful methods and subpaths.
@@ -22,6 +24,14 @@ class ApiControllerHandler
      */
     public function handle(string $path, string $method): bool
     {
+        return $this->dispatch($path, $method) !== null;
+    }
+
+    /**
+     * Dispatch an API request and return a response when handled.
+     */
+    public function dispatch(string $path, string $method): ?ResponseInterface
+    {
         $segments = explode('/', $path);
         array_shift($segments); // Remove 'api'
 
@@ -29,27 +39,48 @@ class ApiControllerHandler
         $controllerClass = 'ApiControllers\\' . $controllerName . 'Controller';
 
         if (!$this->controllerExists($controllerClass)) {
-            return false;
+            return null;
         }
 
         $controller = new $controllerClass();
 
-        // Build action method name
         $action = strtolower($method);
         if (isset($segments[1]) && $segments[1] !== '') {
             $subAction = strtolower(str_replace('-', '_', $segments[1]));
             $action .= '_' . $subAction;
         }
 
-        // Remaining segments are parameters
         $params = array_slice($segments, 2);
 
         if (!method_exists($controller, $action)) {
-            return false;
+            return null;
         }
 
-        call_user_func_array([$controller, $action], $params);
-        return true;
+        ob_start();
+        $result = call_user_func_array([$controller, $action], $params);
+        $content = (string) ob_get_clean();
+
+        if ($result instanceof ResponseInterface) {
+            return $result;
+        }
+
+        if (is_array($result)) {
+            $encoded = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (!is_string($encoded)) {
+                $encoded = '{}';
+            }
+            return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $encoded);
+        }
+
+        if (is_string($result) || $result instanceof \Stringable) {
+            $content .= (string) $result;
+        }
+
+        if ($content === '') {
+            return new Response(204, ['Content-Type' => 'application/json; charset=utf-8']);
+        }
+
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $content);
     }
 
     private function controllerExists(string $controllerClass): bool
