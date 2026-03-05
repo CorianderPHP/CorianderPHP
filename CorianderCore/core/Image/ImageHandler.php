@@ -57,17 +57,26 @@ class ImageHandler
             [$width, $height] = $imageSize;
         }
 
+        $safePictureClass = self::escapeHtmlAttribute($pictureClass);
+        $safeImgClass = self::escapeHtmlAttribute($imgClass);
+        $safeAltText = self::escapeHtmlAttribute($altText);
+
         // Prepare the HTML for the <picture> element
-        $pictureHTML = "<picture class=\"$pictureClass\">";
+        $pictureHTML = "<picture class=\"{$safePictureClass}\">";
         
         if ($webpPath) {
-            $webpRelativePath = self::getRelativePath($webpPath);
-            $pictureHTML .= "<source srcset=\"$webpRelativePath\" type=\"image/webp\" />";
+            $webpRelativePath = self::escapeHtmlAttribute(self::getRelativePath($webpPath));
+            $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
         }
         
-        $originalRelativePath = self::getRelativePath($fullImagePath);
-        $pictureHTML .= "<source srcset=\"$originalRelativePath\" type=\"image/" . pathinfo($imagePath, PATHINFO_EXTENSION) . "\" />";
-        $pictureHTML .= "<img alt='$altText' width=\"$width\" height=\"$height\" class=\"$imgClass\" src=\"$originalRelativePath\" />";
+        $originalRelativePath = self::escapeHtmlAttribute(self::getRelativePath($fullImagePath));
+        $originalExtension = strtolower((string) pathinfo($imagePath, PATHINFO_EXTENSION));
+        $safeOriginalType = preg_replace('/[^a-z0-9.+-]/', '', $originalExtension);
+        $safeWidth = $width !== '' ? (string) (int) $width : '';
+        $safeHeight = $height !== '' ? (string) (int) $height : '';
+
+        $pictureHTML .= "<source srcset=\"{$originalRelativePath}\" type=\"image/{$safeOriginalType}\" />";
+        $pictureHTML .= "<img alt=\"{$safeAltText}\" width=\"{$safeWidth}\" height=\"{$safeHeight}\" class=\"{$safeImgClass}\" src=\"{$originalRelativePath}\" />";
         
         $pictureHTML .= "</picture>";
         
@@ -163,6 +172,11 @@ class ImageHandler
     private static function getRelativePath(string $fullPath): string
     {
         return str_replace(self::$imageDir, '', $fullPath);
+    }
+
+    private static function escapeHtmlAttribute(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
 
