@@ -87,12 +87,23 @@ class ControllerCacheService
             }
         }
 
-        if (!is_dir(dirname($this->cacheFile))) {
-            mkdir(dirname($this->cacheFile), 0777, true);
+        $cacheDirectory = dirname($this->cacheFile);
+        if (!is_dir($cacheDirectory) && !mkdir($cacheDirectory, 0775, true) && !is_dir($cacheDirectory)) {
+            throw new \RuntimeException('Unable to create controller cache directory.');
         }
 
         $content = "<?php\nreturn " . var_export($controllers, true) . ";\n";
-        file_put_contents($this->cacheFile, $content);
+        $temporaryFile = $this->cacheFile . '.tmp.' . bin2hex(random_bytes(8));
+
+        if (file_put_contents($temporaryFile, $content, LOCK_EX) === false) {
+            throw new \RuntimeException('Unable to write controller cache file.');
+        }
+
+        if (!@rename($temporaryFile, $this->cacheFile)) {
+            @unlink($temporaryFile);
+            throw new \RuntimeException('Unable to replace controller cache file atomically.');
+        }
+
         self::$cacheStore[$this->cacheFile] = $controllers;
     }
 
@@ -107,3 +118,4 @@ class ControllerCacheService
         self::$cacheStore[$this->cacheFile] = [];
     }
 }
+
