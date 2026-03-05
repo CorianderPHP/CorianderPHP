@@ -7,8 +7,6 @@ use CorianderCore\Core\Router\NameFormatter;
 use CorianderCore\Core\Router\Services\ControllerCacheService;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
-use ReflectionMethod;
-use ReflectionException;
 
 /**
  * Handles dispatching to web controllers by resolving controller class and action from a URL path.
@@ -133,15 +131,15 @@ class WebControllerHandler
 
         $params = array_slice($segments, 2);
 
-        if ($action !== 'index' && $this->isPublicInvokableAction($controller, $action)) {
+        if ($action !== 'index' && ControllerActionInspector::isPublicInvokable($controller, $action)) {
             return [true, call_user_func_array([$controller, $action], $params)];
         }
 
-        if ($method === 'POST' && $this->isPublicInvokableAction($controller, 'store')) {
+        if ($method === 'POST' && ControllerActionInspector::isPublicInvokable($controller, 'store')) {
             return [true, call_user_func_array([$controller, 'store'], $params)];
         }
 
-        if ($this->isPublicInvokableAction($controller, $action)) {
+        if (ControllerActionInspector::isPublicInvokable($controller, $action)) {
             return [true, call_user_func_array([$controller, $action], $params)];
         }
 
@@ -155,21 +153,6 @@ class WebControllerHandler
         }
 
         return preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $action) === 1;
-    }
-
-    private function isPublicInvokableAction(object $controller, string $action): bool
-    {
-        if (!method_exists($controller, $action)) {
-            return false;
-        }
-
-        try {
-            $method = new ReflectionMethod($controller, $action);
-        } catch (ReflectionException) {
-            return false;
-        }
-
-        return $method->isPublic() && !$method->isStatic();
     }
 
     /**
@@ -205,4 +188,3 @@ class WebControllerHandler
         return $this->controllerExistenceCache[$controllerClass] = false;
     }
 }
-

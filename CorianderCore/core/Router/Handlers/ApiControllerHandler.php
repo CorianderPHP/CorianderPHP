@@ -6,8 +6,6 @@ namespace CorianderCore\Core\Router\Handlers;
 use CorianderCore\Core\Router\NameFormatter;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
-use ReflectionException;
-use ReflectionMethod;
 
 /**
  * Handles dispatching to API controllers based on RESTful methods and subpaths.
@@ -65,7 +63,7 @@ class ApiControllerHandler
 
         $params = array_slice($segments, 2);
 
-        if (!$this->isPublicInvokableAction($controller, $action)) {
+        if (!ControllerActionInspector::isPublicInvokable($controller, $action)) {
             return null;
         }
 
@@ -115,20 +113,6 @@ class ApiControllerHandler
 
         json_decode($payload, true);
         return json_last_error() === JSON_ERROR_NONE;
-    }
-    private function isPublicInvokableAction(object $controller, string $action): bool
-    {
-        if (!method_exists($controller, $action)) {
-            return false;
-        }
-
-        try {
-            $method = new ReflectionMethod($controller, $action);
-        } catch (ReflectionException) {
-            return false;
-        }
-
-        return $method->isPublic() && !$method->isStatic();
     }
 
     private function controllerExists(string $controllerClass): bool
