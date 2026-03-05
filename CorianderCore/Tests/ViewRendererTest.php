@@ -91,3 +91,4 @@ class ViewRendererTest extends TestCase
         @rmdir($directory);
     }
 }
+
