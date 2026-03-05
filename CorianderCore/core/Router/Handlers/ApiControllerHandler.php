@@ -15,6 +15,16 @@ use ReflectionMethod;
 class ApiControllerHandler
 {
     /**
+     * @var callable(string):object
+     */
+    private $controllerFactory;
+
+    public function __construct(?callable $controllerFactory = null)
+    {
+        $this->controllerFactory = $controllerFactory ?? static fn(string $className): object => new $className();
+    }
+
+    /**
      * Dispatch an API request to the appropriate controller action.
      *
      * Parses the path to determine the controller and action method based on
@@ -44,7 +54,8 @@ class ApiControllerHandler
             return null;
         }
 
-        $controller = new $controllerClass();
+        $factory = $this->controllerFactory;
+        $controller = $factory($controllerClass);
 
         $action = strtolower($method);
         if (isset($segments[1]) && $segments[1] !== '') {
@@ -140,4 +151,3 @@ class ApiControllerHandler
         return PROJECT_ROOT . '/src/ApiControllers/' . $shortName . '.php';
     }
 }
-

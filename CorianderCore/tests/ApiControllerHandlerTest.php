@@ -136,6 +136,22 @@ class ApiControllerHandlerTest extends TestCase
         $this->assertSame('{"created":true}', (string) $response->getBody());
     }
 
+    public function testUsesInjectedControllerFactory(): void
+    {
+        $instantiated = [];
+        $handler = new ApiControllerHandler(
+            static function (string $className) use (&$instantiated): object {
+                $instantiated[] = $className;
+                return new $className();
+            }
+        );
+
+        $response = $handler->dispatch('api/sample/payload', 'GET');
+
+        $this->assertNotNull($response);
+        $this->assertSame(['ApiControllers\\SampleController'], $instantiated);
+    }
+
     /**
      * Ensure API controllers can be loaded from src/ApiControllers even when
      * they are not preloaded by autoload.
@@ -178,4 +194,3 @@ PHP
         }
     }
 }
-
