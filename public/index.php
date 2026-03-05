@@ -16,6 +16,70 @@ use Nyholm\Psr7\ServerRequest;
  *
  * Supports direct HTTPS and common reverse proxy headers.
  */
+function corianderIpInCidr(string $ip, string $cidr): bool
+{
+    if (!str_contains($cidr, '/')) {
+        return $ip === $cidr;
+    }
+
+    [$subnet, $prefixLength] = explode('/', $cidr, 2);
+    if ($subnet === '' || !ctype_digit($prefixLength)) {
+        return false;
+    }
+
+    $ipBinary = @inet_pton($ip);
+    $subnetBinary = @inet_pton($subnet);
+    if ($ipBinary === false || $subnetBinary === false || strlen($ipBinary) !== strlen($subnetBinary)) {
+        return false;
+    }
+
+    $bits = (int) $prefixLength;
+    $maxBits = strlen($ipBinary) * 8;
+    if ($bits < 0 || $bits > $maxBits) {
+        return false;
+    }
+
+    $bytes = intdiv($bits, 8);
+    $remainder = $bits % 8;
+
+    if ($bytes > 0 && substr($ipBinary, 0, $bytes) !== substr($subnetBinary, 0, $bytes)) {
+        return false;
+    }
+
+    if ($remainder === 0) {
+        return true;
+    }
+
+    $mask = (0xFF << (8 - $remainder)) & 0xFF;
+    return (ord($ipBinary[$bytes]) & $mask) === (ord($subnetBinary[$bytes]) & $mask);
+}
+
+function corianderIsTrustedProxy(string $remoteAddr): bool
+{
+    if ($remoteAddr === '') {
+        return false;
+    }
+
+    $trusted = defined('TRUSTED_PROXIES') ? (string) TRUSTED_PROXIES : '127.0.0.1,::1';
+    $entries = array_map(static fn(string $item): string => trim($item), explode(',', $trusted));
+
+    foreach ($entries as $entry) {
+        if ($entry === '') {
+            continue;
+        }
+
+        if ($entry === '*') {
+            return true;
+        }
+
+        if (corianderIpInCidr($remoteAddr, $entry)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function corianderIsSecureRequest(array $serverParams): bool
 {
     $https = strtolower((string) ($serverParams['HTTPS'] ?? ''));
@@ -24,15 +88,18 @@ function corianderIsSecureRequest(array $serverParams): bool
     }
 
     $remoteAddr = (string) ($serverParams['REMOTE_ADDR'] ?? '');
-    $trustedProxy = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
-
-    if ($trustedProxy) {
+    if (corianderIsTrustedProxy($remoteAddr)) {
         $forwardedProto = strtolower((string) ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? ''));
         if ($forwardedProto !== '') {
             $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
             if ($firstHop === 'https') {
                 return true;
             }
+        }
+
+        $forwarded = strtolower((string) ($serverParams['HTTP_FORWARDED'] ?? ''));
+        if ($forwarded !== '' && str_contains($forwarded, 'proto=https')) {
+            return true;
         }
 
         $forwardedSsl = strtolower((string) ($serverParams['HTTP_X_FORWARDED_SSL'] ?? ''));
@@ -49,6 +116,8 @@ function corianderIsSecureRequest(array $serverParams): bool
     return (string) ($serverParams['SERVER_PORT'] ?? '') === '443';
 }
 
+require_once '../config/config.php';
+
 $secure = corianderIsSecureRequest($_SERVER);
 session_set_cookie_params([
     'path' => '/',
@@ -57,8 +126,6 @@ session_set_cookie_params([
     'samesite' => 'Lax',
 ]);
 session_start();
-
-require_once '../config/config.php';
 
 if (file_exists(PROJECT_ROOT . '/CorianderCore/autoload.php')) {
     require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
@@ -156,4 +223,5 @@ try {
 
     echo 'Internal Server Error';
 }
+
 

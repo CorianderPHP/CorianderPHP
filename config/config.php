@@ -9,6 +9,10 @@ if (!defined('PROJECT_URL')) {
 if (!defined('CORIANDER_UPDATE_BACKUP_DIR')) {
     define('CORIANDER_UPDATE_BACKUP_DIR', 'backups/coriander');
 }
+if (!defined('TRUSTED_PROXIES')) {
+    define('TRUSTED_PROXIES', getenv('TRUSTED_PROXIES') ?: '127.0.0.1,::1');
+}
+
 
 // Logging configuration via environment variables
 if (!defined('LOG_CHANNEL')) {
@@ -56,3 +60,4 @@ if (file_exists($databaseConfigFile)) {
     // Include the database configuration file
     include_once $databaseConfigFile;
 }
+
