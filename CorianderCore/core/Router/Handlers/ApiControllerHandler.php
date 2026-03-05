@@ -82,9 +82,29 @@ class ApiControllerHandler
             return new Response(204, ['Content-Type' => 'application/json; charset=utf-8']);
         }
 
-        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $content);
+        $trimmedContent = trim($content);
+        if ($this->isJsonPayload($trimmedContent)) {
+            return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $trimmedContent);
+        }
+
+        $encoded = json_encode(['data' => $content], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($encoded)) {
+            $encoded = '{"data":""}';
+        }
+
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], $encoded);
     }
 
+
+    private function isJsonPayload(string $payload): bool
+    {
+        if ($payload === '') {
+            return false;
+        }
+
+        json_decode($payload, true);
+        return json_last_error() === JSON_ERROR_NONE;
+    }
     private function isPublicInvokableAction(object $controller, string $action): bool
     {
         if (!method_exists($controller, $action)) {
@@ -120,3 +140,4 @@ class ApiControllerHandler
         return PROJECT_ROOT . '/src/ApiControllers/' . $shortName . '.php';
     }
 }
+
