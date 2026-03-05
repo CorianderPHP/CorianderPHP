@@ -111,6 +111,45 @@ class FrameworkFileSyncServiceIntegrationTest extends TestCase
 
         new FrameworkFileSyncService($this->root, ['CorianderCore'], '../outside');
     }
+
+    public function testApplyPlanRejectsTraversalBackupScope(): void
+    {
+        $destination = $this->root . '/CorianderCore/core/safe.txt';
+        $source = $this->root . '/source/safe.txt';
+
+        mkdir(dirname($destination), 0775, true);
+        mkdir(dirname($source), 0775, true);
+
+        file_put_contents($destination, 'current');
+        file_put_contents($source, 'updated');
+
+        $plan = [
+            'operations' => [
+                [
+                    'type' => 'update',
+                    'relative_path' => 'CorianderCore/core/safe.txt',
+                    'source' => $source,
+                    'destination' => $destination,
+                ],
+            ],
+        ];
+
+        $service = new FrameworkFileSyncService($this->root, ['CorianderCore']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('path traversal');
+        $service->applyPlan($plan, true, true, '../escape');
+    }
+
+    public function testRollbackBackupScopeRejectsTraversalScope(): void
+    {
+        $service = new FrameworkFileSyncService($this->root, ['CorianderCore']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('path traversal');
+        $service->rollbackBackupScope('../escape');
+    }
+
     private function deleteDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
@@ -138,5 +177,3 @@ class FrameworkFileSyncServiceIntegrationTest extends TestCase
         @rmdir($directory);
     }
 }
-
-
