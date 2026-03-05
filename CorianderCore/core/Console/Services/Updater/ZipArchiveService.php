@@ -25,6 +25,8 @@ final class ZipArchiveService
             throw new RuntimeException('Unable to create update extraction directory.');
         }
 
+        $this->assertSafeEntries($zip);
+
         if (!$zip->extractTo($destinationDirectory)) {
             $zip->close();
             throw new RuntimeException('Unable to extract update archive.');
@@ -43,5 +45,31 @@ final class ZipArchiveService
         }
 
         throw new RuntimeException('Update archive has an unexpected structure.');
+    }
+
+    private function assertSafeEntries(ZipArchive $zip): void
+    {
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (!is_string($name) || $name === '') {
+                throw new RuntimeException('Update archive contains an invalid file entry.');
+            }
+
+            if (str_contains($name, "\0")) {
+                throw new RuntimeException('Update archive contains a null-byte file entry.');
+            }
+
+            $normalized = str_replace('\\', '/', $name);
+            if (str_starts_with($normalized, '/') || preg_match('/^[A-Za-z]:\//', $normalized) === 1) {
+                throw new RuntimeException('Update archive contains an absolute path entry.');
+            }
+
+            $segments = explode('/', trim($normalized, '/'));
+            foreach ($segments as $segment) {
+                if ($segment === '' || $segment === '.' || $segment === '..') {
+                    throw new RuntimeException('Update archive contains an unsafe path traversal entry.');
+                }
+            }
+        }
     }
 }

@@ -48,6 +48,7 @@ try {
 ## Best Practices
 
 - Use prepared statements and parameter binding to prevent SQL injection.
+- Prefer `findWhere`, `updateWhere`, and `deleteWhere` when your conditions are simple equality checks.
 - Keep long-lived connections to a minimum; enable `DatabaseHandler::setAutoCloseConnection(false)` only when necessary.
 - Centralize complex queries in repository classes to maintain SOLID principles.
 - Close connections explicitly in long-running scripts.
@@ -59,10 +60,9 @@ try {
 ```php
 use CorianderCore\Core\Database\SQLManager;
 
-$activeUsers = SQLManager::findBy(
+$activeUsers = SQLManager::findWhere(
     ['id', 'email'],
     'users',
-    'status = :status',
     ['status' => 'active']
 );
 ```
@@ -85,7 +85,7 @@ Creates a user record with the provided email and marks it as active.
 ```php
 use CorianderCore\Core\Database\SQLManager;
 
-SQLManager::update('users', ['status' => 'disabled'], 'id = :id', ['id' => 5]);
+SQLManager::updateWhere('users', ['status' => 'disabled'], ['id' => 5]);
 ```
 Disables the user whose ID equals `5`.
 
@@ -94,7 +94,19 @@ Disables the user whose ID equals `5`.
 ```php
 use CorianderCore\Core\Database\SQLManager;
 
-SQLManager::deleteFrom('users', 'status = :status', ['status' => 'inactive']);
+SQLManager::deleteWhere('users', ['status' => 'inactive']);
 ```
 Removes all users currently flagged as inactive.
 
+## Advanced Conditions
+
+For non-equality expressions (`IN`, range queries, SQL functions), use the lower-level methods with explicit placeholders:
+
+```php
+SQLManager::findBy(
+    ['id', 'email'],
+    'users',
+    'created_at >= :from AND status IN (:s1, :s2)',
+    ['from' => '2026-01-01', 's1' => 'active', 's2' => 'pending']
+);
+```

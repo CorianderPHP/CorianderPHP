@@ -44,6 +44,27 @@ class ZipArchiveServiceIntegrationTest extends TestCase
         $this->assertFileExists($sourceRoot . '/CorianderCore/core/file.txt');
     }
 
+
+    public function testExtractRejectsUnsafeTraversalEntry(): void
+    {
+        if (!class_exists(ZipArchive::class)) {
+            self::markTestSkipped('ZipArchive extension is required.');
+        }
+
+        $archivePath = $this->root . '/unsafe.zip';
+        $extractPath = $this->root . '/extract-unsafe';
+
+        $zip = new ZipArchive();
+        $zip->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFromString('../escape.txt', 'data');
+        $zip->close();
+
+        $service = new ZipArchiveService();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('unsafe path traversal');
+        $service->extract($archivePath, $extractPath);
+    }
     private function deleteDirectory(string $directory): void
     {
         if (!is_dir($directory)) {

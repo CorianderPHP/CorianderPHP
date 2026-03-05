@@ -26,19 +26,37 @@ class ViewRenderer
      */
     public function render(string $viewPath, array $data = []): bool
     {
+        $normalizedPath = $this->normalizeViewPath($viewPath);
+        if ($normalizedPath === null) {
+            return false;
+        }
+
         $escapedData = $this->escapeData($data);
         extract($escapedData, EXTR_OVERWRITE);
 
-        $fullViewPath = PROJECT_ROOT . '/public/public_views/' . $viewPath . '/index.php';
+        $viewsRoot = PROJECT_ROOT . '/public/public_views';
+        $fullViewPath = $viewsRoot . '/' . $normalizedPath . '/index.php';
 
-        if (file_exists($fullViewPath)) {
-            require_once PROJECT_ROOT . '/public/public_views/header.php';
-            require_once $fullViewPath;
-            require_once PROJECT_ROOT . '/public/public_views/footer.php';
-            return true;
+        if (!file_exists($fullViewPath)) {
+            return false;
         }
 
-        return false;
+        $realViewsRoot = realpath($viewsRoot);
+        $realViewPath = realpath($fullViewPath);
+        if ($realViewsRoot === false || $realViewPath === false) {
+            return false;
+        }
+
+        $prefix = rtrim($realViewsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (!str_starts_with($realViewPath, $prefix)) {
+            return false;
+        }
+
+        require_once $viewsRoot . '/header.php';
+        require_once $fullViewPath;
+        require_once $viewsRoot . '/footer.php';
+
+        return true;
     }
 
     /**
@@ -56,5 +74,33 @@ class ViewRenderer
         });
 
         return $data;
+    }
+
+    /**
+     * Normalize and validate a view path to prevent traversal and invalid segments.
+     */
+    private function normalizeViewPath(string $viewPath): ?string
+    {
+        if (str_contains($viewPath, "\0")) {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', trim($viewPath));
+        if ($path === '' || str_starts_with($path, '/')) {
+            return null;
+        }
+
+        if (preg_match('/^[a-zA-Z]:\//', $path) === 1) {
+            return null;
+        }
+
+        $segments = explode('/', trim($path, '/'));
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                return null;
+            }
+        }
+
+        return implode('/', $segments);
     }
 }
