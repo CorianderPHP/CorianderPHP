@@ -12,9 +12,7 @@
 $router->add('GET', 'sitemap.xml', function (\Nyholm\Psr7\ServerRequest $request) use ($notFound) {
     $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
     if (!file_exists($sitemapPath)) {
-        $notFound();
-        return;
+        return $notFound();
     }
     require_once $sitemapPath;
 });
-

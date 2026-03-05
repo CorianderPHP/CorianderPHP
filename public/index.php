@@ -8,9 +8,48 @@ use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Security\ApiRequestLimitsMiddleware;
 use CorianderCore\Core\Security\CsrfMiddleware;
 use CorianderCore\Core\Security\SecurityHeadersMiddleware;
+use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
-$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+/**
+ * Detect whether the original client connection should be treated as HTTPS.
+ *
+ * Supports direct HTTPS and common reverse proxy headers.
+ */
+function corianderIsSecureRequest(array $serverParams): bool
+{
+    $https = strtolower((string) ($serverParams['HTTPS'] ?? ''));
+    if ($https !== '' && $https !== 'off' && $https !== '0') {
+        return true;
+    }
+
+    $remoteAddr = (string) ($serverParams['REMOTE_ADDR'] ?? '');
+    $trustedProxy = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+
+    if ($trustedProxy) {
+        $forwardedProto = strtolower((string) ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($forwardedProto !== '') {
+            $firstHop = trim(explode(',', $forwardedProto, 2)[0]);
+            if ($firstHop === 'https') {
+                return true;
+            }
+        }
+
+        $forwardedSsl = strtolower((string) ($serverParams['HTTP_X_FORWARDED_SSL'] ?? ''));
+        if ($forwardedSsl === 'on') {
+            return true;
+        }
+
+        $frontEndHttps = strtolower((string) ($serverParams['HTTP_FRONT_END_HTTPS'] ?? ''));
+        if ($frontEndHttps === 'on') {
+            return true;
+        }
+    }
+
+    return (string) ($serverParams['SERVER_PORT'] ?? '') === '443';
+}
+
+$secure = corianderIsSecureRequest($_SERVER);
 session_set_cookie_params([
     'path' => '/',
     'secure' => $secure,
@@ -52,9 +91,12 @@ try {
             include $metaDataFile;
         }
 
+        ob_start();
         require_once PROJECT_ROOT . '/public/public_views/header.php';
         require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
         require_once PROJECT_ROOT . '/public/public_views/footer.php';
+
+        return new Response(404, [], (string) ob_get_clean());
     };
     $router->setNotFound($notFound);
 
@@ -114,3 +156,4 @@ try {
 
     echo 'Internal Server Error';
 }
+

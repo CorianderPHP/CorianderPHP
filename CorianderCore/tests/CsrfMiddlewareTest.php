@@ -165,4 +165,41 @@ class CsrfMiddlewareTest extends TestCase
         $this->assertTrue($handler->called);
         $this->assertSame(200, $response->getStatusCode());
     }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testBypassesApiRoutesByDefaultWhenTokenMissing(): void
+    {
+        $middleware = new CsrfMiddleware();
+        $request = new ServerRequest('POST', '/api/items');
+        $handler = new class implements RequestHandlerInterface {
+            public bool $called = false;
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertTrue($handler->called);
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testCanEnforceCsrfForApiRoutesWhenEnabled(): void
+    {
+        $middleware = new CsrfMiddleware(null, true);
+        $request = new ServerRequest('POST', '/api/items');
+        $handler = new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
 }
