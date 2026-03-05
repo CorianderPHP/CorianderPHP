@@ -8,11 +8,15 @@ Modules extend the framework with reusable packages. They live under `CorianderC
 
 ## Example: ImageDataExtractor Module
 
-Create a PHP class inside the modules directory:
+Create the module directory:
 
 ```bash
 mkdir -p CorianderCore/Modules/ImageDataExtractor
-cat <<'PHP' > CorianderCore/Modules/ImageDataExtractor/Extractor.php
+```
+
+Then create `CorianderCore/Modules/ImageDataExtractor/Extractor.php` with:
+
+```php
 <?php
 namespace CorianderCore\\Modules\\ImageDataExtractor;
 
@@ -24,7 +28,6 @@ class Extractor
         return [];
     }
 }
-PHP
 ```
 
 The framework's autoloader discovers modules automatically, so the `CorianderCore\\Modules\\ImageDataExtractor\\Extractor` class is available immediately across your project.
@@ -34,4 +37,3 @@ The framework's autoloader discovers modules automatically, so the `CorianderCor
 - Keep modules self-contained; they should not depend on application-specific code.
 - Use descriptive namespaces and follow PSR-4 conventions.
 - Document module APIs and include tests to ease reuse.
-
