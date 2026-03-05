@@ -8,6 +8,7 @@ use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Security\ApiRequestLimitsMiddleware;
 use CorianderCore\Core\Security\CsrfMiddleware;
 use CorianderCore\Core\Security\SecurityHeadersMiddleware;
+use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
@@ -52,9 +53,12 @@ try {
             include $metaDataFile;
         }
 
+        ob_start();
         require_once PROJECT_ROOT . '/public/public_views/header.php';
         require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
         require_once PROJECT_ROOT . '/public/public_views/footer.php';
+
+        return new Response(404, [], (string) ob_get_clean());
     };
     $router->setNotFound($notFound);
 
