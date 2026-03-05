@@ -16,6 +16,8 @@ final class FrameworkFileSyncService
      */
     private array $managedPaths;
 
+    private string $defaultBackupDirectory;
+
     /**
      * @var array<string, bool>|null
      */
@@ -24,10 +26,11 @@ final class FrameworkFileSyncService
     /**
      * @param string[] $managedPaths
      */
-    public function __construct(?string $projectRoot = null, array $managedPaths = ['CorianderCore', 'coriander'])
+    public function __construct(?string $projectRoot = null, array $managedPaths = ['CorianderCore', 'coriander'], ?string $defaultBackupDirectory = null)
     {
         $this->projectRoot = $projectRoot ?? (defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 6));
         $this->managedPaths = $managedPaths;
+        $this->defaultBackupDirectory = $this->normalizeBackupDirectory($defaultBackupDirectory ?? $this->resolveDefaultBackupDirectory());
     }
 
     /**
@@ -99,12 +102,13 @@ final class FrameworkFileSyncService
      * @param array{operations: array<int, array{type:string,relative_path:string,source:string,destination:string}>} $plan
      * @return array{applied_add_count:int, applied_update_count:int, skipped_local_changes_count:int, skipped_local_changes: string[], backup_count:int, backups: string[]}
      */
-    public function applyPlan(array $plan, bool $force = false, bool $createBackups = true): array
+    public function applyPlan(array $plan, bool $force = false, bool $createBackups = true, ?string $backupScope = null, ?string $backupDirectory = null): array
     {
         $appliedAddCount = 0;
         $appliedUpdateCount = 0;
         $skippedLocalChanges = [];
         $backupRelativePaths = [];
+        $appliedAddPaths = [];
 
         /**
          * @var array<int, array{type:string,destination:string,backup_absolute:string|null}>
@@ -120,7 +124,7 @@ final class FrameworkFileSyncService
 
                 $backupAbsolutePath = null;
                 if ($operation['type'] === 'update' && $createBackups && file_exists($operation['destination'])) {
-                    $backupAbsolutePath = $this->createBackup($operation['destination']);
+                    $backupAbsolutePath = $this->createBackup($operation['destination'], $backupScope, $backupDirectory);
                     $backupRelativePaths[] = $this->toRelativeProjectPath($backupAbsolutePath);
                 }
 
@@ -145,6 +149,7 @@ final class FrameworkFileSyncService
 
                 if ($operation['type'] === 'add') {
                     $appliedAddCount++;
+                    $appliedAddPaths[] = $operation['relative_path'];
                 } else {
                     $appliedUpdateCount++;
                 }
@@ -158,6 +163,10 @@ final class FrameworkFileSyncService
             throw new RuntimeException($message, 0, $exception);
         }
 
+        if ($createBackups && $backupScope !== null && trim($backupScope) !== '') {
+            $this->writeRollbackManifest($backupScope, $backupDirectory, $appliedAddPaths);
+        }
+
         return [
             'applied_add_count' => $appliedAddCount,
             'applied_update_count' => $appliedUpdateCount,
@@ -168,6 +177,56 @@ final class FrameworkFileSyncService
         ];
     }
 
+    /**
+     * @return array{scope:string, restored_count:int, restored_files:string[]}
+     */
+    public function rollbackLatestBackup(?string $backupDirectory = null): array
+    {
+        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
+        $basePath = $this->projectRoot . '/' . $baseDirectory;
+
+        if (!is_dir($basePath)) {
+            throw new RuntimeException('No backup directory found: ' . $baseDirectory);
+        }
+
+        $latestScope = $this->findLatestBackupScope($basePath);
+        if ($latestScope === null) {
+            throw new RuntimeException('No backup scope found in: ' . $baseDirectory);
+        }
+
+        return $this->rollbackBackupScope($latestScope, $backupDirectory);
+    }
+
+    /**
+     * @return array{scope:string, restored_count:int, restored_files:string[]}
+     */
+    public function rollbackBackupScope(string $scope, ?string $backupDirectory = null): array
+    {
+        $scope = trim(str_replace('\\', '/', $scope), '/');
+        if ($scope === '') {
+            throw new RuntimeException('Backup scope cannot be empty.');
+        }
+
+        $scopePath = $this->resolveBackupScopePath($scope, $backupDirectory);
+        if (!is_dir($scopePath)) {
+            throw new RuntimeException('Backup scope not found: ' . $scope);
+        }
+
+        $backupCandidates = $this->collectBackupCandidates($scopePath);
+        if ($backupCandidates === []) {
+            throw new RuntimeException('No backup files found in scope: ' . $scope);
+        }
+
+        $manifest = $this->readRollbackManifest($scopePath);
+        $addedFiles = isset($manifest['added_files']) && is_array($manifest['added_files'])
+            ? array_values(array_filter($manifest['added_files'], 'is_string'))
+            : [];
+
+        $result = $this->runAtomicRollback($backupCandidates, $addedFiles);
+        $result['scope'] = $scope;
+
+        return $result;
+    }
     /**
      * @return string[]
      */
@@ -258,20 +317,295 @@ final class FrameworkFileSyncService
         return $this->modifiedPathsIndex;
     }
 
-    private function createBackup(string $destinationFile): string
+    private function createBackup(string $destinationFile, ?string $backupScope = null, ?string $backupDirectory = null): string
     {
-        $backupPath = $destinationFile . '.bak.' . date('YmdHis');
+        $relativePath = $this->toRelativeProjectPath($destinationFile);
+        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
+        $scopeSegment = $backupScope !== null && trim($backupScope) !== ''
+            ? '/' . trim(str_replace('\\', '/', $backupScope), '/')
+            : '';
+
+        $backupPath = $this->projectRoot . '/' . $baseDirectory . $scopeSegment . '/' . $relativePath . '.bak';
         $suffix = 0;
         while (file_exists($backupPath)) {
             $suffix++;
-            $backupPath = $destinationFile . '.bak.' . date('YmdHis') . '.' . $suffix;
+            $backupPath = $this->projectRoot . '/' . $baseDirectory . $scopeSegment . '/' . $relativePath . '.bak.' . $suffix;
+        }
+
+        $directory = dirname($backupPath);
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            throw new RuntimeException('Unable to create backup directory: ' . $directory);
         }
 
         if (!copy($destinationFile, $backupPath)) {
-            throw new RuntimeException('Failed to create backup file: ' . $destinationFile);
+            throw new RuntimeException('Failed to create backup file: ' . $relativePath);
         }
 
         return $backupPath;
+    }
+
+    private function findLatestBackupScope(string $basePath): ?string
+    {
+        $entries = scandir($basePath);
+        if ($entries === false) {
+            return null;
+        }
+
+        $latestScope = null;
+        $latestMtime = -1;
+
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $candidatePath = $basePath . '/' . $entry;
+            if (!is_dir($candidatePath)) {
+                continue;
+            }
+
+            $mtime = @filemtime($candidatePath);
+            if ($mtime === false) {
+                continue;
+            }
+
+            if ($mtime > $latestMtime) {
+                $latestMtime = $mtime;
+                $latestScope = $entry;
+            }
+        }
+
+        return $latestScope;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function collectBackupCandidates(string $scopePath): array
+    {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($scopePath, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        $candidates = [];
+
+        foreach ($iterator as $item) {
+            if (!$item->isFile()) {
+                continue;
+            }
+
+            $relativeBackupPath = str_replace('\\', '/', substr($item->getPathname(), strlen($scopePath) + 1));
+            if (!preg_match('/^(.*)\.bak(?:\.(\d+))?$/', $relativeBackupPath, $matches)) {
+                continue;
+            }
+
+            $targetRelativePath = $matches[1];
+            $suffix = isset($matches[2]) ? (int) $matches[2] : 0;
+
+            if (!isset($candidates[$targetRelativePath]) || $suffix > $candidates[$targetRelativePath]['suffix']) {
+                $candidates[$targetRelativePath] = [
+                    'suffix' => $suffix,
+                    'path' => $item->getPathname(),
+                ];
+            }
+        }
+
+        $resolved = [];
+        foreach ($candidates as $targetRelativePath => $candidate) {
+            $resolved[$targetRelativePath] = $candidate['path'];
+        }
+
+        ksort($resolved);
+
+        return $resolved;
+    }
+    /**
+     * @param string[] $addedFiles
+     * @param array<string, string> $backupCandidates
+     * @return array{restored_count:int, restored_files:string[]}
+     */
+    private function runAtomicRollback(array $backupCandidates, array $addedFiles): array
+    {
+        $deleteTargets = [];
+        foreach ($addedFiles as $addedFile) {
+            $normalized = trim(str_replace('\\', '/', $addedFile), '/');
+            if ($normalized === '' || isset($backupCandidates[$normalized])) {
+                continue;
+            }
+            $deleteTargets[] = $normalized;
+        }
+
+        $deleteTargets = array_values(array_unique($deleteTargets));
+
+        $snapshotDirectory = rtrim(sys_get_temp_dir(), '\\/') . '/coriander-rollback-' . bin2hex(random_bytes(8));
+        if (!mkdir($snapshotDirectory, 0775, true) && !is_dir($snapshotDirectory)) {
+            throw new RuntimeException('Unable to create rollback snapshot directory.');
+        }
+
+        $snapshots = [];
+
+        try {
+            $targets = array_values(array_unique(array_merge(array_keys($backupCandidates), $deleteTargets)));
+            sort($targets);
+
+            foreach ($targets as $targetRelativePath) {
+                $destination = $this->projectRoot . '/' . $targetRelativePath;
+                if (!is_file($destination)) {
+                    continue;
+                }
+
+                $snapshotPath = $snapshotDirectory . '/' . $targetRelativePath;
+                $snapshotDir = dirname($snapshotPath);
+                if (!is_dir($snapshotDir) && !mkdir($snapshotDir, 0775, true) && !is_dir($snapshotDir)) {
+                    throw new RuntimeException('Unable to create rollback snapshot directory: ' . $snapshotDir);
+                }
+
+                if (!copy($destination, $snapshotPath)) {
+                    throw new RuntimeException('Unable to snapshot file before rollback: ' . $targetRelativePath);
+                }
+
+                $snapshots[$targetRelativePath] = $snapshotPath;
+            }
+
+            $restoredFiles = [];
+            foreach ($backupCandidates as $targetRelativePath => $backupFile) {
+                $destination = $this->projectRoot . '/' . $targetRelativePath;
+                $destinationDirectory = dirname($destination);
+                if (!is_dir($destinationDirectory) && !mkdir($destinationDirectory, 0775, true) && !is_dir($destinationDirectory)) {
+                    throw new RuntimeException('Unable to create destination directory: ' . $destinationDirectory);
+                }
+
+                if (!copy($backupFile, $destination)) {
+                    throw new RuntimeException('Failed to restore backup file: ' . $targetRelativePath);
+                }
+
+                $restoredFiles[] = $targetRelativePath;
+            }
+
+            foreach ($deleteTargets as $targetRelativePath) {
+                $destination = $this->projectRoot . '/' . $targetRelativePath;
+                if (is_file($destination) && !@unlink($destination)) {
+                    throw new RuntimeException('Failed to remove file added by update: ' . $targetRelativePath);
+                }
+
+                if (!in_array($targetRelativePath, $restoredFiles, true)) {
+                    $restoredFiles[] = $targetRelativePath;
+                }
+            }
+
+            sort($restoredFiles);
+
+            return [
+                'restored_count' => count($restoredFiles),
+                'restored_files' => $restoredFiles,
+            ];
+        } catch (RuntimeException $exception) {
+            foreach ($snapshots as $targetRelativePath => $snapshotPath) {
+                $destination = $this->projectRoot . '/' . $targetRelativePath;
+                $destinationDirectory = dirname($destination);
+                if (!is_dir($destinationDirectory)) {
+                    @mkdir($destinationDirectory, 0775, true);
+                }
+                @copy($snapshotPath, $destination);
+            }
+
+            foreach ($deleteTargets as $targetRelativePath) {
+                if (isset($snapshots[$targetRelativePath])) {
+                    continue;
+                }
+                $destination = $this->projectRoot . '/' . $targetRelativePath;
+                if (is_file($destination)) {
+                    @unlink($destination);
+                }
+            }
+
+            throw new RuntimeException('Rollback failed and was reverted: ' . $exception->getMessage(), 0, $exception);
+        } finally {
+            $this->deleteTemporaryDirectory($snapshotDirectory);
+        }
+    }
+
+    /**
+     * @return array{added_files:string[]}|null
+     */
+    private function readRollbackManifest(string $scopePath): ?array
+    {
+        $manifestPath = $scopePath . '/.rollback-manifest.json';
+        if (!is_file($manifestPath)) {
+            return null;
+        }
+
+        $decoded = json_decode((string) file_get_contents($manifestPath), true);
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @param string[] $addedFiles
+     */
+    private function writeRollbackManifest(string $scope, ?string $backupDirectory, array $addedFiles): void
+    {
+        $scopePath = $this->resolveBackupScopePath($scope, $backupDirectory);
+        if (!is_dir($scopePath) && !mkdir($scopePath, 0775, true) && !is_dir($scopePath)) {
+            throw new RuntimeException('Unable to create backup scope directory: ' . $scopePath);
+        }
+
+        $manifestPath = $scopePath . '/.rollback-manifest.json';
+        $payload = [
+            'added_files' => array_values(array_unique($addedFiles)),
+            'generated_at' => date(DATE_ATOM),
+        ];
+
+        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (!is_string($json) || @file_put_contents($manifestPath, $json) === false) {
+            throw new RuntimeException('Unable to write rollback manifest.');
+        }
+    }
+
+    private function resolveBackupScopePath(string $scope, ?string $backupDirectory = null): string
+    {
+        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
+        $normalizedScope = trim(str_replace('\\', '/', $scope), '/');
+        return $this->projectRoot . '/' . $baseDirectory . '/' . $normalizedScope;
+    }
+    private function deleteTemporaryDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $items = scandir($directory);
+        if ($items === false) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $directory . DIRECTORY_SEPARATOR . $item;
+            if (is_dir($path)) {
+                $this->deleteTemporaryDirectory($path);
+            } elseif (file_exists($path)) {
+                @unlink($path);
+            }
+        }
+
+        @rmdir($directory);
+    }
+    private function resolveDefaultBackupDirectory(): string
+    {
+        if (defined('CORIANDER_UPDATE_BACKUP_DIR') && is_string(CORIANDER_UPDATE_BACKUP_DIR) && trim(CORIANDER_UPDATE_BACKUP_DIR) !== '') {
+            return CORIANDER_UPDATE_BACKUP_DIR;
+        }
+
+        return 'backups/coriander';
+    }
+
+    private function normalizeBackupDirectory(string $backupDirectory): string
+    {
+        $normalized = trim(str_replace('\\', '/', $backupDirectory), '/');
+        return $normalized !== '' ? $normalized : 'backups/coriander';
     }
 
     /**
@@ -316,3 +650,8 @@ final class FrameworkFileSyncService
         return $normalizedAbsolute;
     }
 }
+
+
+
+
+

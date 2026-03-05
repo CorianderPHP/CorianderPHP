@@ -63,6 +63,35 @@ class UpdateCommandTest extends TestCase
         $this->assertStringContainsString('Framework update completed successfully.', $output);
     }
 
+    public function testBackupDirectoryOptionIsForwardedToUpdateService(): void
+    {
+        $service = new FakeFrameworkUpdateService();
+        $postTasks = new FakePostUpdateTasksService();
+        $command = new Update($service, static fn(string $message): bool => true, $postTasks);
+
+        ob_start();
+        $command->execute(['--yes', '--backup-dir=backups/custom']);
+        ob_end_clean();
+
+        $this->assertSame('backups/custom', $service->lastBackupDirectory);
+        $this->assertSame('v0.1.0-to-v0.2.0', $service->lastBackupScope);
+    }
+    public function testRollbackFlagRestoresFromLatestBackup(): void
+    {
+        $service = new FakeFrameworkUpdateService();
+        $postTasks = new FakePostUpdateTasksService();
+        $command = new Update($service, static fn(string $message): bool => true, $postTasks);
+
+        ob_start();
+        $command->execute(['--rollback', '--yes']);
+        $output = (string) ob_get_clean();
+
+        $this->assertTrue($service->rollbackCalled);
+        $this->assertFalse($service->runUpdateCalled);
+        $this->assertTrue($postTasks->runCalled);
+        $this->assertStringContainsString('Rollback completed successfully.', $output);
+    }
+
     public function testClearCacheFlagRunsOptionalCacheTask(): void
     {
         $service = new FakeFrameworkUpdateService();
@@ -81,7 +110,10 @@ class UpdateCommandTest extends TestCase
 class FakeFrameworkUpdateService extends FrameworkUpdateService
 {
     public bool $runUpdateCalled = false;
+    public bool $rollbackCalled = false;
     public bool $lastDryRunFlag = false;
+    public ?string $lastBackupScope = null;
+    public ?string $lastBackupDirectory = null;
 
     public function __construct()
     {
@@ -105,10 +137,24 @@ class FakeFrameworkUpdateService extends FrameworkUpdateService
         return true;
     }
 
-    public function runUpdate(string $zipUrl, bool $dryRun = false, bool $force = false, bool $createBackups = true): array
+
+    public function rollbackLatestBackup(?string $backupDirectory = null): array
+    {
+        $this->rollbackCalled = true;
+        $this->lastBackupDirectory = $backupDirectory;
+
+        return [
+            'scope' => 'v0.1.2-to-v0.1.3',
+            'restored_count' => 1,
+            'restored_files' => ['CorianderCore/autoload.php'],
+        ];
+    }
+    public function runUpdate(string $zipUrl, bool $dryRun = false, bool $force = false, bool $createBackups = true, ?string $backupScope = null, ?string $backupDirectory = null): array
     {
         $this->runUpdateCalled = true;
         $this->lastDryRunFlag = $dryRun;
+        $this->lastBackupScope = $backupScope;
+        $this->lastBackupDirectory = $backupDirectory;
 
         return [
             'operations' => [
@@ -123,7 +169,7 @@ class FakeFrameworkUpdateService extends FrameworkUpdateService
             'skipped_local_changes_count' => 0,
             'skipped_local_changes' => [],
             'backup_count' => $dryRun ? 0 : 1,
-            'backups' => $dryRun ? [] : ['CorianderCore/autoload.php.bak.20260101010101'],
+            'backups' => $dryRun ? [] : ['backups/coriander/v0.1.0-to-v0.2.0/CorianderCore/autoload.php.bak'],
         ];
     }
 }
@@ -154,3 +200,4 @@ class FakePostUpdateTasksService extends PostUpdateTasksService
         ];
     }
 }
+

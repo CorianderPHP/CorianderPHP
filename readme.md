@@ -71,6 +71,8 @@ All commands are invoked via `php coriander`:
 - `php coriander update --dry-run` - show planned framework changes without writing files.
 - `php coriander update --force` - overwrite locally modified framework-managed files.
 - `php coriander update --clear-cache` - clear framework cache after update.
+- `php coriander update --backup-dir=backups/custom` - override backup output directory for this run.
+- `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
 - `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
 - Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
 
@@ -78,7 +80,11 @@ All commands are invoked via `php coriander`:
 
 - Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
 - Only framework-managed paths are updated by the updater, and partial failures trigger automatic rollback.
+- Backups are written under `backups/coriander/<from-version>-to-<to-version>/` by default (configurable via `CORIANDER_UPDATE_BACKUP_DIR` in `config/config.php`).
+- Rollback restores from the most recent backup scope detected in the configured backup directory.
+- Rollback also removes files that were originally added by the update (when rollback metadata is available).
 - Start with a first release tag such as `v0.1.0` before using `php coriander update` in other projects.
+- Rollback is atomic: if restoration fails mid-way, the framework files are restored back to their pre-rollback state.
 
 ## CSRF Protection
 
@@ -105,6 +111,8 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 ## License
 
 This project is licensed under the MIT License.
+
+
 
 
 
