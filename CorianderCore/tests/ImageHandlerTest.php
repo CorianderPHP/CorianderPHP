@@ -136,6 +136,6 @@ class ImageHandlerTest extends TestCase
 
         $this->assertStringContainsString('<picture class="picture-class">', $html, 'Picture tag was not rendered correctly.');
         $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/webp/test_image_80.webp" type="image/webp"', $html, 'WebP source tag was not rendered correctly.');
-        $this->assertStringContainsString('<img alt=\'Test Image\' width="100" height="100" class="img-class" src="/CorianderCore/tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
+        $this->assertStringContainsString('<img alt="Test Image" width="100" height="100" class="img-class" src="/CorianderCore/tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
     }
 }
