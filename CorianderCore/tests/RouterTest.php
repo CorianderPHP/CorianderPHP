@@ -338,7 +338,7 @@ class RouterTest extends TestCase
     }
 
     /**
-     * Test that a route is rejected when the HTTP method does not match.
+     * Test that a route returns 405 when the path matches but the method does not.
      */
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testMethodRejection()
@@ -350,17 +350,12 @@ class RouterTest extends TestCase
             $executed = true;
         });
 
-        $notFoundCalled = false;
-        $this->router->setNotFound(function () use (&$notFoundCalled) {
-            $notFoundCalled = true;
-        });
-
-        $this->router->dispatch($request);
+        $response = $this->router->dispatch($request);
 
         $this->assertFalse($executed);
-        $this->assertTrue($notFoundCalled);
-    }
-    /**
+        $this->assertSame(405, $response->getStatusCode());
+        $this->assertSame('GET', $response->getHeaderLine('Allow'));
+    }    /**
      * Test that an explicit POST action in the URI has priority over the store method.
      */
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]

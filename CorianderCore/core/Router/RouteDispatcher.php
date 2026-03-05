@@ -46,38 +46,52 @@ class RouteDispatcher
         defined('REQUESTED_VIEW') || define('REQUESTED_VIEW', $requestedView);
 
         $method = strtoupper($request->getMethod());
+        $allowedMethods = [];
 
         foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $params, $callback, $middleware]) {
-            if ($routeMethod === $method && preg_match($pattern, $path, $matches)) {
-                array_shift($matches);
-                $requestWithAttributes = $request;
-                foreach ($params as $i => $name) {
-                    $requestWithAttributes = $requestWithAttributes->withAttribute($name, $matches[$i] ?? null);
-                }
-
-                $handler = new class($callback) implements RequestHandlerInterface {
-                    public function __construct(private $callback) {}
-
-                    public function handle(ServerRequestInterface $request): ResponseInterface
-                    {
-                        ob_start();
-                        $result = call_user_func($this->callback, $request);
-                        $content = (string) ob_get_clean();
-                        if ($result instanceof ResponseInterface) {
-                            return $result;
-                        }
-
-                        if (is_string($result) || $result instanceof \Stringable) {
-                            $content .= (string) $result;
-                        }
-
-                        return new Response(200, [], $content);
-                    }
-                };
-
-                $queue = new MiddlewareQueue($middleware, $handler);
-                return $queue->handle($requestWithAttributes);
+            if (!preg_match($pattern, $path, $matches)) {
+                continue;
             }
+
+            if ($routeMethod !== $method) {
+                $allowedMethods[] = $routeMethod;
+                continue;
+            }
+
+            array_shift($matches);
+            $requestWithAttributes = $request;
+            foreach ($params as $i => $name) {
+                $requestWithAttributes = $requestWithAttributes->withAttribute($name, $matches[$i] ?? null);
+            }
+
+            $handler = new class($callback) implements RequestHandlerInterface {
+                public function __construct(private $callback) {}
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    ob_start();
+                    $result = call_user_func($this->callback, $request);
+                    $content = (string) ob_get_clean();
+                    if ($result instanceof ResponseInterface) {
+                        return $result;
+                    }
+
+                    if (is_string($result) || $result instanceof \Stringable) {
+                        $content .= (string) $result;
+                    }
+
+                    return new Response(200, [], $content);
+                }
+            };
+
+            $queue = new MiddlewareQueue($middleware, $handler);
+            return $queue->handle($requestWithAttributes);
+        }
+
+        if ($allowedMethods !== []) {
+            $allowedMethods = array_values(array_unique($allowedMethods));
+            sort($allowedMethods);
+            return new Response(405, ['Allow' => implode(', ', $allowedMethods)], 'Method Not Allowed');
         }
 
         if (str_starts_with($path, 'api/')) {
