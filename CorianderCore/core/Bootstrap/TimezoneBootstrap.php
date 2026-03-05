@@ -6,6 +6,11 @@ namespace CorianderCore\Core\Bootstrap;
 class TimezoneBootstrap
 {
     /**
+     * @var array<string, bool>|null
+     */
+    private static ?array $timezoneIndex = null;
+
+    /**
      * Apply app timezone from environment value when valid.
      */
     public static function applyFromEnvironment(?string $timezone): bool
@@ -14,7 +19,11 @@ class TimezoneBootstrap
             return false;
         }
 
-        if (!in_array($timezone, timezone_identifiers_list(), true)) {
+        if (self::$timezoneIndex === null) {
+            self::$timezoneIndex = array_fill_keys(timezone_identifiers_list(), true);
+        }
+
+        if (!isset(self::$timezoneIndex[$timezone])) {
             return false;
         }
 
