@@ -42,7 +42,8 @@ class RouteDispatcher
             $path = 'home';
         }
 
-        defined('REQUESTED_VIEW') || define('REQUESTED_VIEW', $path);
+        $requestedView = $this->normalizeRequestedView($path) ?? 'home';
+        defined('REQUESTED_VIEW') || define('REQUESTED_VIEW', $requestedView);
 
         $method = strtoupper($request->getMethod());
 
@@ -100,5 +101,33 @@ class RouteDispatcher
 
         ob_end_clean();
         return $this->notFoundHandler->handle($this->registry);
+    }
+
+    /**
+     * Normalize a requested view path into safe relative segments.
+     */
+    private function normalizeRequestedView(string $path): ?string
+    {
+        if (str_contains($path, "\0")) {
+            return null;
+        }
+
+        $normalizedPath = str_replace('\\', '/', trim($path));
+        if ($normalizedPath === '' || str_starts_with($normalizedPath, '/')) {
+            return null;
+        }
+
+        if (preg_match('/^[a-zA-Z]:\//', $normalizedPath) === 1) {
+            return null;
+        }
+
+        $segments = explode('/', trim($normalizedPath, '/'));
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                return null;
+            }
+        }
+
+        return implode('/', $segments);
     }
 }

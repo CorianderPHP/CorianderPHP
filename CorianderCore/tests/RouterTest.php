@@ -161,6 +161,26 @@ class RouterTest extends TestCase
         $this->assertSame('home', REQUESTED_VIEW);
     }
 
+
+    /**
+     * Test that unsafe requested view paths are normalized before being exposed.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testUnsafeRequestedViewFallsBackToHome(): void
+    {
+        $request = new ServerRequest('GET', '/../etc/passwd');
+
+        $this->router->setNotFound(function () {
+            echo '404 Custom Not Found';
+        });
+
+        $response = $this->router->dispatch($request);
+        $output = (string) $response->getBody();
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertStringContainsString('404 Custom Not Found', $output);
+        $this->assertSame('home', REQUESTED_VIEW);
+    }
     /**
      * Test that the router handles a request to a controller where the action method does not exist.
      * This test verifies that a 404 error is triggered when the specified action is not found in the controller.
