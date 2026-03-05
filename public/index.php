@@ -5,7 +5,9 @@ use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Logging\Logger;
 use CorianderCore\Core\Router\Router;
+use CorianderCore\Core\Security\ApiRequestLimitsMiddleware;
 use CorianderCore\Core\Security\CsrfMiddleware;
+use CorianderCore\Core\Security\SecurityHeadersMiddleware;
 use Nyholm\Psr7\ServerRequest;
 
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
@@ -34,6 +36,8 @@ try {
     $container->set(Router::class, fn() => new Router());
 
     $router = $container->get(Router::class);
+    $router->addMiddleware(new SecurityHeadersMiddleware());
+    $router->addMiddleware(new ApiRequestLimitsMiddleware());
     $router->addMiddleware(new CsrfMiddleware());
 
     $notFound = function () {

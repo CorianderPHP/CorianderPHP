@@ -9,6 +9,11 @@ use RuntimeException;
 
 class GitHubReleaseServiceTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        putenv('CORIANDER_UPDATE_ALLOWED_REPOS');
+    }
+
     public function testExtractStatusCodeReturnsFinalStatusFromRedirectChain(): void
     {
         $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
@@ -32,6 +37,15 @@ class GitHubReleaseServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         new GitHubReleaseService('invalid repository format');
+    }
+
+    public function testConstructorRejectsRepositoryOutsideAllowlist(): void
+    {
+        putenv('CORIANDER_UPDATE_ALLOWED_REPOS=CorianderPHP/CorianderPHP');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('not allowed');
+        new GitHubReleaseService('example/other-repo');
     }
 
     public function testDownloadArchiveRejectsNonHttpsUrl(): void

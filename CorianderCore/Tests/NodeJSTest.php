@@ -18,4 +18,17 @@ class NodeJSTest extends TestCase
 
         $this->assertStringContainsString('Please provide a Node.js command to run', $output);
     }
+
+    public function testWatchCommandPrintsStartupMessageAndForwardsChildOutput(): void
+    {
+        $command = new NodeJS(PHP_BINARY);
+
+        ob_start();
+        $command->execute(['run', 'watch-tw']);
+        $output = (string) ob_get_clean();
+
+        $this->assertStringContainsString('Starting watcher... Press Ctrl+C to stop.', $output);
+        $this->assertStringContainsString('Could not open input file', $output);
+        $this->assertStringContainsString('npm command failed with exit code', $output);
+    }
 }

@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "../../../nodejs/node_modules/tailwindcss";
+@config "../../../nodejs/tailwind.config.js";
 
 @font-face {
     font-family: "Poppins";

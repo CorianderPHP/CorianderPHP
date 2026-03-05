@@ -11,6 +11,27 @@ use PHPUnit\Framework\TestCase;
 
 class UpdateCommandTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        putenv('APP_ENV=development');
+        putenv('CORIANDER_UPDATER_ALLOW_PRODUCTION=1');
+        putenv('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR=0');
+        putenv('CORIANDER_UPDATER_RATE_LIMIT_FILE=cache/_tmp_update_rate_limit.json');
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('APP_ENV');
+        putenv('CORIANDER_UPDATER_ALLOW_PRODUCTION');
+        putenv('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR');
+        putenv('CORIANDER_UPDATER_RATE_LIMIT_FILE');
+
+        $rateLimitFile = PROJECT_ROOT . '/cache/_tmp_update_rate_limit.json';
+        if (file_exists($rateLimitFile)) {
+            unlink($rateLimitFile);
+        }
+    }
+
     public function testDryRunExecutesWithoutPromptAndWithoutPostTasks(): void
     {
         $service = new FakeFrameworkUpdateService();
@@ -76,6 +97,7 @@ class UpdateCommandTest extends TestCase
         $this->assertSame('backups/custom', $service->lastBackupDirectory);
         $this->assertSame('v0.1.0-to-v0.2.0', $service->lastBackupScope);
     }
+
     public function testRollbackFlagRestoresFromLatestBackup(): void
     {
         $service = new FakeFrameworkUpdateService();
@@ -149,6 +171,7 @@ class FakeFrameworkUpdateService extends FrameworkUpdateService
             'restored_files' => ['CorianderCore/autoload.php'],
         ];
     }
+
     public function runUpdate(string $zipUrl, bool $dryRun = false, bool $force = false, bool $createBackups = true, ?string $backupScope = null, ?string $backupDirectory = null): array
     {
         $this->runUpdateCalled = true;
