@@ -29,6 +29,48 @@ define('DB_PASSWORD', 'secret');
 
 The file is automatically loaded from `config/config.php` when present. Avoid committing credentials to version control.
 
+## Migrations
+
+CorianderPHP supports timestamped migration files with batch tracking.
+
+### Create migration files
+
+```bash
+php coriander make:migration CreateUsersTable
+```
+
+This creates a file in `database/migrations` named like:
+
+`20260305123000_create_users_table.php`
+
+Each migration file returns an object with `up(PDO $pdo)` and optional `down(PDO $pdo)` methods.
+
+### Apply migrations
+
+```bash
+php coriander migrate
+```
+
+### Check migration status
+
+```bash
+php coriander migrate:status
+```
+
+### Rollback migrations
+
+```bash
+php coriander migrate:rollback
+php coriander migrate:rollback --step=2
+```
+
+### Migration safety notes
+
+- Executed migration checksums are tracked in the `migrations` table.
+- If an executed migration file changes, commands fail by default.
+- Use `--allow-changed` only in local development when intentionally editing history.
+- Keep migrations immutable in shared/staging/production environments.
+
 ## Error Handling
 
 - `DatabaseHandler` logs warnings if required constants are missing, unsupported drivers are used, or the connection cannot be established.
@@ -115,3 +157,5 @@ SQLManager::findBy(
     ['from' => '2026-01-01', 's1' => 'active', 's2' => 'pending']
 );
 ```
+
+
