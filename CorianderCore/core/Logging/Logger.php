@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Logging;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
+use Stringable;
 
 /**
  * Simple PSR-3 compliant logger writing to configurable channels.
@@ -56,7 +57,8 @@ class Logger extends AbstractLogger
     public function __construct(?string $channel = null, ?string $minLevel = null)
     {
         $this->channel = $channel ?? getenv('LOG_CHANNEL') ?: 'stderr';
-        $this->minLevel = $minLevel ?? getenv('LOG_LEVEL') ?: LogLevel::WARNING;
+        $configuredLevel = strtolower(trim($minLevel ?? getenv('LOG_LEVEL') ?: LogLevel::WARNING));
+        $this->minLevel = isset($this->levels[$configuredLevel]) ? $configuredLevel : LogLevel::WARNING;
     }
 
     /**
@@ -68,9 +70,9 @@ class Logger extends AbstractLogger
      *
      * @return void
      */
-    public function log(string $level, string|Stringable $message, array $context = []): void
+    public function log($level, string|Stringable $message, array $context = []): void
     {
-        if (!isset($this->levels[$level])) {
+        if (!is_string($level) || !isset($this->levels[$level])) {
             return;
         }
         if ($this->levels[$level] > $this->levels[$this->minLevel]) {

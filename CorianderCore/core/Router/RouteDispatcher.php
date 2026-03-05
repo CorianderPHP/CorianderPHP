@@ -65,6 +65,11 @@ class RouteDispatcher
                         if ($result instanceof ResponseInterface) {
                             return $result;
                         }
+
+                        if (is_string($result) || $result instanceof \Stringable) {
+                            $content .= (string) $result;
+                        }
+
                         return new Response(200, [], $content);
                     }
                 };

@@ -49,6 +49,12 @@ class ConsoleOutput
     {
         $message = '&7' . $message;
 
+        if (!self::supportsAnsi()) {
+            $plainMessage = preg_replace('/&[423e78lur]/', '', $message) ?? $message;
+            echo $plainMessage . PHP_EOL;
+            return;
+        }
+
         // Replace color codes with corresponding ANSI codes
         $formattedMessage = str_replace([
             '&4', '&2', '&3', '&e', '&7', '&8', '&l', '&u', '&r'
@@ -58,6 +64,38 @@ class ConsoleOutput
 
         // Output the formatted message to the console
         echo $formattedMessage . self::STYLE_RESET . PHP_EOL;
+    }
+
+    /**
+     * Detect whether ANSI styling should be emitted for current stdout.
+     */
+    private static function supportsAnsi(): bool
+    {
+        if (getenv('NO_COLOR') !== false) {
+            return false;
+        }
+
+        if (getenv('FORCE_COLOR') !== false || getenv('CLICOLOR_FORCE') === '1') {
+            return true;
+        }
+
+        if (!defined('STDOUT')) {
+            return false;
+        }
+
+        if (function_exists('stream_isatty') && @stream_isatty(STDOUT)) {
+            return true;
+        }
+
+        if (function_exists('posix_isatty') && @posix_isatty(STDOUT)) {
+            return true;
+        }
+
+        if (DIRECTORY_SEPARATOR === '\\' && function_exists('sapi_windows_vt100_support')) {
+            return @sapi_windows_vt100_support(STDOUT);
+        }
+
+        return false;
     }
 
     /**
