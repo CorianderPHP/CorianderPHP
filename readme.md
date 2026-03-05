@@ -15,7 +15,7 @@
 
 ## Documentation
 
-Detailed guides live in the [`docs/`](docs) directory:
+Detailed guides live in the [docs/](docs) directory. Start with [Documentation Index](docs/index.md):
 
 - [CLI](docs/cli.md)
 - [Routing](docs/routing.md)
@@ -26,6 +26,7 @@ Detailed guides live in the [`docs/`](docs) directory:
 - [Cache](docs/cache.md)
 - [Modules](docs/modules.md)
 - [NodeJS Integration](docs/nodejs.md)
+- [Security](docs/security.md)
 
 These guides are kept in sync with releases; review them when upgrading.
 
@@ -115,6 +116,8 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 ## License
 
 This project is licensed under the MIT License.
+
+
 
 
 
