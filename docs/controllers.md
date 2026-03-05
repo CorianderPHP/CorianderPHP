@@ -31,5 +31,4 @@ public function show($id): void
 - Keep actions small and delegate business logic to separate classes.
 - Name controllers in PascalCase; the CLI appends `Controller` automatically.
 - Place API controllers under `src/ApiControllers` and return JSON responses.
-- Validate input and use CSRF guards for state-changing requests.
-
+- Validate input and use CSRF guards for state-changing requests (`POST`, `PUT`, `PATCH`, `DELETE`).

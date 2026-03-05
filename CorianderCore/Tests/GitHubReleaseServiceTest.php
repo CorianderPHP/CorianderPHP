@@ -5,6 +5,7 @@ namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Console\Services\Updater\GitHubReleaseService;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class GitHubReleaseServiceTest extends TestCase
 {
@@ -25,5 +26,29 @@ class GitHubReleaseServiceTest extends TestCase
         $statusCode = $method->invoke($service, $headers);
 
         $this->assertSame(200, $statusCode);
+    }
+
+    public function testConstructorRejectsInvalidRepositoryFormat(): void
+    {
+        $this->expectException(RuntimeException::class);
+        new GitHubReleaseService('invalid repository format');
+    }
+
+    public function testDownloadArchiveRejectsNonHttpsUrl(): void
+    {
+        $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('must use HTTPS');
+        $service->downloadArchive('http://github.com/CorianderPHP/CorianderPHP/archive/refs/tags/v0.1.1.zip', sys_get_temp_dir() . '/unused.zip');
+    }
+
+    public function testDownloadArchiveRejectsUnknownHost(): void
+    {
+        $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('host is not allowed');
+        $service->downloadArchive('https://example.com/release.zip', sys_get_temp_dir() . '/unused.zip');
     }
 }

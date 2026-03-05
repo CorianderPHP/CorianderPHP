@@ -69,7 +69,6 @@ $router->add('POST', '/user', function(ServerRequest $request) {
 ## Best Practices
 
 - Group related routes into separate files and include them during bootstrap to keep definitions maintainable.
-- Leverage PSR-15 middleware for cross-cutting concerns such as authentication or CSRF protection.
+- Leverage PSR-15 middleware for cross-cutting concerns such as authentication or CSRF protection on mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`).
 - Use URL parameters instead of query strings for cleaner, cache-friendly routes.
 - Avoid defining routes unless necessary; controllers are mapped automatically.
-

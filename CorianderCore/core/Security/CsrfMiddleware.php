@@ -10,21 +10,49 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Middleware validating CSRF tokens on POST requests.
+ * Middleware validating CSRF tokens on mutating requests.
  *
  * Workflow:
- * 1. For non-POST requests the middleware is bypassed.
- * 2. On POST, the token from parsed body (or recoverable raw body) is validated via {@see Csrf::validate()}.
+ * 1. For methods outside the protected set the middleware is bypassed.
+ * 2. On protected methods, the token from parsed body (or recoverable raw body)
+ *    is validated via {@see Csrf::validate()}.
  * 3. When validation fails a 403 response is returned.
  */
 class CsrfMiddleware implements MiddlewareInterface
 {
     /**
+     * @var array<int,string>
+     */
+    private array $protectedMethods;
+
+    /**
+     * @param array<int,string>|null $protectedMethods HTTP methods requiring CSRF validation.
+     */
+    public function __construct(?array $protectedMethods = null)
+    {
+        $methods = $protectedMethods ?? ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+        $this->protectedMethods = [];
+        foreach ($methods as $method) {
+            if (!is_string($method)) {
+                continue;
+            }
+
+            $normalized = strtoupper(trim($method));
+            if ($normalized !== '') {
+                $this->protectedMethods[] = $normalized;
+            }
+        }
+
+        $this->protectedMethods = array_values(array_unique($this->protectedMethods));
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if (strtoupper($request->getMethod()) !== 'POST') {
+        if (!$this->requiresValidation($request->getMethod())) {
             return $handler->handle($request);
         }
 
@@ -67,5 +95,10 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         return null;
+    }
+
+    private function requiresValidation(string $method): bool
+    {
+        return in_array(strtoupper($method), $this->protectedMethods, true);
     }
 }

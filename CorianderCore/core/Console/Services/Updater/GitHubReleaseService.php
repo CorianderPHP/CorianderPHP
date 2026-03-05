@@ -9,12 +9,15 @@ class GitHubReleaseService
 {
     private const API_BASE = 'https://api.github.com/repos/';
     private const MAX_RETRIES = 3;
+    private const ALLOWED_DOWNLOAD_HOSTS = ['github.com', 'api.github.com', 'codeload.github.com'];
 
     private string $repository;
 
     public function __construct(?string $repository = null)
     {
-        $this->repository = $repository ?? $this->detectRepositoryFromComposer() ?? 'CorianderPHP/CorianderPHP';
+        $candidate = $repository ?? $this->detectRepositoryFromComposer() ?? 'CorianderPHP/CorianderPHP';
+        $this->assertRepositoryIsAllowed($candidate);
+        $this->repository = $candidate;
     }
 
     /**
@@ -44,6 +47,8 @@ class GitHubReleaseService
 
     public function downloadArchive(string $url, string $destination): void
     {
+        $this->assertDownloadUrlIsAllowed($url);
+
         $attempt = 0;
         $lastFailure = 'Unknown network error while downloading update archive.';
 
@@ -74,6 +79,32 @@ class GitHubReleaseService
         throw new RuntimeException($lastFailure);
     }
 
+
+    private function assertRepositoryIsAllowed(string $repository): void
+    {
+        if (preg_match('/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/', $repository) !== 1) {
+            throw new RuntimeException('Invalid GitHub repository format. Expected "owner/repository".');
+        }
+    }
+
+    private function assertDownloadUrlIsAllowed(string $url): void
+    {
+        $parts = parse_url($url);
+        if (!is_array($parts)) {
+            throw new RuntimeException('Invalid update archive URL.');
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+
+        if ($scheme !== 'https') {
+            throw new RuntimeException('Update archive URL must use HTTPS.');
+        }
+
+        if (!in_array($host, self::ALLOWED_DOWNLOAD_HOSTS, true)) {
+            throw new RuntimeException('Update archive URL host is not allowed.');
+        }
+    }
     private function buildZipUrl(string $tag): string
     {
         return 'https://github.com/' . $this->repository . '/archive/refs/tags/' . rawurlencode($tag) . '.zip';

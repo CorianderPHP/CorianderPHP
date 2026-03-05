@@ -133,6 +133,17 @@ class SQLManager
         }
     }
 
+
+    /**
+     * Retrieves rows from a table using an equality-based condition map.
+     *
+     * @param array<string,mixed> $conditions Associative column => value conditions.
+     */
+    public static function findWhere(array $columns, string $table, array $conditions): array
+    {
+        [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
+        return self::findBy($columns, $table, $whereClause, $params);
+    }
     /**
      * Updates data in a table in the database based on a given condition.
      *
@@ -167,6 +178,18 @@ class SQLManager
         }
     }
 
+
+    /**
+     * Updates rows in a table using an equality-based condition map.
+     *
+     * @param array<string,mixed> $data       Associative array of column => value pairs to update.
+     * @param array<string,mixed> $conditions Associative column => value conditions.
+     */
+    public static function updateWhere(string $table, array $data, array $conditions): bool
+    {
+        [$whereClause, $whereParams] = self::buildWhereFromArray($conditions, 'w_');
+        return self::update($table, $data, $whereClause, $whereParams);
+    }
     /**
      * Inserts a new row into a table in the database.
      *
@@ -252,6 +275,17 @@ class SQLManager
         }
     }
 
+
+    /**
+     * Deletes rows in a table using an equality-based condition map.
+     *
+     * @param array<string,mixed> $conditions Associative column => value conditions.
+     */
+    public static function deleteWhere(string $table, array $conditions): bool
+    {
+        [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
+        return self::deleteFrom($table, $whereClause, $params);
+    }
     /**
      * Executes a given SQL query and retrieves a row of data from the database table.
      *
@@ -277,6 +311,38 @@ class SQLManager
         }
     }
 
+
+    /**
+     * Build a safe equality-based WHERE clause from an associative array.
+     *
+     * @param array<string,mixed> $conditions
+     * @return array{0:string,1:array<string,mixed>}
+     */
+    private static function buildWhereFromArray(array $conditions, string $placeholderPrefix): array
+    {
+        if ($conditions === []) {
+            throw new DatabaseException('Conditions array cannot be empty.');
+        }
+
+        $clauses = [];
+        $params = [];
+
+        foreach ($conditions as $column => $value) {
+            $safeColumn = self::quoteIdentifier((string) $column);
+            $placeholder = ':' . $placeholderPrefix . preg_replace('/[^a-zA-Z0-9_]/', '_', (string) $column);
+            $index = 1;
+            $basePlaceholder = $placeholder;
+            while (array_key_exists(ltrim($placeholder, ':'), $params)) {
+                $placeholder = $basePlaceholder . '_' . $index;
+                $index++;
+            }
+
+            $clauses[] = $safeColumn . ' = ' . $placeholder;
+            $params[ltrim($placeholder, ':')] = $value;
+        }
+
+        return [implode(' AND ', $clauses), $params];
+    }
     /**
      * Quote an identifier such as a table or column name.
      *

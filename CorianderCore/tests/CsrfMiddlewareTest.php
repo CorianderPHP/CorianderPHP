@@ -118,4 +118,51 @@ class CsrfMiddlewareTest extends TestCase
         $this->assertTrue($handler->called);
         $this->assertSame(200, $response->getStatusCode());
     }
+
+    /**
+     * Ensure DELETE requests with an invalid token are rejected.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testRejectsInvalidTokenOnDelete(): void
+    {
+        $middleware = new CsrfMiddleware();
+        $request = (new ServerRequest('DELETE', '/test'))
+            ->withParsedBody(['csrf_token' => 'invalid']);
+        $handler = new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('Invalid CSRF token', (string) $response->getBody());
+    }
+
+    /**
+     * Ensure PATCH requests with a valid token are allowed.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testAllowsValidTokenOnPatch(): void
+    {
+        $token = Csrf::token();
+        $middleware = new CsrfMiddleware();
+        $request = (new ServerRequest('PATCH', '/test'))
+            ->withParsedBody(['csrf_token' => $token]);
+        $handler = new class implements RequestHandlerInterface {
+            public bool $called = false;
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertTrue($handler->called);
+        $this->assertSame(200, $response->getStatusCode());
+    }
 }

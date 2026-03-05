@@ -32,9 +32,18 @@ The helper converts the image if needed and outputs a `<picture>` tag with WebP 
 
 Variables passed to view templates are automatically escaped for HTML output to mitigate XSS attacks.
 
+## Path Safety
+
+View resolution only accepts normalized relative paths under `public/public_views`.
+
+- Dot-segments such as `.` or `..` are rejected.
+- Absolute paths are rejected.
+- Null-byte path fragments are rejected.
+
+This prevents path traversal and accidental inclusion of files outside the view root.
+
 ## Best Practices
 
 - Keep view logic minimal; handle business logic in controllers or services.
-- Avoid double escaping—variables provided to views are sanitized by the framework.
+- Avoid double escaping; variables provided to views are sanitized by the framework.
 - Store assets under `public/assets` and reference them with absolute paths.
-
