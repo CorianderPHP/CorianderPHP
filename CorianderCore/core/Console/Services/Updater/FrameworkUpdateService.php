@@ -43,7 +43,7 @@ class FrameworkUpdateService
     /**
      * @return array{operations: array<int, array{type:string,relative_path:string,source:string,destination:string}>, add_count:int, update_count:int, unchanged_count:int, missing_paths: string[], applied_add_count:int, applied_update_count:int, skipped_local_changes_count:int, skipped_local_changes: string[], backup_count:int, backups: string[]}
      */
-    public function runUpdate(string $zipUrl, bool $dryRun = false, bool $force = false, bool $createBackups = true): array
+    public function runUpdate(string $zipUrl, bool $dryRun = false, bool $force = false, bool $createBackups = true, ?string $backupScope = null, ?string $backupDirectory = null): array
     {
         $tempDirectory = $this->createTempDirectory();
         $archivePath = $tempDirectory . '/framework.zip';
@@ -64,7 +64,7 @@ class FrameworkUpdateService
             ];
 
             if (!$dryRun) {
-                $applyResult = $this->fileSyncService->applyPlan($plan, $force, $createBackups);
+                $applyResult = $this->fileSyncService->applyPlan($plan, $force, $createBackups, $backupScope, $backupDirectory);
             }
 
             return array_merge($plan, $applyResult);
@@ -73,6 +73,13 @@ class FrameworkUpdateService
         }
     }
 
+    /**
+     * @return array{scope:string, restored_count:int, restored_files:string[]}
+     */
+    public function rollbackLatestBackup(?string $backupDirectory = null): array
+    {
+        return $this->fileSyncService->rollbackLatestBackup($backupDirectory);
+    }
     private function createTempDirectory(): string
     {
         $base = rtrim(sys_get_temp_dir(), '\\/');

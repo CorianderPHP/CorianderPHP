@@ -36,10 +36,44 @@ class Update
         $dryRun = in_array('--dry-run', $args, true);
         $force = in_array('--force', $args, true);
         $clearCache = in_array('--clear-cache', $args, true);
+        $rollback = in_array('--rollback', $args, true);
+        $backupDirectory = $this->extractOptionValue($args, '--backup-dir');
 
+
+        if ($rollback) {
+            if ($dryRun) {
+                ConsoleOutput::print('&e--dry-run has no effect with --rollback.');
+            }
+
+            if (!$assumeYes) {
+                $confirmed = ($this->confirmationPrompt)('Rollback latest framework backup now? [y/N]: ');
+                if (!$confirmed) {
+                    ConsoleOutput::print('&eRollback cancelled.');
+                    return;
+                }
+            }
+
+            $result = $this->updateService->rollbackLatestBackup($backupDirectory);
+            ConsoleOutput::print('Rollback scope: &8' . $result['scope']);
+            ConsoleOutput::print('Restored files: &2' . (string) $result['restored_count']);
+            foreach ($result['restored_files'] as $restoredFile) {
+                ConsoleOutput::print('&8- restored: ' . $restoredFile);
+            }
+
+            $postTaskResults = $this->postUpdateTasksService->run($clearCache);
+            $this->printPostTaskResult('composer dump-autoload', $postTaskResults['composer_dump_autoload']);
+
+            if ($clearCache && $postTaskResults['cache_clear'] !== null) {
+                $this->printPostTaskResult('cache clear', $postTaskResults['cache_clear']);
+            }
+
+            ConsoleOutput::print('&2Rollback completed successfully.');
+            return;
+        }
         $localVersion = $this->updateService->getLocalVersion();
         $latestRelease = $this->updateService->fetchLatestRelease();
         $latestVersion = $latestRelease['tag'];
+        $backupScope = $localVersion . '-to-' . $latestVersion;
 
         ConsoleOutput::print('Current version: &8' . $localVersion);
         ConsoleOutput::print('Latest version: &2' . $latestVersion);
@@ -59,7 +93,7 @@ class Update
             }
         }
 
-        $result = $this->updateService->runUpdate($latestRelease['zip_url'], $dryRun, $force, true);
+        $result = $this->updateService->runUpdate($latestRelease['zip_url'], $dryRun, $force, true, $backupScope, $backupDirectory);
 
         $label = $dryRun ? 'Would add' : 'Planned add';
         ConsoleOutput::print($label . ': &2' . (string) $result['add_count']);
@@ -124,6 +158,22 @@ class Update
         }
     }
 
+    /**
+     * @param array<int, string> $args
+     */
+    private function extractOptionValue(array $args, string $option): ?string
+    {
+        foreach ($args as $arg) {
+            if (!str_starts_with($arg, $option . '=')) {
+                continue;
+            }
+
+            $value = trim(substr($arg, strlen($option) + 1));
+            return $value !== '' ? $value : null;
+        }
+
+        return null;
+    }
     private function promptUserConfirmation(string $message): bool
     {
         fwrite(STDOUT, $message);
@@ -136,3 +186,4 @@ class Update
         return $normalized === 'y' || $normalized === 'yes';
     }
 }
+
