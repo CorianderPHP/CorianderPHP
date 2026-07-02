@@ -34,6 +34,12 @@ class SampleController
     {
         return new Response(201, ['Content-Type' => 'application/json'], '{"created":true}');
     }
+
+    public function get_throws(): void
+    {
+        echo 'partial output';
+        throw new \RuntimeException('API controller failed.');
+    }
 }
 
 
@@ -150,6 +156,21 @@ class ApiControllerHandlerTest extends TestCase
 
         $this->assertNotNull($response);
         $this->assertSame(['ApiControllers\\SampleController'], $instantiated);
+    }
+
+    public function testControllerExceptionCleansOutputBuffer(): void
+    {
+        $handler = new ApiControllerHandler();
+        $bufferLevel = ob_get_level();
+
+        try {
+            $handler->dispatch('api/sample/throws', 'GET');
+            $this->fail('Expected API controller exception to be thrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('API controller failed.', $exception->getMessage());
+        }
+
+        $this->assertSame($bufferLevel, ob_get_level());
     }
 
     /**
