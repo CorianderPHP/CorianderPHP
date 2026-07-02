@@ -5,6 +5,7 @@
   "scripts": {
     "watch-typescript": "tsc --watch",
     "build-typescript": "tsc",
+    "watch-all": "node watch.all.js",
     "watch-ts": "node build.watch.js",
     "build-ts": "node build.js",
     "watch-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch=always --minify",
