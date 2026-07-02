@@ -9,11 +9,15 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\Services\Node\NpmExecutableResolver;
 
 class NodeJS
 {
-    public function __construct(private ?string $npmExecutableOverride = null)
+    private NpmExecutableResolver $npmExecutableResolver;
+
+    public function __construct(?string $npmExecutableOverride = null, ?callable $executableLocator = null)
     {
+        $this->npmExecutableResolver = new NpmExecutableResolver($npmExecutableOverride, $executableLocator);
     }
 
     /**
@@ -39,7 +43,8 @@ class NodeJS
             ConsoleOutput::print('&2Starting watcher...&7 Press Ctrl+C to stop.');
         }
 
-        $command = array_merge([$this->resolveNpmExecutable()], array_values($args));
+        $npmExecutable = $this->resolveNpmExecutable();
+        $command = array_merge([$npmExecutable], array_values($args));
 
         $descriptors = [
             0 => ['pipe', 'r'],
@@ -65,6 +70,7 @@ class NodeJS
         $exitCode = proc_close($process);
         if ($exitCode !== 0) {
             ConsoleOutput::print('&4[Error]&7 npm command failed with exit code ' . (string) $exitCode . '.');
+            ConsoleOutput::print('&8|&7 Resolved npm executable: ' . $npmExecutable);
         }
     }
 
@@ -126,31 +132,6 @@ class NodeJS
 
     private function resolveNpmExecutable(): string
     {
-        if (is_string($this->npmExecutableOverride) && trim($this->npmExecutableOverride) !== '') {
-            return $this->npmExecutableOverride;
-        }
-
-        if (DIRECTORY_SEPARATOR !== '\\') {
-            return 'npm';
-        }
-
-        $candidates = [];
-        $programFiles = getenv('ProgramFiles');
-        if (is_string($programFiles) && $programFiles !== '') {
-            $candidates[] = rtrim($programFiles, '\\/') . '\\nodejs\\npm.cmd';
-        }
-
-        $programFilesX86 = getenv('ProgramFiles(x86)');
-        if (is_string($programFilesX86) && $programFilesX86 !== '') {
-            $candidates[] = rtrim($programFilesX86, '\\/') . '\\nodejs\\npm.cmd';
-        }
-
-        foreach ($candidates as $candidate) {
-            if (is_file($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return 'npm.cmd';
+        return $this->npmExecutableResolver->resolve();
     }
 }
