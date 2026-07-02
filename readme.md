@@ -47,6 +47,9 @@ These guides are kept in sync with releases; review them when upgrading.
    php coriander nodejs install             # install from package.json
    php coriander nodejs install tailwindcss # add a package
    ```
+   Requires Node.js with npm available. On Windows, npm is usually installed at
+   `C:\Program Files\nodejs\npm.cmd`; custom installs can be configured with
+   `CORIANDER_NPM_EXECUTABLE` (see [NodeJS Integration](docs/nodejs.md)).
 4. Watch or build assets as needed (see [NodeJS Integration](docs/nodejs.md)).
 
 ### Logging
