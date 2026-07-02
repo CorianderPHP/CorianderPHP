@@ -96,6 +96,56 @@ class Router
     }
 
     /**
+     * Register a GET route.
+     *
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
+     */
+    public function get(string $pattern, callable $callback, array $middleware = []): void
+    {
+        $this->add('GET', $pattern, $callback, $middleware);
+    }
+
+    /**
+     * Register a POST route.
+     *
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
+     */
+    public function post(string $pattern, callable $callback, array $middleware = []): void
+    {
+        $this->add('POST', $pattern, $callback, $middleware);
+    }
+
+    /**
+     * Register a PUT route.
+     *
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
+     */
+    public function put(string $pattern, callable $callback, array $middleware = []): void
+    {
+        $this->add('PUT', $pattern, $callback, $middleware);
+    }
+
+    /**
+     * Register a PATCH route.
+     *
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
+     */
+    public function patch(string $pattern, callable $callback, array $middleware = []): void
+    {
+        $this->add('PATCH', $pattern, $callback, $middleware);
+    }
+
+    /**
+     * Register a DELETE route.
+     *
+     * @param MiddlewareInterface[] $middleware Route-specific middleware.
+     */
+    public function delete(string $pattern, callable $callback, array $middleware = []): void
+    {
+        $this->add('DELETE', $pattern, $callback, $middleware);
+    }
+
+    /**
      * Group routes under a common prefix and middleware set.
      *
      * @param string                $prefix     Path prefix for the group.
