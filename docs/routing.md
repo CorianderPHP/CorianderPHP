@@ -12,13 +12,16 @@ use Nyholm\Psr7\ServerRequest;
 
 /** @var Router $router */
 
-$router->add('GET', '/hello/{name}', function (ServerRequest $request) {
+$router->get('/hello/{name}', function (ServerRequest $request) {
     $name = $request->getAttribute('name');
     return new \Nyholm\Psr7\Response(200, [], "Hello {$name}");
 });
 
 $router->setNotFound(fn() => new \Nyholm\Psr7\Response(404, [], 'Not Found'));
 ```
+
+The router also provides `post()`, `put()`, `patch()`, and `delete()` shortcuts.
+Use `add($method, ...)` only when the method is dynamic or uncommon.
 
 ### Route Groups
 
@@ -35,7 +38,7 @@ $auth = new class implements MiddlewareInterface {
 };
 
 $router->group('/admin', [$auth], function (Router $r) {
-    $r->add('GET', '/dashboard', fn (ServerRequest $req) =>
+    $r->get('/dashboard', fn (ServerRequest $req) =>
         new \Nyholm\Psr7\Response(200, [], 'Dashboard'));
 });
 ```
@@ -47,7 +50,7 @@ Routes inside the group inherit the `/admin` prefix and the `$auth` middleware.
 Middleware can also be attached directly when registering a route:
 
 ```php
-$router->add('GET', '/profile', fn (ServerRequest $r) =>
+$router->get('/profile', fn (ServerRequest $r) =>
     new \Nyholm\Psr7\Response(200, [], 'Profile'), [$auth]);
 ```
 
@@ -63,7 +66,7 @@ $router->add('GET', '/profile', fn (ServerRequest $r) =>
 - Wrap route logic in `try/catch` blocks to log and report exceptions without exposing sensitive data:
 
 ```php
-$router->add('POST', '/user', function(ServerRequest $request) {
+$router->post('/user', function(ServerRequest $request) {
     try {
         // process request
     } catch (\Throwable $e) {

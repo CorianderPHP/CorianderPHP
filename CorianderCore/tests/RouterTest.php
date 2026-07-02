@@ -144,6 +144,47 @@ class RouterTest extends TestCase
     }
 
     /**
+     * Test that HTTP verb shortcut methods register routes.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testHttpVerbRouteShortcuts(): void
+    {
+        $this->router->get('/shortcut-get', fn (ServerRequest $request) => 'GET OK');
+        $this->router->post('/shortcut-post', fn (ServerRequest $request) => 'POST OK');
+        $this->router->put('/shortcut-put', fn (ServerRequest $request) => 'PUT OK');
+        $this->router->patch('/shortcut-patch', fn (ServerRequest $request) => 'PATCH OK');
+        $this->router->delete('/shortcut-delete', fn (ServerRequest $request) => 'DELETE OK');
+
+        $this->assertSame('GET OK', (string) $this->router->dispatch(new ServerRequest('GET', '/shortcut-get'))->getBody());
+        $this->assertSame('POST OK', (string) $this->router->dispatch(new ServerRequest('POST', '/shortcut-post'))->getBody());
+        $this->assertSame('PUT OK', (string) $this->router->dispatch(new ServerRequest('PUT', '/shortcut-put'))->getBody());
+        $this->assertSame('PATCH OK', (string) $this->router->dispatch(new ServerRequest('PATCH', '/shortcut-patch'))->getBody());
+        $this->assertSame('DELETE OK', (string) $this->router->dispatch(new ServerRequest('DELETE', '/shortcut-delete'))->getBody());
+    }
+
+    /**
+     * Test that shortcut methods keep route-specific middleware support.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testHttpVerbRouteShortcutsAcceptMiddleware(): void
+    {
+        $middleware = new class implements \Psr\Http\Server\MiddlewareInterface {
+            public function process(\Psr\Http\Message\ServerRequestInterface $request, \Psr\Http\Server\RequestHandlerInterface $handler): \Psr\Http\Message\ResponseInterface
+            {
+                return $handler->handle($request->withAttribute('shortcut_middleware', 'yes'));
+            }
+        };
+
+        $this->router->get('/shortcut-middleware', function (ServerRequest $request) {
+            return $request->getAttribute('shortcut_middleware');
+        }, [$middleware]);
+
+        $response = $this->router->dispatch(new ServerRequest('GET', '/shortcut-middleware'));
+
+        $this->assertSame('yes', (string) $response->getBody());
+    }
+
+    /**
      * Test that the router defaults to the home route when the request URI is empty.
      * This test simulates a request with an empty URI and verifies that the router
      * loads the home view by default, ensuring correct behavior for base URL access.
