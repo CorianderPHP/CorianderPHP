@@ -61,4 +61,25 @@ class RouteDispatcherTest extends TestCase
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('missing', (string) $response->getBody());
     }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testCustomRouteExceptionCleansOutputBuffer(): void
+    {
+        $router = new Router();
+        $router->add('GET', '/throws', function (ServerRequest $request): void {
+            echo 'partial output';
+            throw new \RuntimeException('Route failed.');
+        });
+
+        $bufferLevel = ob_get_level();
+
+        try {
+            $router->dispatch(new ServerRequest('GET', '/throws'));
+            $this->fail('Expected route exception to be thrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Route failed.', $exception->getMessage());
+        }
+
+        $this->assertSame($bufferLevel, ob_get_level());
+    }
 }

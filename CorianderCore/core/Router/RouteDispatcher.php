@@ -6,6 +6,7 @@ namespace CorianderCore\Core\Router;
 use CorianderCore\Core\Router\Handlers\ApiControllerHandler;
 use CorianderCore\Core\Router\Handlers\NotFoundHandler;
 use CorianderCore\Core\Router\Handlers\WebControllerHandler;
+use CorianderCore\Core\Support\OutputBuffer;
 use CorianderCore\Core\Router\ViewRenderer;
 use CorianderCore\Core\Router\Middleware\MiddlewareQueue;
 use Nyholm\Psr7\Response;
@@ -66,9 +67,8 @@ class RouteDispatcher
 
                 public function handle(ServerRequestInterface $request): ResponseInterface
                 {
-                    ob_start();
-                    $result = call_user_func($this->callback, $request);
-                    $content = (string) ob_get_clean();
+                    [$result, $content] = OutputBuffer::capture(fn() => call_user_func($this->callback, $request));
+
                     if ($result instanceof ResponseInterface) {
                         return $result;
                     }
@@ -104,13 +104,11 @@ class RouteDispatcher
             return $webResponse;
         }
 
-        ob_start();
-        if ($this->viewRenderer->render($path)) {
-            $content = (string) ob_get_clean();
+        [$rendered, $content] = OutputBuffer::capture(fn() => $this->viewRenderer->render($path));
+        if ($rendered) {
             return new Response(200, [], $content);
         }
 
-        ob_end_clean();
         return $this->notFoundHandler->handle($this->registry);
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Router\Handlers;
 
 use CorianderCore\Core\Router\NameFormatter;
+use CorianderCore\Core\Support\OutputBuffer;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
@@ -67,9 +68,7 @@ class ApiControllerHandler
             return null;
         }
 
-        ob_start();
-        $result = call_user_func_array([$controller, $action], $params);
-        $content = (string) ob_get_clean();
+        [$result, $content] = OutputBuffer::capture(fn() => call_user_func_array([$controller, $action], $params));
 
         if ($result instanceof ResponseInterface) {
             return $result;

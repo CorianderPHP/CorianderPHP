@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Router\Handlers;
 
 use CorianderCore\Core\Router\NameFormatter;
 use CorianderCore\Core\Router\Services\ControllerCacheService;
+use CorianderCore\Core\Support\OutputBuffer;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
@@ -70,9 +71,13 @@ class WebControllerHandler
         $factory = $this->controllerFactory;
         $controller = $factory($controllerClass);
 
-        ob_start();
-        [$handled, $result] = $this->dispatchAction($controller, $segments, $method);
-        $content = (string) ob_get_clean();
+        [$handledAndResult, $content] = OutputBuffer::capture(function () use ($controller, $segments, $method): array {
+            [$handled, $result] = $this->dispatchAction($controller, $segments, $method);
+
+            return [$handled, $result];
+        });
+
+        [$handled, $result] = $handledAndResult;
 
         if (!$handled) {
             return null;

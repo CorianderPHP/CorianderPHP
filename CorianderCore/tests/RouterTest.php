@@ -464,6 +464,43 @@ PHP;
     }
 
     /**
+     * Test that a throwing web controller action does not leak output buffers.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testWebControllerExceptionCleansOutputBuffer(): void
+    {
+        $request = new ServerRequest('GET', '/test-controller');
+
+        $controllerCode = <<<'PHP'
+<?php
+namespace Controllers;
+
+class TestController
+{
+    public function index(): void
+    {
+        echo 'partial output';
+        throw new \RuntimeException('Web controller failed.');
+    }
+}
+PHP;
+
+        $controllerFile = PROJECT_ROOT . '/src/Controllers/TestController.php';
+        file_put_contents($controllerFile, $controllerCode);
+
+        $bufferLevel = ob_get_level();
+
+        try {
+            $this->router->dispatch($request);
+            $this->fail('Expected web controller exception to be thrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Web controller failed.', $exception->getMessage());
+        }
+
+        $this->assertSame($bufferLevel, ob_get_level());
+    }
+
+    /**
      * Test that API controller responses preserve explicit status and headers.
      */
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
