@@ -127,7 +127,11 @@ Flags:
 ## Error Handling
 
 - Commands print diagnostic messages prefixed with `[Error]` or `[Warning]` when something goes wrong.
-- Most commands exit silently on success and non-zero on failure, allowing usage in scripts.
+- Commands return `0` on success and non-zero on command errors, allowing usage in scripts and CI.
+- Execution failures return `1`.
+- Invalid usage or bad arguments return `2`.
+- Unknown commands or subcommands return `3`.
+- Commands that wrap external processes, such as `nodejs`, propagate the external process exit code when possible.
 
 ## Best Practices
 

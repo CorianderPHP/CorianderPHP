@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Console\Services\Updater\FrameworkVersionService;
 
@@ -18,9 +19,10 @@ class Version
     /**
      * @param array<int, string> $args
      */
-    public function execute(array $args = []): void
+    public function execute(array $args = []): int
     {
         $version = $this->versionService->getLocalVersion();
         ConsoleOutput::print('&lFramework version:&r &2' . $version);
+        return CommandExitCode::SUCCESS;
     }
 }

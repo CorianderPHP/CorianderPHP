@@ -4,6 +4,7 @@ namespace CorianderCore\Tests;
 
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Core\Console\CommandHandler;
+use CorianderCore\Core\Console\CommandExitCode;
 
 class CommandHandlerTest extends TestCase
 {
@@ -33,9 +34,10 @@ class CommandHandlerTest extends TestCase
     {
         // Start output buffering to capture the output of the 'hello' command
         ob_start();
-        $this->commandHandler->handle('hello', []);
+        $exitCode = $this->commandHandler->handle('hello', []);
         $output = ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         // Assert that the expected output message contains specific greeting strings
         $this->assertStringContainsString("Hi! I'm", $output);
         $this->assertStringContainsString("Coriander", $output);
@@ -51,9 +53,10 @@ class CommandHandlerTest extends TestCase
     {
         // Start output buffering to capture the output of the 'help' command
         ob_start();
-        $this->commandHandler->handle('help', []);
+        $exitCode = $this->commandHandler->handle('help', []);
         $output = ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         // Assert that the output contains the expected command list
         $this->assertStringContainsString('Available commands:', $output);
         $this->assertStringContainsString('hello', $output);
@@ -69,12 +72,35 @@ class CommandHandlerTest extends TestCase
     {
         // Start output buffering to capture the output of an invalid command
         ob_start();
-        $this->commandHandler->handle('invalidCommand', []);
+        $exitCode = $this->commandHandler->handle('invalidCommand', []);
         $output = ob_get_clean();
 
+        $this->assertSame(CommandExitCode::UNKNOWN_COMMAND, $exitCode);
         // Assert that the output contains the expected error message and command list
         $this->assertStringContainsString('Unknown command: invalidCommand', $output);
         $this->assertStringContainsString('Available commands:', $output);
+    }
+
+    public function testCommandReturnCodeIsPropagated(): void
+    {
+        $mockCommandClass = get_class(new class {
+            public function execute(array $args): int
+            {
+                return 7;
+            }
+        });
+
+        $commandsProperty = (new \ReflectionClass(CommandHandler::class))->getProperty('commands');
+        $commandsProperty->setAccessible(true);
+        $commands = $commandsProperty->getValue($this->commandHandler);
+        $commands['returnsCode'] = $mockCommandClass;
+        $commandsProperty->setValue($this->commandHandler, $commands);
+
+        ob_start();
+        $exitCode = $this->commandHandler->handle('returnsCode', []);
+        ob_end_clean();
+
+        $this->assertSame(7, $exitCode);
     }
 
     /**

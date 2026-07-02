@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Router\Services\ControllerCacheService;
 
@@ -32,32 +33,34 @@ class Cache
     /**
      * Execute the cache command.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         if (empty($args) || !isset($args[0])) {
             $this->listCommands();
-            return;
+            return CommandExitCode::SUCCESS;
         }
 
         $subcommand = strtolower($args[0]);
         if (!in_array($subcommand, $this->validSubcommands, true)) {
             ConsoleOutput::print("&4[Error]&7 Unknown cache command: cache:{$subcommand}\n");
             $this->listCommands();
-            return;
+            return CommandExitCode::UNKNOWN_COMMAND;
         }
 
         $resourceArgs = array_slice($args, 1);
         switch ($subcommand) {
             case 'controllers':
                 $this->cacheControllers($resourceArgs);
-                break;
+                return CommandExitCode::SUCCESS;
             case 'all':
                 $this->cacheAll($resourceArgs);
-                break;
+                return CommandExitCode::SUCCESS;
             case 'clear':
                 $this->clearCache($resourceArgs);
-                break;
+                return CommandExitCode::SUCCESS;
         }
+
+        return CommandExitCode::UNKNOWN_COMMAND;
     }
 
     protected function cacheControllers(array $args): void

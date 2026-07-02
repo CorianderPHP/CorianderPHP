@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\View;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Utils\DirectoryHandler;
 
@@ -50,7 +51,7 @@ class MakeView
      *
      * @param array $args The arguments passed to the command, where the first argument is the view name.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         try {
             // Ensure a view name is provided.
@@ -76,10 +77,14 @@ class MakeView
 
             // Output success message.
             ConsoleOutput::print("&2[Success]&r&7 View '{$viewName}' created successfully at '{$fullViewPath}'.");
+            return CommandExitCode::SUCCESS;
 
         } catch (\Exception $e) {
             // Handle any exceptions during the creation process.
             ConsoleOutput::print("&4[Error]&7 " . $e->getMessage());
+            return str_contains($e->getMessage(), 'Please specify')
+                ? CommandExitCode::INVALID_USAGE
+                : CommandExitCode::FAILURE;
         }
     }
 

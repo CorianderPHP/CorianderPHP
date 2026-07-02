@@ -45,8 +45,8 @@ $args = array_slice($argv, 2);
 try {
     // Initialize and execute the command handler
     $handler = new CommandHandler();
-    $handler->handle($command, $args);
-} catch (Exception $e) {
+    exit($handler->handle($command, $args));
+} catch (Throwable $e) {
     // Handle any errors by outputting the message
     ConsoleOutput::hr();
     ConsoleOutput::print("&4[Error]&7 Failed to execute command: &8" . $command . "&7.");

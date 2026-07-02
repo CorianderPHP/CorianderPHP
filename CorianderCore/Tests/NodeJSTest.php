@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Console\Commands\NodeJS;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\Node\NpmExecutableResolver;
 use PHPUnit\Framework\TestCase;
 
@@ -33,9 +34,10 @@ class NodeJSTest extends TestCase
         $command = new NodeJS();
 
         ob_start();
-        $command->execute([]);
+        $exitCode = $command->execute([]);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::INVALID_USAGE, $exitCode);
         $this->assertStringContainsString('Please provide a Node.js command to run', $output);
     }
 
@@ -44,9 +46,10 @@ class NodeJSTest extends TestCase
         $command = new NodeJS(PHP_BINARY);
 
         ob_start();
-        $command->execute(['run', 'watch-tw']);
+        $exitCode = $command->execute(['run', 'watch-tw']);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::FAILURE, $exitCode);
         $this->assertStringContainsString('Starting watcher... Press Ctrl+C to stop.', $output);
         $this->assertStringContainsString('Could not open input file', $output);
         $this->assertStringContainsString('npm command failed with exit code', $output);

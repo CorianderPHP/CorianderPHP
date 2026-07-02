@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 
 class Hello
@@ -19,11 +20,11 @@ class Hello
      * 'hello' command is invoked through the CommandHandler. It serves as 
      * a basic example of a command that can be executed in the console.
      *
-     * @return void
+     * @return int Process exit code.
      */
-    public function execute(): void
+    public function execute(): int
     {
         ConsoleOutput::print("Hi! I'm &2Coriander&7, how can I help you?");
+        return CommandExitCode::SUCCESS;
     }
 }
-

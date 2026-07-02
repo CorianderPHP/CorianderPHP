@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Migration;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use RuntimeException;
 
@@ -16,17 +17,17 @@ class MakeMigration
     /**
      * @param array<int, string> $args
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         if (!isset($args[0]) || trim($args[0]) === '') {
             ConsoleOutput::print('&4[Error]&7 Please specify a migration name, e.g., make:migration CreateUsersTable.');
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
         $slug = $this->toSnakeCase((string) $args[0]);
         if ($slug === '') {
             ConsoleOutput::print('&4[Error]&7 Invalid migration name. Use letters, numbers, or underscores.');
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
         $timestamp = date('YmdHis');
@@ -39,12 +40,13 @@ class MakeMigration
         $fullPath = $this->migrationsDirectory . '/' . $filename;
         if (file_exists($fullPath)) {
             ConsoleOutput::print('&4[Error]&7 Migration file already exists: ' . $filename);
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         file_put_contents($fullPath, $this->buildTemplate());
 
         ConsoleOutput::print('&2[Success]&7 Migration created: &8' . $this->relativePath($fullPath));
+        return CommandExitCode::SUCCESS;
     }
 
     private function buildTemplate(): string

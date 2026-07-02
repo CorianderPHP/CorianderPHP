@@ -5,6 +5,7 @@ namespace CorianderCore\Tests;
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Core\Console\Commands\Make;
 use CorianderCore\Core\Console\Commands\Make\View\MakeView;
+use CorianderCore\Core\Console\CommandExitCode;
 
 class MakeTest extends TestCase
 {
@@ -46,7 +47,7 @@ class MakeTest extends TestCase
         $this->expectOutputRegex("/Unknown make command: make:invalid/");
 
         // Run the make command with an invalid subcommand 'invalid'
-        $this->make->execute(['invalid']);
+        $this->assertSame(CommandExitCode::UNKNOWN_COMMAND, $this->make->execute(['invalid']));
     }
 
     /**
@@ -59,7 +60,7 @@ class MakeTest extends TestCase
         $this->expectOutputRegex("/Available make commands:/");
 
         // Run the make command with no arguments
-        $this->make->execute([]);
+        $this->assertSame(CommandExitCode::SUCCESS, $this->make->execute([]));
     }
 
     /**
@@ -72,6 +73,6 @@ class MakeTest extends TestCase
         $this->expectOutputRegex("/Please specify a view name, e.g., 'make:view agenda'/");
 
         // Run the 'make:view' command without providing a view name
-        $this->make->execute(['view']);
+        $this->assertSame(CommandExitCode::INVALID_USAGE, $this->make->execute(['view']));
     }
 }

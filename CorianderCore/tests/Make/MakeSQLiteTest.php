@@ -4,6 +4,7 @@ namespace CorianderCore\Tests\Make;
 
 use PHPUnit\Framework\TestCase;
 use CorianderCore\Core\Console\Commands\Make\Database\SQLite\MakeSQLite;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Utils\DirectoryHandler;
 
@@ -81,9 +82,10 @@ class MakeSQLiteTest extends TestCase
     public function testExecuteSqlite()
     {
         // Execute the MakeSQLite process
-        $this->makeSQLite->execute('test');
+        $exitCode = $this->makeSQLite->execute('test');
 
         // Expect the output to indicate success
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->expectOutputRegex("/\[Success\].*Database test.sqlite created in folder/");
         // Check if the SQLite files and config file were created
         $this->assertFileExists(self::$testPath . '/database/clean_test.sqlite');

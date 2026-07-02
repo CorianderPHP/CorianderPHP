@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Controller;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Router\NameFormatter;
 
@@ -54,11 +55,11 @@ class MakeController
      *
      * @param array $args The arguments passed to the command, where the first argument is the controller name.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         if (empty($args)) {
             ConsoleOutput::print("&4[Error]&7 Please specify a controller name.");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
         $controllerNameRaw = $args[0];
@@ -78,14 +79,16 @@ class MakeController
 
         if ($this->controllerExists($controllerPath)) {
             ConsoleOutput::print("&4[Error]&7 Controller '{$controllerName}' already exists at '{$controllerPath}'.");
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         try {
             $this->createFileFromTemplate($templateFile, $controllerPath, $controllerName, $kebabCaseName);
             ConsoleOutput::print("&2[Success]&7 Controller '{$controllerName}' created successfully at '{$controllerPath}'. ");
+            return CommandExitCode::SUCCESS;
         } catch (\Exception $e) {
             ConsoleOutput::print("&4[Error]&7 Failed to create controller: " . $e->getMessage());
+            return CommandExitCode::FAILURE;
         }
     }
 
