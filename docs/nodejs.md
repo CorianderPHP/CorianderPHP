@@ -59,6 +59,10 @@ Run all commands from the project root.
   ```bash
   php coriander nodejs run watch-ts
   ```
+- **Watch TypeScript and TailwindCSS**
+  ```bash
+  php coriander nodejs run watch-all
+  ```
 - **Build TypeScript**
   ```bash
   php coriander nodejs run build-ts
