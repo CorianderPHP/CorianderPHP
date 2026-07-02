@@ -169,7 +169,8 @@ try {
     $router->addMiddleware(new ApiRequestLimitsMiddleware());
     $router->addMiddleware(new CsrfMiddleware());
 
-    $router->setNotFound(corianderCreateNotFoundHandler());
+    $notFound = corianderCreateNotFoundHandler();
+    $router->setNotFound($notFound);
 
     $routesFile = __DIR__ . '/routes.php';
     if (file_exists($routesFile)) {
