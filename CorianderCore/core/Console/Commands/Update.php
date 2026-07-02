@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\Commands\Update\UpdateOptions;
 use CorianderCore\Core\Console\Commands\Update\UpdateOutputPresenter;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\Updater\FrameworkUpdateService;
 use CorianderCore\Core\Console\Services\Updater\PostUpdateTasksService;
 use CorianderCore\Core\Console\Services\Updater\UpdaterAccessGuard;
@@ -33,20 +34,19 @@ class Update
     /**
      * @param array<int, string> $args
      */
-    public function execute(array $args = []): void
+    public function execute(array $args = []): int
     {
         $sanitizedArgs = $this->accessGuard->assertCanRun($args);
         $options = UpdateOptions::fromArgs($sanitizedArgs);
 
         if ($options->rollback) {
-            $this->executeRollback($options);
-            return;
+            return $this->executeRollback($options);
         }
 
-        $this->executeUpdate($options);
+        return $this->executeUpdate($options);
     }
 
-    private function executeRollback(UpdateOptions $options): void
+    private function executeRollback(UpdateOptions $options): int
     {
         if ($options->dryRun) {
             $this->presenter->printRollbackDryRunWarning();
@@ -54,7 +54,7 @@ class Update
 
         if (!$options->assumeYes && !$this->confirm('Rollback latest framework backup now? [y/N]: ')) {
             $this->presenter->printRollbackCancelled();
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         $result = $this->updateService->rollbackLatestBackup($options->backupDirectory);
@@ -68,9 +68,10 @@ class Update
         }
 
         $this->presenter->printRollbackSuccess();
+        return $this->postTasksSucceeded($postTaskResults) ? CommandExitCode::SUCCESS : CommandExitCode::FAILURE;
     }
 
-    private function executeUpdate(UpdateOptions $options): void
+    private function executeUpdate(UpdateOptions $options): int
     {
         $localVersion = $this->updateService->getLocalVersion();
         $latestRelease = $this->updateService->fetchLatestRelease();
@@ -81,14 +82,14 @@ class Update
 
         if (!$this->updateService->isUpdateAvailable($localVersion, $latestVersion)) {
             $this->presenter->printAlreadyUpToDate();
-            return;
+            return CommandExitCode::SUCCESS;
         }
 
         if ($options->dryRun) {
             $this->presenter->printDryRunEnabled();
         } elseif (!$options->assumeYes && !$this->confirm('A new version is available. Update now? [y/N]: ')) {
             $this->presenter->printUpdateCancelled();
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         $result = $this->updateService->runUpdate(
@@ -104,7 +105,7 @@ class Update
 
         if ($options->dryRun) {
             $this->presenter->printDryRunNoChanges();
-            return;
+            return CommandExitCode::SUCCESS;
         }
 
         $this->presenter->printAppliedSummary($result, $options->force);
@@ -117,6 +118,16 @@ class Update
         }
 
         $this->presenter->printUpdateSuccess();
+        return $this->postTasksSucceeded($postTaskResults) ? CommandExitCode::SUCCESS : CommandExitCode::FAILURE;
+    }
+
+    /**
+     * @param array{composer_dump_autoload: array{success: bool, exit_code: int, output: string}, cache_clear: array{success: bool, exit_code: int, output: string}|null} $postTaskResults
+     */
+    private function postTasksSucceeded(array $postTaskResults): bool
+    {
+        return $postTaskResults['composer_dump_autoload']['success']
+            && ($postTaskResults['cache_clear'] === null || $postTaskResults['cache_clear']['success']);
     }
 
     private function confirm(string $message): bool

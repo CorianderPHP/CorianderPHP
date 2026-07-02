@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\Node\NpmExecutableResolver;
 
 class NodeJS
@@ -24,19 +25,19 @@ class NodeJS
      * Executes the provided Node.js (npm) command.
      *
      * @param array<int, string> $args The arguments passed to the 'nodejs' command (e.g., 'install', 'run build').
-     * @return void
+     * @return int Process exit code.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         if (empty($args)) {
             ConsoleOutput::print("&4[Error]&7 Please provide a Node.js command to run. (e.g, php coriander nodejs run watch-tw)");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
         $nodeDir = PROJECT_ROOT . '/nodejs';
         if (!is_dir($nodeDir)) {
             ConsoleOutput::print('&4[Error]&7 Node.js directory not found: ' . $nodeDir);
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         if ($this->isWatchCommand($args)) {
@@ -55,7 +56,7 @@ class NodeJS
         $process = proc_open($command, $descriptors, $pipes, $nodeDir);
         if (!is_resource($process)) {
             ConsoleOutput::print('&4[Error]&7 Could not start the npm process.');
-            return;
+            return CommandExitCode::FAILURE;
         }
 
         fclose($pipes[0]);
@@ -71,7 +72,10 @@ class NodeJS
         if ($exitCode !== 0) {
             ConsoleOutput::print('&4[Error]&7 npm command failed with exit code ' . (string) $exitCode . '.');
             ConsoleOutput::print('&8|&7 Resolved npm executable: ' . $npmExecutable);
+            return is_int($exitCode) ? max(CommandExitCode::FAILURE, min(255, $exitCode)) : CommandExitCode::FAILURE;
         }
+
+        return CommandExitCode::SUCCESS;
     }
 
     /**

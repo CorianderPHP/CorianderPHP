@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Sitemap;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
@@ -45,7 +46,7 @@ class MakeSitemap
      * - If a sitemap already exists, an error message is displayed.
      * - If the sitemap is successfully created, a success message is displayed.
      */
-    public function execute(): void
+    public function execute(): int
     {
         try {
             // Guard clause to prevent overwriting an existing sitemap.
@@ -58,9 +59,11 @@ class MakeSitemap
 
             // Success message after sitemap creation.
             ConsoleOutput::print("&2[Success]&r&7 Sitemap created successfully at '{$this->sitemapFilePath}'.");
+            return CommandExitCode::SUCCESS;
         } catch (\Exception $e) {
             // Handle any exceptions during the creation process.
             ConsoleOutput::print("&4[Error]&7 " . $e->getMessage());
+            return CommandExitCode::FAILURE;
         }
     }
 

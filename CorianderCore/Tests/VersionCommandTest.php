@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Console\Commands\Version;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\Updater\FrameworkVersionService;
 use PHPUnit\Framework\TestCase;
 
@@ -21,9 +22,10 @@ class VersionCommandTest extends TestCase
             $command = new Version($service);
 
             ob_start();
-            $command->execute([]);
+            $exitCode = $command->execute([]);
             $output = (string) ob_get_clean();
 
+            $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
             $this->assertStringContainsString('Framework version:', $output);
             $this->assertStringContainsString('v9.9.9', $output);
         } finally {

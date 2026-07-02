@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Database\SQLite;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 
 /**
@@ -47,12 +48,17 @@ class MakeSQLite
      *
      * @param string|null $dbName Optional database name. If null, prompts the user for input.
      */
-    public function execute(?string $dbName = null): void
+    public function execute(?string $dbName = null): int
     {
         // Ask the user for the SQLite database name if not provided
         if (empty($dbName)) {
             ConsoleOutput::print("Enter SQLite database name (without extension):\n");
-            $dbName = trim(fgets(STDIN));
+            $dbName = trim((string) fgets(STDIN));
+        }
+
+        if (trim($dbName) === '') {
+            ConsoleOutput::print('&4[Error]&7 Please specify a SQLite database name.');
+            return CommandExitCode::INVALID_USAGE;
         }
 
         ConsoleOutput::hr();
@@ -63,6 +69,7 @@ class MakeSQLite
 
         ConsoleOutput::hr();
         ConsoleOutput::print("&2[Success]&r&7 Database " . $dbName . ".sqlite created in folder: " . $this->databaseFolder);
+        return CommandExitCode::SUCCESS;
     }
 
     /**

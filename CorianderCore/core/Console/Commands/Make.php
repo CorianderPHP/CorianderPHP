@@ -8,6 +8,7 @@ use CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase;
 use CorianderCore\Core\Console\Commands\Make\Migration\MakeMigration;
 use CorianderCore\Core\Console\Commands\Make\Sitemap\MakeSitemap;
 use CorianderCore\Core\Console\Commands\Make\View\MakeView;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 
 class Make
@@ -41,98 +42,95 @@ class Make
     /**
      * @param array<int, string> $args
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         if ($args === [] || !isset($args[0])) {
             $this->listCommands();
-            return;
+            return CommandExitCode::SUCCESS;
         }
 
         $subcommand = strtolower($args[0]);
         if (!in_array($subcommand, $this->validSubcommands, true)) {
             ConsoleOutput::print("&4[Error]&7 Unknown make command: make:{$subcommand}");
             $this->listCommands();
-            return;
+            return CommandExitCode::UNKNOWN_COMMAND;
         }
 
         $resourceArgs = array_slice($args, 1);
 
         switch ($subcommand) {
             case 'view':
-                $this->makeView($resourceArgs);
-                return;
+                return $this->makeView($resourceArgs);
 
             case 'controller':
-                $this->makeController($resourceArgs);
-                return;
+                return $this->makeController($resourceArgs);
 
             case 'database':
-                $this->makeDatabase($resourceArgs);
-                return;
+                return $this->makeDatabase($resourceArgs);
 
             case 'sitemap':
-                $this->makeSitemap($resourceArgs);
-                return;
+                return $this->makeSitemap($resourceArgs);
 
             case 'migration':
-                $this->makeMigration($resourceArgs);
-                return;
+                return $this->makeMigration($resourceArgs);
         }
+
+        return CommandExitCode::UNKNOWN_COMMAND;
     }
 
     /**
      * @param array<int, string> $args
      */
-    protected function makeView(array $args): void
+    protected function makeView(array $args): int
     {
         if ($args === []) {
             ConsoleOutput::print("&4[Error]&7 Please specify a view name, e.g., 'make:view agenda'.");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
-        $this->makeViewInstance->execute($args);
+        return $this->makeViewInstance->execute($args);
     }
 
     /**
      * @param array<int, string> $args
      */
-    protected function makeController(array $args): void
+    protected function makeController(array $args): int
     {
         if ($args === []) {
             ConsoleOutput::print("&4[Error]&7 Please specify a controller name, e.g., 'make:controller Agenda'.");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
-        $this->makeControllerInstance->execute($args);
+        return $this->makeControllerInstance->execute($args);
     }
 
     /**
      * @param array<int, string> $args
      */
-    protected function makeDatabase(array $args): void
+    protected function makeDatabase(array $args): int
     {
-        $this->makeDatabaseInstance->execute();
+        return $this->makeDatabaseInstance->execute();
     }
 
     /**
      * @param array<int, string> $args
      */
-    protected function makeSitemap(array $args): void
+    protected function makeSitemap(array $args): int
     {
-        $this->makeSitemapInstance->execute($args);
+        return $this->makeSitemapInstance->execute();
     }
 
     /**
      * @param array<int, string> $args
      */
-    protected function makeMigration(array $args): void
+    protected function makeMigration(array $args): int
     {
         if ($args === []) {
             ConsoleOutput::print("&4[Error]&7 Please specify a migration name, e.g., 'make:migration CreateUsersTable'.");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
-        $this->makeMigrationInstance->execute($args);
+        return $this->makeMigrationInstance->execute($args);
     }
 
     protected function listCommands(): void

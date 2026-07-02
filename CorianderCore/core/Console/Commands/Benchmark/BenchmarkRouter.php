@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Console\Commands\Benchmark;
 
 use CorianderCore\Core\Benchmark\BenchmarkHandler;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Router\NameFormatter;
@@ -23,9 +24,9 @@ class BenchmarkRouter
      * Executes the benchmark process for the router.
      *
      * @param array $args The arguments passed to the benchmark:router command (e.g., route name, duration).
-     * @return void
+     * @return int Process exit code.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         // Default route to 'home' if not specified
         $route = $args[0] ?? 'home';
@@ -39,7 +40,7 @@ class BenchmarkRouter
         // Verify if the route exists
         if (!$this->routeExists($router, $route)) {
             ConsoleOutput::print("&4[Error]&7 Route '{$route}' does not exist.");
-            return;
+            return CommandExitCode::INVALID_USAGE;
         }
 
         // Initialize BenchmarkHandler
@@ -81,6 +82,7 @@ class BenchmarkRouter
         ConsoleOutput::print("Average CPU Usage per Iteration: &7" . formatTime($results['average_cpu_usage_per_iteration']));
         ConsoleOutput::print("Total CPU Usage: &7" . formatTime($results['total_cpu_usage']));
         ConsoleOutput::print("Total CPU Usage: &7" . round($results['cpu_usage_percentage'], 3) . " %");
+        return CommandExitCode::SUCCESS;
     }
 
     /**

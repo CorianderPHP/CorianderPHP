@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Console\Commands\Update;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\Updater\FrameworkUpdateService;
 use CorianderCore\Core\Console\Services\Updater\PostUpdateTasksService;
 use PHPUnit\Framework\TestCase;
@@ -41,9 +42,10 @@ class UpdateCommandTest extends TestCase
         }, $postTasks);
 
         ob_start();
-        $command->execute(['--dry-run']);
+        $exitCode = $command->execute(['--dry-run']);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->assertTrue($service->runUpdateCalled);
         $this->assertTrue($service->lastDryRunFlag);
         $this->assertFalse($postTasks->runCalled);
@@ -57,9 +59,10 @@ class UpdateCommandTest extends TestCase
         $command = new Update($service, static fn(string $message): bool => false, $postTasks);
 
         ob_start();
-        $command->execute([]);
+        $exitCode = $command->execute([]);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::FAILURE, $exitCode);
         $this->assertFalse($service->runUpdateCalled);
         $this->assertFalse($postTasks->runCalled);
         $this->assertStringContainsString('Update cancelled.', $output);
@@ -74,9 +77,10 @@ class UpdateCommandTest extends TestCase
         }, $postTasks);
 
         ob_start();
-        $command->execute(['--yes']);
+        $exitCode = $command->execute(['--yes']);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->assertTrue($service->runUpdateCalled);
         $this->assertFalse($service->lastDryRunFlag);
         $this->assertTrue($postTasks->runCalled);
@@ -105,9 +109,10 @@ class UpdateCommandTest extends TestCase
         $command = new Update($service, static fn(string $message): bool => true, $postTasks);
 
         ob_start();
-        $command->execute(['--rollback', '--yes']);
+        $exitCode = $command->execute(['--rollback', '--yes']);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->assertTrue($service->rollbackCalled);
         $this->assertFalse($service->runUpdateCalled);
         $this->assertTrue($postTasks->runCalled);

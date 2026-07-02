@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Console\Commands;
 
 use CorianderCore\Core\Console\ConsoleOutput;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Commands\Benchmark\BenchmarkRouter;
 
 /**
@@ -53,14 +54,14 @@ class Benchmark
      * - 'php coriander benchmark:router' will benchmark the router performance.
      *
      * @param array $args The arguments passed to the benchmark command, including the subcommand and resource name.
-     * @return void
+     * @return int Process exit code.
      */
-    public function execute(array $args): void
+    public function execute(array $args): int
     {
         // Ensure the command has at least one argument (the subcommand)
         if (empty($args) || !isset($args[0])) {
             $this->listCommands();
-            return;
+            return CommandExitCode::SUCCESS;
         }
 
         // Extract the subcommand (e.g. 'router')
@@ -71,7 +72,7 @@ class Benchmark
             // Display an error message and list valid subcommands if the subcommand is invalid
             ConsoleOutput::print("&4[Error]&7 Unknown benchmark command: benchmark:{$subcommand}\n");
             $this->listCommands();
-            return;
+            return CommandExitCode::UNKNOWN_COMMAND;
         }
 
         // Extract the remaining arguments, which are specific to the resource (e.g., view or controller name)
@@ -80,13 +81,13 @@ class Benchmark
         // Delegate the execution based on the subcommand type
         switch ($subcommand) {
             case 'router':
-                $this->benchmarkRouter($resourceArgs); // Delegate to the BenchmarkRouter handler
-                break;
+                return $this->benchmarkRouter($resourceArgs); // Delegate to the BenchmarkRouter handler
 
             default:
                 // This fallback case is unlikely to be triggered due to the earlier validation,
                 // but serves as a safety net to catch any unforeseen issues.
                 ConsoleOutput::print("&4[Error]&7 Unknown benchmark command: benchmark:{$subcommand}\n");
+                return CommandExitCode::UNKNOWN_COMMAND;
         }
     }
 
@@ -98,10 +99,10 @@ class Benchmark
      * @param array $args The arguments for benchmarking the router.
      * @return void
      */
-    protected function benchmarkRouter(array $args): void
+    protected function benchmarkRouter(array $args): int
     {
         // Delegate the router benchmarking task to the BenchmarkRouter class
-        $this->benchmarkRouterInstance->execute($args);
+        return $this->benchmarkRouterInstance->execute($args);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Console\Commands\Migrate;
+use CorianderCore\Core\Console\CommandExitCode;
 use PHPUnit\Framework\TestCase;
 
 class MigrateCommandTest extends TestCase
@@ -43,10 +44,22 @@ class MigrateCommandTest extends TestCase
         $command = new Migrate();
 
         ob_start();
-        $command->execute(['--allow-changed']);
+        $exitCode = $command->execute(['--allow-changed']);
         $output = (string) ob_get_clean();
 
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->assertStringContainsString('Database is up to date.', $output);
     }
-}
 
+    public function testUnknownActionReturnsUnknownCommand(): void
+    {
+        $command = new Migrate();
+
+        ob_start();
+        $exitCode = $command->execute(['unknown']);
+        $output = (string) ob_get_clean();
+
+        $this->assertSame(CommandExitCode::UNKNOWN_COMMAND, $exitCode);
+        $this->assertStringContainsString('Unknown migrate command: migrate:unknown', $output);
+    }
+}

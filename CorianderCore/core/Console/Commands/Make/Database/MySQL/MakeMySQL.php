@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands\Make\Database\MySQL;
 
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
 use \PDO;
 use \PDOException;
@@ -39,7 +40,7 @@ class MakeMySQL
      * Executes the process of creating a MySQL configuration.
      * Prompts the user for MySQL connection details and generates a config file.
      */
-    public function execute(): void
+    public function execute(): int
     {
         // Ask the user for MySQL connection details
         ConsoleOutput::print("Enter MySQL host:\n");
@@ -71,12 +72,13 @@ class MakeMySQL
             $confirmation = strtolower(trim((string)fgets(STDIN)));
             if ($confirmation !== 'y') {
                 ConsoleOutput::print("&e[Warning]&7 Database configuration file not created.");
-                return;
+                return CommandExitCode::FAILURE;
             }
         }
 
         // Generate MySQL configuration
         $this->generateConfig($dbHost, $dbName, $dbUser, $dbPassword);
+        return CommandExitCode::SUCCESS;
     }
 
     /**

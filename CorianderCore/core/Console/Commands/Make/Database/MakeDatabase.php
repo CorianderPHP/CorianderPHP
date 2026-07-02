@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Console\Commands\Make\Database;
 
 use CorianderCore\Core\Console\Commands\Make\Database\MySQL\MakeMySQL;
 use CorianderCore\Core\Console\Commands\Make\Database\SQLite\MakeSQLite;
+use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\Services\PdoDriverService;
 use CorianderCore\Core\Console\ConsoleOutput;
 
@@ -34,7 +35,7 @@ class MakeDatabase
      * Executes the database configuration process based on user input.
      * Checks for the necessary PDO drivers before prompting the user to choose between MySQL and SQLite.
      */
-    public function execute(): void
+    public function execute(): int
     {
         // Check available PDO drivers and warn if MySQL driver is missing
         $availableDrivers = $this->pdoDriverService->getAvailableDrivers();
@@ -75,20 +76,18 @@ class MakeDatabase
                 case '0':
                 case '':
                     ConsoleOutput::print("Exiting the database creation process.");
-                    return;  // Exit the loop and terminate the script
+                    return CommandExitCode::SUCCESS;  // Exit the loop and terminate the script
                 case '1':
                     if ($mysqlAvailable) {
                         $mysqlMaker = new MakeMySQL();
-                        $mysqlMaker->execute();
-                        return;  // Exit the loop after successful MySQL execution
+                        return $mysqlMaker->execute();  // Exit the loop after successful MySQL execution
                     } else {
                         ConsoleOutput::print("&l&4[Error]&7 MySQL is not available on this system.");
                     }
                     break;
                 case '2':
                     $sqliteMaker = new MakeSQLite();
-                    $sqliteMaker->execute();
-                    return;  // Exit the loop after successful SQLite execution
+                    return $sqliteMaker->execute();  // Exit the loop after successful SQLite execution
                 default:
                     ConsoleOutput::print("&4[Error]&7 Invalid choice. Please enter &l0&r&7 to exit, &l1&r&7 for MySQL, or &l2&r&7 for SQLite.");
                     break;
