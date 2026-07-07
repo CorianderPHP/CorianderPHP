@@ -57,4 +57,41 @@ class SecurityHeadersMiddlewareTest extends TestCase
 
         $this->assertSame('max-age=31536000; includeSubDomains', $response->getHeaderLine('Strict-Transport-Security'));
     }
+
+    public function testUsesConstructorConfiguredHeaders(): void
+    {
+        $middleware = new SecurityHeadersMiddleware([
+            'Content-Security-Policy' => "default-src 'self'; script-src 'self'; img-src 'self' data: https://cdn.discordapp.com/",
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+        $request = new ServerRequest('GET', 'https://example.test/path');
+
+        $response = $middleware->process($request, new class implements RequestHandlerInterface {
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+            {
+                return new Response(200, [], 'ok');
+            }
+        });
+
+        $this->assertSame(
+            "default-src 'self'; script-src 'self'; img-src 'self' data: https://cdn.discordapp.com/",
+            $response->getHeaderLine('Content-Security-Policy')
+        );
+        $this->assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+    }
+
+    public function testCanBeDisabledFromConstructor(): void
+    {
+        $middleware = new SecurityHeadersMiddleware(enabled: false);
+        $request = new ServerRequest('GET', 'https://example.test/path');
+
+        $response = $middleware->process($request, new class implements RequestHandlerInterface {
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+            {
+                return new Response(200, [], 'ok');
+            }
+        });
+
+        $this->assertSame('', $response->getHeaderLine('X-Content-Type-Options'));
+    }
 }

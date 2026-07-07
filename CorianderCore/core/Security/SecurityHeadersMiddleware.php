@@ -13,6 +13,16 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class SecurityHeadersMiddleware implements MiddlewareInterface
 {
+    private const DEFAULT_HEADERS = [
+        'Content-Security-Policy' => "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
+        'X-Content-Type-Options' => 'nosniff',
+        'X-Frame-Options' => 'DENY',
+        'Referrer-Policy' => 'strict-origin-when-cross-origin',
+        'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
+        'Cross-Origin-Opener-Policy' => 'same-origin',
+        'Cross-Origin-Resource-Policy' => 'same-origin',
+    ];
+
     /**
      * @var array<string,string>
      */
@@ -25,17 +35,9 @@ class SecurityHeadersMiddleware implements MiddlewareInterface
      */
     public function __construct(?array $headers = null, ?bool $enabled = null)
     {
-        $this->headers = $headers ?? [
-            'Content-Security-Policy' => "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
-            'X-Content-Type-Options' => 'nosniff',
-            'X-Frame-Options' => 'DENY',
-            'Referrer-Policy' => 'strict-origin-when-cross-origin',
-            'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
-            'Cross-Origin-Opener-Policy' => 'same-origin',
-            'Cross-Origin-Resource-Policy' => 'same-origin',
-        ];
+        $this->headers = $headers ?? self::DEFAULT_HEADERS;
 
-        $this->enabled = $enabled ?? $this->resolveEnabledFlag();
+        $this->enabled = $enabled ?? true;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -58,16 +60,6 @@ class SecurityHeadersMiddleware implements MiddlewareInterface
         }
 
         return $response;
-    }
-
-    private function resolveEnabledFlag(): bool
-    {
-        $flag = getenv('SECURITY_HEADERS_ENABLED');
-        if ($flag === false) {
-            return true;
-        }
-
-        return !in_array(strtolower(trim((string) $flag)), ['0', 'false', 'no', 'off'], true);
     }
 
     private function isSecureRequest(ServerRequestInterface $request): bool

@@ -125,6 +125,22 @@ class MigrationManagerTest extends TestCase
         $this->assertTrue($status[0]['changed']);
     }
 
+    public function testMigrationCanCloseFrameworkStartedTransaction(): void
+    {
+        file_put_contents(
+            $this->migrationDir . '/20260101000000_manual_commit.php',
+            "<?php\ndeclare(strict_types=1);\n\nreturn new class {\n    public function up(\\PDO \$pdo): void\n    {\n        \$pdo->exec('CREATE TABLE manually_committed (id INTEGER PRIMARY KEY AUTOINCREMENT)');\n        if (\$pdo->inTransaction()) {\n            \$pdo->commit();\n        }\n    }\n\n    public function down(\\PDO \$pdo): void\n    {\n        \$pdo->exec('DROP TABLE IF EXISTS manually_committed');\n    }\n};\n"
+        );
+
+        $result = $this->manager->migrate();
+
+        $this->assertSame(1, $result['applied']);
+        $this->assertSame(
+            1,
+            (int) $this->pdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='manually_committed'")->fetchColumn()
+        );
+    }
+
     private function writeMigration(string $filename, string $upSql, string $downSql): void
     {
         file_put_contents(

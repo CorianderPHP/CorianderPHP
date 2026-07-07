@@ -91,6 +91,7 @@ All commands are invoked via `php coriander`:
 - `php coriander update --auth-token=<token>` - provide updater token when guard is enabled.
 - `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
 - `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
+- Runtime variables load from `.env`; `.env-example` is copied automatically when `.env` is missing ([Environment](docs/environment.md)).
 - Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
 
 ## Framework Update Notes
