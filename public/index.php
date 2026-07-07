@@ -63,7 +63,10 @@ try {
 
     $router = $container->get(Router::class);
     $router->addMiddleware(new SecurityHeadersMiddleware());
-    $router->addMiddleware(new ApiRequestLimitsMiddleware());
+    $router->addMiddleware(new ApiRequestLimitsMiddleware(
+        defined('API_MAX_BODY_BYTES') ? (int) API_MAX_BODY_BYTES : null,
+        defined('API_TIMEOUT_SECONDS') ? (int) API_TIMEOUT_SECONDS : null
+    ));
     $router->addMiddleware(new CsrfMiddleware());
 
     $notFound = corianderCreateNotFoundHandler();

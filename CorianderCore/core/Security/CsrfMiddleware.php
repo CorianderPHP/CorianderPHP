@@ -14,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * Workflow:
  * 1. For methods outside the protected set the middleware is bypassed.
- * 2. API routes can be excluded from CSRF checks for stateless clients.
+ * 2. API routes are excluded from CSRF checks for stateless clients.
  * 3. On protected methods, the token from parsed body (or recoverable raw body)
  *    is validated via {@see Csrf::validate()}.
  * 4. When validation fails a 403 response is returned.
@@ -26,8 +26,6 @@ class CsrfMiddleware implements MiddlewareInterface
      */
     private array $protectedMethods;
 
-    private bool $enforceForApi;
-
     /**
      * @var array<int,string>
      */
@@ -35,10 +33,9 @@ class CsrfMiddleware implements MiddlewareInterface
 
     /**
      * @param array<int,string>|null $protectedMethods HTTP methods requiring CSRF validation.
-     * @param bool|null              $enforceForApi   Whether API routes should also require CSRF tokens.
      * @param array<int,string>|null $apiPrefixes     Route prefixes considered API paths.
      */
-    public function __construct(?array $protectedMethods = null, ?bool $enforceForApi = null, ?array $apiPrefixes = null)
+    public function __construct(?array $protectedMethods = null, ?array $apiPrefixes = null)
     {
         $methods = $protectedMethods ?? ['POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -55,7 +52,6 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         $this->protectedMethods = array_values(array_unique($this->protectedMethods));
-        $this->enforceForApi = $enforceForApi ?? $this->resolveEnforceForApiFlag();
         $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? ['api']);
     }
 
@@ -68,7 +64,7 @@ class CsrfMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        if (!$this->enforceForApi && $this->isApiRequest($request)) {
+        if ($this->isApiRequest($request)) {
             return $handler->handle($request);
         }
 
@@ -138,16 +134,6 @@ class CsrfMiddleware implements MiddlewareInterface
     private function requiresValidation(string $method): bool
     {
         return in_array(strtoupper($method), $this->protectedMethods, true);
-    }
-
-    private function resolveEnforceForApiFlag(): bool
-    {
-        $flag = getenv('CSRF_ENFORCE_API');
-        if ($flag === false) {
-            return false;
-        }
-
-        return in_array(strtolower(trim((string) $flag)), ['1', 'true', 'yes', 'on'], true);
     }
 
     /**

@@ -12,6 +12,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class ApiRequestLimitsMiddlewareTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        putenv('API_MAX_BODY_BYTES');
+        putenv('API_TIMEOUT_SECONDS');
+    }
+
     public function testRejectsApiRequestOverConfiguredBodyLimit(): void
     {
         $middleware = new ApiRequestLimitsMiddleware(10, 5);
@@ -140,6 +146,23 @@ class ApiRequestLimitsMiddlewareTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('ok', (string) $response->getBody());
+    }
+
+    public function testEnvironmentValuesDoNotConfigureMiddlewareDirectly(): void
+    {
+        putenv('API_MAX_BODY_BYTES=1');
+
+        $middleware = new ApiRequestLimitsMiddleware();
+        $request = new ServerRequest('POST', '/api/items', ['Content-Length' => '2'], 'ok');
+
+        $response = $middleware->process($request, new class implements RequestHandlerInterface {
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): \Psr\Http\Message\ResponseInterface
+            {
+                return new Response(200, [], 'ok');
+            }
+        });
+
+        $this->assertSame(200, $response->getStatusCode());
     }
 }
 
