@@ -27,8 +27,8 @@ class ApiRequestLimitsMiddleware implements MiddlewareInterface
      */
     public function __construct(?int $maxBodyBytes = null, ?int $timeoutSeconds = null, ?array $apiPrefixes = null)
     {
-        $this->maxBodyBytes = $this->normalizePositiveInt($maxBodyBytes, (int) (getenv('API_MAX_BODY_BYTES') ?: 1_048_576));
-        $this->timeoutSeconds = $this->normalizePositiveInt($timeoutSeconds, (int) (getenv('API_TIMEOUT_SECONDS') ?: 15));
+        $this->maxBodyBytes = $this->normalizePositiveInt($maxBodyBytes, 1_048_576);
+        $this->timeoutSeconds = $this->normalizePositiveInt($timeoutSeconds, 15);
         $this->apiPrefixes = $apiPrefixes ?? ['api'];
     }
 

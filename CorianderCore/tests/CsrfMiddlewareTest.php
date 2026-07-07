@@ -204,6 +204,28 @@ class CsrfMiddlewareTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testEnvironmentFlagDoesNotConfigureMiddlewareDirectly(): void
+    {
+        putenv('CSRF_ENFORCE_API=1');
+
+        $middleware = new CsrfMiddleware();
+        $request = new ServerRequest('POST', '/api/items');
+        $handler = new class implements RequestHandlerInterface {
+            public bool $called = false;
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+                return new Response(200, [], 'OK');
+            }
+        };
+
+        $response = $middleware->process($request, $handler);
+
+        $this->assertTrue($handler->called);
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testDoesNotUseGlobalPostFallback(): void
     {
         $token = Csrf::token();

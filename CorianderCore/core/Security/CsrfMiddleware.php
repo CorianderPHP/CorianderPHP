@@ -55,7 +55,7 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         $this->protectedMethods = array_values(array_unique($this->protectedMethods));
-        $this->enforceForApi = $enforceForApi ?? $this->resolveEnforceForApiFlag();
+        $this->enforceForApi = $enforceForApi ?? false;
         $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? ['api']);
     }
 
@@ -138,16 +138,6 @@ class CsrfMiddleware implements MiddlewareInterface
     private function requiresValidation(string $method): bool
     {
         return in_array(strtoupper($method), $this->protectedMethods, true);
-    }
-
-    private function resolveEnforceForApiFlag(): bool
-    {
-        $flag = getenv('CSRF_ENFORCE_API');
-        if ($flag === false) {
-            return false;
-        }
-
-        return in_array(strtolower(trim((string) $flag)), ['1', 'true', 'yes', 'on'], true);
     }
 
     /**
