@@ -8,6 +8,7 @@ use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Security\ApiRequestLimitsMiddleware;
 use CorianderCore\Core\Security\CsrfMiddleware;
 use CorianderCore\Core\Security\SecurityHeadersMiddleware;
+use CorianderCore\Core\Support\OutputBuffer;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
@@ -128,12 +129,13 @@ function corianderCreateNotFoundHandler(): callable
             include $metaDataFile;
         }
 
-        ob_start();
-        require_once PROJECT_ROOT . '/public/public_views/header.php';
-        require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
-        require_once PROJECT_ROOT . '/public/public_views/footer.php';
+        [, $content] = OutputBuffer::capture(static function () use ($notFoundView): void {
+            require_once PROJECT_ROOT . '/public/public_views/header.php';
+            require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
+            require_once PROJECT_ROOT . '/public/public_views/footer.php';
+        });
 
-        return new Response(404, [], (string) ob_get_clean());
+        return new Response(404, [], $content);
     };
 }
 require_once '../config/config.php';
