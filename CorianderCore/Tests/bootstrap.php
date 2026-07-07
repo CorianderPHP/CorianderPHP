@@ -47,6 +47,14 @@ if (!defined('PROJECT_ROOT')) {
 $testsRoot = PROJECT_ROOT . '/CorianderCore/Tests';
 corianderCleanupTestTempArtifacts($testsRoot);
 
+$testDbPath = $testsRoot . '/_tmp_test.sqlite';
+$testDbDir = dirname($testDbPath);
+if (!is_dir($testDbDir)) {
+    mkdir($testDbDir, 0777, true);
+}
+putenv('DB_TYPE=sqlite');
+putenv('DB_NAME=' . $testDbPath);
+
 $config = PROJECT_ROOT . '/config/config.php';
 if (file_exists($config)) {
     require_once $config;
@@ -57,11 +65,6 @@ if (!defined('DB_TYPE')) {
 }
 
 if (!defined('DB_NAME')) {
-    $testDbPath = $testsRoot . '/_tmp_test.sqlite';
-    $testDbDir = dirname($testDbPath);
-    if (!is_dir($testDbDir)) {
-        mkdir($testDbDir, 0777, true);
-    }
     define('DB_NAME', $testDbPath);
 }
 
