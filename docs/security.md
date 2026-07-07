@@ -15,7 +15,6 @@ This page summarizes framework-level security behavior and recommended usage pat
 ## CSRF Protection
 
 - CSRF middleware validates mutating web methods: `POST`, `PUT`, `PATCH`, `DELETE`.
-- `/api/*` routes are excluded from CSRF validation and should use API-oriented authentication/authorization.
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
 - For non-API JSON requests, include the token in the JSON body as `csrf_token`.
 
