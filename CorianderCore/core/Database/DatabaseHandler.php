@@ -40,7 +40,12 @@ class DatabaseHandler
     /**
      * @var bool Auto-close flag to determine if the connection should close automatically.
      */
-    private static bool $autoCloseConnection = true;
+    private static bool $defaultAutoCloseConnection = true;
+
+    /**
+     * @var bool Whether this handler should close its PDO connection on close().
+     */
+    private bool $autoCloseConnection;
 
     /**
      * Construct a new DatabaseHandler instance.
@@ -49,9 +54,10 @@ class DatabaseHandler
      *
      * @param LoggerInterface|null $logger Logger instance for reporting issues; defaults to core Logger when null.
      */
-    public function __construct(?LoggerInterface $logger = null)
+    public function __construct(?LoggerInterface $logger = null, ?bool $autoCloseConnection = null)
     {
         $this->logger = $logger ?? new Logger();
+        $this->autoCloseConnection = $autoCloseConnection ?? self::$defaultAutoCloseConnection;
 
         if (!defined('DB_TYPE')) {
             $this->logger->warning('DB_TYPE is not defined. No database connection established.');
@@ -121,7 +127,18 @@ class DatabaseHandler
      */
     public static function setAutoCloseConnection(bool $autoClose): void
     {
-        self::$autoCloseConnection = $autoClose;
+        self::$defaultAutoCloseConnection = $autoClose;
+    }
+
+    /**
+     * Set whether this handler instance should close its connection.
+     *
+     * @param bool $autoClose Whether this instance should close its PDO connection.
+     * @return void
+     */
+    public function setAutoClose(bool $autoClose): void
+    {
+        $this->autoCloseConnection = $autoClose;
     }
 
     /**
@@ -132,7 +149,7 @@ class DatabaseHandler
      */
     public function close(): void
     {
-        if (!self::$autoCloseConnection) {
+        if (!$this->autoCloseConnection) {
             return;
         }
         $this->pdo = null;
