@@ -170,9 +170,7 @@ try {
         defined('API_MAX_BODY_BYTES') ? (int) API_MAX_BODY_BYTES : null,
         defined('API_TIMEOUT_SECONDS') ? (int) API_TIMEOUT_SECONDS : null
     ));
-    $router->addMiddleware(new CsrfMiddleware(
-        enforceForApi: in_array(strtolower(trim((string) (getenv('CSRF_ENFORCE_API') ?: ''))), ['1', 'true', 'yes', 'on'], true)
-    ));
+    $router->addMiddleware(new CsrfMiddleware());
 
     $notFound = corianderCreateNotFoundHandler();
     $router->setNotFound($notFound);
