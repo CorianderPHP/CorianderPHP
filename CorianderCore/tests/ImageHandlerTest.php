@@ -92,6 +92,17 @@ class ImageHandlerTest extends TestCase
         if (is_dir(self::$testPath)) {
             DirectoryHandler::deleteDirectory(self::$testPath); // Cleanup the temporary directory.
         }
+
+        $publicImageTestPath = PROJECT_ROOT . '/public/assets/_tmp_image_handler';
+        if (is_dir($publicImageTestPath)) {
+            DirectoryHandler::deleteDirectory($publicImageTestPath);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('PUBLIC_URL_PREFIX');
+        unset($_ENV['PUBLIC_URL_PREFIX'], $_SERVER['PUBLIC_URL_PREFIX']);
     }
 
     /**
@@ -150,6 +161,34 @@ class ImageHandlerTest extends TestCase
             '',
             ImageHandler::render('/../../windows/system32/drivers/etc/hosts'),
             'Render should return empty output for rejected traversal paths.'
+        );
+    }
+
+    public function testRenderUsesConfiguredPublicUrlPrefix(): void
+    {
+        putenv('PUBLIC_URL_PREFIX=/public');
+        $_ENV['PUBLIC_URL_PREFIX'] = '/public';
+        $_SERVER['PUBLIC_URL_PREFIX'] = '/public';
+
+        $publicImageDir = PROJECT_ROOT . '/public/assets/_tmp_image_handler';
+        if (!is_dir($publicImageDir)) {
+            mkdir($publicImageDir, 0755, true);
+        }
+
+        $imagePath = $publicImageDir . '/test_image.png';
+        $image = imagecreatetruecolor(10, 10);
+        imagepng($image, $imagePath);
+        imagedestroy($image);
+
+        $html = ImageHandler::render('/public/assets/_tmp_image_handler/test_image.png', 'Test Image');
+
+        $this->assertStringContainsString(
+            'srcset="/public/assets/_tmp_image_handler/webp/test_image_80.webp"',
+            $html
+        );
+        $this->assertStringContainsString(
+            'src="/public/assets/_tmp_image_handler/test_image.png"',
+            $html
         );
     }
 }

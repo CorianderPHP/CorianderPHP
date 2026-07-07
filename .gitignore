@@ -1,4 +1,5 @@
 composer.phar
+.env
 .phpunit.result.cache
 /vendor/
 /backups/coriander/

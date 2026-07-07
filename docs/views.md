@@ -28,6 +28,14 @@ Use the built-in `ImageHandler` to convert images to WebP on the fly inside a vi
 
 The helper converts the image if needed and outputs a `<picture>` tag with WebP and fallback sources.
 
+If your web server serves the project root instead of the `public/` directory, set the public URL prefix in `.env`:
+
+```env
+PUBLIC_URL_PREFIX=/public
+```
+
+When the document root is already `public/`, leave the prefix empty. URLs generated from `/public/assets/...` are emitted as `/assets/...`.
+
 ## Output Safety
 
 Variables passed to view templates are automatically escaped for HTML output to mitigate XSS attacks.

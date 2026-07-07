@@ -38,9 +38,25 @@ When CorianderPHP runs behind a reverse proxy/load balancer, HTTPS detection for
 - `Cross-Origin-Resource-Policy`
 - `Strict-Transport-Security` (HTTPS requests)
 
-Environment flag:
+Custom header policy:
 
-- `SECURITY_HEADERS_ENABLED=0` to disable (not recommended).
+- Pass custom headers to `SecurityHeadersMiddleware` where the middleware is registered.
+
+Example:
+
+```php
+$router->addMiddleware(new SecurityHeadersMiddleware([
+    'Content-Security-Policy' => "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.discordapp.com/ https://files.stripe.com/; font-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
+    'X-Content-Type-Options' => 'nosniff',
+    'X-Frame-Options' => 'DENY',
+    'Referrer-Policy' => 'strict-origin-when-cross-origin',
+    'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
+    'Cross-Origin-Opener-Policy' => 'same-origin',
+    'Cross-Origin-Resource-Policy' => 'same-origin',
+]));
+```
+
+To disable the middleware headers, pass `enabled: false` when registering it.
 
 ## API Request Limits
 

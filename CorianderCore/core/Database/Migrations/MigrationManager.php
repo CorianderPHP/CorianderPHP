@@ -417,7 +417,7 @@ class MigrationManager
 
         try {
             $callback();
-            if (!$inTransaction) {
+            if (!$inTransaction && $this->pdo->inTransaction()) {
                 $this->pdo->commit();
             }
         } catch (\Throwable $exception) {

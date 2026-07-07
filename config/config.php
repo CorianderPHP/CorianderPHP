@@ -3,8 +3,15 @@
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', dirname(__DIR__, 1));
 }
+
+$envLoader = PROJECT_ROOT . '/CorianderCore/core/Bootstrap/EnvLoader.php';
+if (file_exists($envLoader)) {
+    require_once $envLoader;
+    \CorianderCore\Core\Bootstrap\EnvLoader::load(PROJECT_ROOT);
+}
+
 if (!defined('PROJECT_URL')) {
-    define('PROJECT_URL', '');
+    define('PROJECT_URL', getenv('PROJECT_URL') ?: '');
 }
 if (!defined('CORIANDER_UPDATE_BACKUP_DIR')) {
     define('CORIANDER_UPDATE_BACKUP_DIR', 'backups/coriander');
@@ -31,10 +38,6 @@ if (!defined('LOG_MAX_FILES')) {
     define('LOG_MAX_FILES', (int) (getenv('LOG_MAX_FILES') ?: 5));
 }
 
-// Security middleware defaults
-if (!defined('SECURITY_HEADERS_ENABLED')) {
-    define('SECURITY_HEADERS_ENABLED', getenv('SECURITY_HEADERS_ENABLED') !== false ? getenv('SECURITY_HEADERS_ENABLED') : '1');
-}
 if (!defined('API_MAX_BODY_BYTES')) {
     define('API_MAX_BODY_BYTES', (int) (getenv('API_MAX_BODY_BYTES') ?: 1048576));
 }
