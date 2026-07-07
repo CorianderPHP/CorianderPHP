@@ -45,6 +45,33 @@ if (!defined('API_TIMEOUT_SECONDS')) {
     define('API_TIMEOUT_SECONDS', (int) (getenv('API_TIMEOUT_SECONDS') ?: 15));
 }
 
+$databaseConfigFile = PROJECT_ROOT . '/config/database.php';
+if (file_exists($databaseConfigFile)) {
+    include_once $databaseConfigFile;
+}
+
+if (!defined('DB_TYPE') && getenv('DB_TYPE') !== false) {
+    define('DB_TYPE', getenv('DB_TYPE'));
+}
+if (!defined('DB_HOST') && getenv('DB_HOST') !== false) {
+    define('DB_HOST', getenv('DB_HOST'));
+}
+if (!defined('DB_PORT') && getenv('DB_PORT') !== false) {
+    define('DB_PORT', (int) getenv('DB_PORT'));
+}
+if (!defined('DB_CHARSET') && getenv('DB_CHARSET') !== false) {
+    define('DB_CHARSET', getenv('DB_CHARSET'));
+}
+if (!defined('DB_NAME') && getenv('DB_NAME') !== false) {
+    define('DB_NAME', getenv('DB_NAME'));
+}
+if (!defined('DB_USER') && getenv('DB_USER') !== false) {
+    define('DB_USER', getenv('DB_USER'));
+}
+if (!defined('DB_PASSWORD') && getenv('DB_PASSWORD') !== false) {
+    define('DB_PASSWORD', getenv('DB_PASSWORD'));
+}
+
 // Updater command hardening defaults
 if (!defined('CORIANDER_UPDATER_ENABLED')) {
     define('CORIANDER_UPDATER_ENABLED', getenv('CORIANDER_UPDATER_ENABLED') !== false ? getenv('CORIANDER_UPDATER_ENABLED') : '1');
@@ -54,13 +81,5 @@ if (!defined('CORIANDER_UPDATER_ALLOW_PRODUCTION')) {
 }
 if (!defined('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR')) {
     define('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR', (int) (getenv('CORIANDER_UPDATER_MAX_ATTEMPTS_PER_HOUR') ?: 5));
-}
-
-// Check if the database.php file exists in the config folder
-$databaseConfigFile = PROJECT_ROOT . '/config/database.php';
-
-if (file_exists($databaseConfigFile)) {
-    // Include the database configuration file
-    include_once $databaseConfigFile;
 }
 

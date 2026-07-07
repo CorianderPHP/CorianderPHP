@@ -14,7 +14,21 @@ The command prompts for MySQL or SQLite and writes the appropriate settings to `
 
 ## Configuration
 
-Create `config/database.php` with the required constants:
+Database settings can come from `.env` or `config/database.php`.
+
+For local projects, `.env` is usually enough:
+
+```env
+DB_TYPE=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_CHARSET=utf8mb4
+DB_NAME=app
+DB_USER=user
+DB_PASSWORD=secret
+```
+
+For projects that need PHP-level configuration, create `config/database.php` with the required constants:
 
 ```php
 <?php
@@ -29,7 +43,7 @@ define('DB_USER', 'user');
 define('DB_PASSWORD', 'secret');
 ```
 
-The file is automatically loaded from `config/config.php` when present. Avoid committing credentials to version control.
+The file is automatically loaded from `config/config.php` when present. Constants already defined in `config/database.php` take precedence over `.env` values. Avoid committing credentials to version control.
 
 ## Migrations
 
