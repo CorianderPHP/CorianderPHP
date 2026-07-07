@@ -81,18 +81,38 @@ class Router
             $pattern = trim($prefix . '/' . $pattern, '/');
         }
 
-        $paramNames = [];
-        if (preg_match_all('#\{([^}]+)\}#', $pattern, $matches)) {
-            $paramNames = $matches[1];
-        }
-
-        $regex = preg_quote($pattern, '#');
-        $regex = preg_replace('#\\\{([^/]+)\\\}#', '([^/]+)', $regex);
-        $regex = '#^' . $regex . '$#';
+        [$regex, $paramNames] = $this->compileRoutePattern($pattern);
 
         $middleware = array_merge($this->getGroupMiddleware(), $middleware);
 
         $this->registry->add(strtoupper($method), $regex, $paramNames, $callback, $middleware);
+    }
+
+    /**
+     * @return array{0:string,1:array<int,string>}
+     */
+    private function compileRoutePattern(string $pattern): array
+    {
+        $paramNames = [];
+        $regex = '';
+        $offset = 0;
+
+        preg_match_all('#\{([^}:\/]+)(?::([^}]+))?\}#', $pattern, $matches, PREG_OFFSET_CAPTURE);
+
+        foreach ($matches[0] as $index => $match) {
+            [$token, $position] = $match;
+            $regex .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
+
+            $paramNames[] = $matches[1][$index][0];
+            $constraint = $matches[2][$index][1] >= 0 ? $matches[2][$index][0] : '[^/]+';
+            $regex .= '(' . $constraint . ')';
+
+            $offset = $position + strlen($token);
+        }
+
+        $regex .= preg_quote(substr($pattern, $offset), '#');
+
+        return ['#^' . $regex . '$#', $paramNames];
     }
 
     /**

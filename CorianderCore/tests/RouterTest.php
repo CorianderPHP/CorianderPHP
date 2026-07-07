@@ -379,6 +379,40 @@ class RouterTest extends TestCase
     }
 
     /**
+     * Test that route parameters can define regex constraints.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testRouteParameterConstraints(): void
+    {
+        $this->router->add('GET', '/user/{id:\d+}', function (ServerRequest $request) {
+            return 'User ' . $request->getAttribute('id');
+        });
+
+        $validResponse = $this->router->dispatch(new ServerRequest('GET', '/user/123'));
+        $invalidResponse = $this->router->dispatch(new ServerRequest('GET', '/user/abc'));
+
+        $this->assertSame('User 123', (string) $validResponse->getBody());
+        $this->assertSame(404, $invalidResponse->getStatusCode());
+    }
+
+    /**
+     * Test that shortcut routes support constrained route parameters.
+     */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testShortcutRoutesSupportParameterConstraints(): void
+    {
+        $this->router->get('/posts/{slug:[a-z0-9-]+}', function (ServerRequest $request) {
+            return $request->getAttribute('slug');
+        });
+
+        $validResponse = $this->router->dispatch(new ServerRequest('GET', '/posts/hello-world'));
+        $invalidResponse = $this->router->dispatch(new ServerRequest('GET', '/posts/Hello'));
+
+        $this->assertSame('hello-world', (string) $validResponse->getBody());
+        $this->assertSame(404, $invalidResponse->getStatusCode());
+    }
+
+    /**
      * Test that a route returns 405 when the path matches but the method does not.
      */
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
