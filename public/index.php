@@ -1,5 +1,6 @@
 <?php
 
+use CorianderCore\Core\Bootstrap\SessionBootstrap;
 use CorianderCore\Core\Bootstrap\TimezoneBootstrap;
 use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
@@ -44,13 +45,8 @@ if (file_exists(PROJECT_ROOT . '/vendor/autoload.php')) {
 }
 
 $secure = TrustedProxy::isSecureRequest($_SERVER);
-session_set_cookie_params([
-    'path' => '/',
-    'secure' => $secure,
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
+SessionBootstrap::configure($secure);
+SessionBootstrap::startForRequest($_SERVER);
 
 $appTimezone = getenv('APP_TIMEZONE');
 TimezoneBootstrap::applyFromEnvironment(is_string($appTimezone) ? $appTimezone : null);
