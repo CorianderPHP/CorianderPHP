@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Security;
 
+use CorianderCore\Core\Bootstrap\SessionBootstrap;
+
 /**
  * Handles generation, storage, and validation of CSRF tokens.
  *
@@ -22,9 +24,7 @@ class Csrf
      */
     public static function token(): string
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        SessionBootstrap::start();
 
         if (empty($_SESSION[self::SESSION_KEY])) {
             $_SESSION[self::SESSION_KEY] = bin2hex(random_bytes(32));
@@ -52,9 +52,7 @@ class Csrf
      */
     public static function validate(?string $token): bool
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        SessionBootstrap::start();
 
         $sessionToken = $_SESSION[self::SESSION_KEY] ?? '';
         return $sessionToken !== '' && $token !== null && hash_equals($sessionToken, $token);
