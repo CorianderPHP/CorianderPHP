@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Image;
 
 use CorianderCore\Core\Logging\StaticLoggerTrait;
+use CorianderCore\Core\Support\PublicUrl;
 
 /**
  * Handles image conversion and rendering for PNG, JPG, and JPEG files.
@@ -245,36 +246,7 @@ class ImageHandler
 
     private static function toPublicUrl(string $path): string
     {
-        if (!str_starts_with($path, '/public/')) {
-            return $path;
-        }
-
-        return self::publicUrlPrefix() . substr($path, 7);
-    }
-
-    private static function publicUrlPrefix(): string
-    {
-        if (defined('PUBLIC_URL_PREFIX')) {
-            return self::normalizeUrlPrefix((string) PUBLIC_URL_PREFIX);
-        }
-
-        $configuredPrefix = getenv('PUBLIC_URL_PREFIX');
-        if (is_string($configuredPrefix)) {
-            return self::normalizeUrlPrefix($configuredPrefix);
-        }
-
-        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-        return str_contains($scriptName, '/public/index.php') ? '/public' : '';
-    }
-
-    private static function normalizeUrlPrefix(string $prefix): string
-    {
-        $prefix = trim($prefix);
-        if ($prefix === '' || $prefix === '/') {
-            return '';
-        }
-
-        return '/' . trim($prefix, '/');
+        return PublicUrl::toPublicUrl($path);
     }
 
     private static function escapeHtmlAttribute(string $value): string

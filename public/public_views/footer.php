@@ -11,7 +11,7 @@
 $requestedView = isset($__corianderRequestedView) ? $__corianderRequestedView : 'home';
 if (file_exists(PROJECT_ROOT . '/public/public_views/' . $requestedView . '/index.php') && file_exists(PROJECT_ROOT . '/public/assets/js/' . $requestedView . '/index.js')) {
 ?>
-    <script type="module" src="/public/assets/js/<?= $requestedView ?>/index.js?<?php echo filemtime(PROJECT_ROOT . '/public/assets/js/' . $requestedView . '/index.js'); ?>" defer></script>
+    <script type="module" src="<?= \CorianderCore\Core\Support\PublicUrl::versionedAsset('assets/js/' . $requestedView . '/index.js') ?>" defer></script>
 <?php
 }
 ?>
