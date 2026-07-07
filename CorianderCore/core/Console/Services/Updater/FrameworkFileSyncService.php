@@ -16,7 +16,7 @@ final class FrameworkFileSyncService
      */
     private array $managedPaths;
 
-    private string $defaultBackupDirectory;
+    private BackupPathResolver $backupPathResolver;
 
     /**
      * @var array<string, bool>|null
@@ -30,7 +30,7 @@ final class FrameworkFileSyncService
     {
         $this->projectRoot = $projectRoot ?? (defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__, 6));
         $this->managedPaths = $managedPaths;
-        $this->defaultBackupDirectory = $this->normalizeBackupDirectory($defaultBackupDirectory ?? $this->resolveDefaultBackupDirectory());
+        $this->backupPathResolver = new BackupPathResolver($this->projectRoot, $defaultBackupDirectory);
     }
 
     /**
@@ -182,7 +182,7 @@ final class FrameworkFileSyncService
      */
     public function rollbackLatestBackup(?string $backupDirectory = null): array
     {
-        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
+        $baseDirectory = $this->backupPathResolver->normalizeBackupDirectory($backupDirectory ?? $this->backupPathResolver->getDefaultBackupDirectory());
         $basePath = $this->projectRoot . '/' . $baseDirectory;
 
         if (!is_dir($basePath)) {
@@ -207,7 +207,7 @@ final class FrameworkFileSyncService
             throw new RuntimeException('Backup scope cannot be empty.');
         }
 
-        $scopePath = $this->resolveBackupScopePath($scope, $backupDirectory);
+        $scopePath = $this->backupPathResolver->resolveScopePath($scope, $backupDirectory);
         if (!is_dir($scopePath)) {
             throw new RuntimeException('Backup scope not found: ' . $scope);
         }
@@ -320,8 +320,8 @@ final class FrameworkFileSyncService
     private function createBackup(string $destinationFile, ?string $backupScope = null, ?string $backupDirectory = null): string
     {
         $relativePath = $this->toRelativeProjectPath($destinationFile);
-        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
-        $normalizedScope = $this->normalizeBackupScope($backupScope);
+        $baseDirectory = $this->backupPathResolver->normalizeBackupDirectory($backupDirectory ?? $this->backupPathResolver->getDefaultBackupDirectory());
+        $normalizedScope = $this->backupPathResolver->normalizeBackupScope($backupScope);
         $scopeSegment = $normalizedScope !== '' ? '/' . $normalizedScope : '';
 
         $backupPath = $this->projectRoot . '/' . $baseDirectory . $scopeSegment . '/' . $relativePath . '.bak';
@@ -543,7 +543,7 @@ final class FrameworkFileSyncService
      */
     private function writeRollbackManifest(string $scope, ?string $backupDirectory, array $addedFiles): void
     {
-        $scopePath = $this->resolveBackupScopePath($scope, $backupDirectory);
+        $scopePath = $this->backupPathResolver->resolveScopePath($scope, $backupDirectory);
         if (!is_dir($scopePath) && !mkdir($scopePath, 0775, true) && !is_dir($scopePath)) {
             throw new RuntimeException('Unable to create backup scope directory: ' . $scopePath);
         }
@@ -560,16 +560,6 @@ final class FrameworkFileSyncService
         }
     }
 
-    private function resolveBackupScopePath(string $scope, ?string $backupDirectory = null): string
-    {
-        $baseDirectory = $this->normalizeBackupDirectory($backupDirectory ?? $this->defaultBackupDirectory);
-        $normalizedScope = $this->normalizeBackupScope($scope);
-        if ($normalizedScope === '') {
-            throw new RuntimeException('Backup scope cannot be empty.');
-        }
-
-        return $this->projectRoot . '/' . $baseDirectory . '/' . $normalizedScope;
-    }
     private function deleteTemporaryDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
@@ -595,72 +585,6 @@ final class FrameworkFileSyncService
         }
 
         @rmdir($directory);
-    }
-    private function resolveDefaultBackupDirectory(): string
-    {
-        if (defined('CORIANDER_UPDATE_BACKUP_DIR') && is_string(CORIANDER_UPDATE_BACKUP_DIR) && trim(CORIANDER_UPDATE_BACKUP_DIR) !== '') {
-            return CORIANDER_UPDATE_BACKUP_DIR;
-        }
-
-        return 'backups/coriander';
-    }
-
-    private function normalizeBackupDirectory(string $backupDirectory): string
-    {
-        if (str_contains($backupDirectory, "\0")) {
-            throw new RuntimeException('Backup directory contains invalid null-byte characters.');
-        }
-
-        $normalized = str_replace("\\", "/", trim($backupDirectory));
-        if ($normalized === '') {
-            return 'backups/coriander';
-        }
-
-        if (str_starts_with($normalized, '/') || preg_match('/^[a-zA-Z]:\//', $normalized) === 1) {
-            throw new RuntimeException('Backup directory must be a relative path inside the project.');
-        }
-
-        $segments = array_values(array_filter(explode('/', trim($normalized, '/')), static fn(string $segment): bool => $segment !== ''));
-        if ($segments === []) {
-            return 'backups/coriander';
-        }
-
-        foreach ($segments as $segment) {
-            if ($segment === '.' || $segment === '..') {
-                throw new RuntimeException('Backup directory cannot contain path traversal segments.');
-            }
-        }
-
-        return implode('/', $segments);
-    }
-
-    private function normalizeBackupScope(?string $scope): string
-    {
-        if ($scope === null) {
-            return '';
-        }
-
-        if (str_contains($scope, "\0")) {
-            throw new RuntimeException('Backup scope contains invalid null-byte characters.');
-        }
-
-        $normalized = str_replace("\\", "/", trim($scope));
-        if ($normalized === '') {
-            return '';
-        }
-
-        if (str_starts_with($normalized, '/') || preg_match('/^[A-Za-z]:\//', $normalized) === 1) {
-            throw new RuntimeException('Backup scope must be relative to the backup directory.');
-        }
-
-        $segments = array_values(array_filter(explode('/', trim($normalized, '/')), static fn(string $segment): bool => $segment !== ''));
-        foreach ($segments as $segment) {
-            if ($segment === '.' || $segment === '..') {
-                throw new RuntimeException('Backup scope cannot contain path traversal segments.');
-            }
-        }
-
-        return implode('/', $segments);
     }
     private function rollbackAppliedOperations(array $appliedOperations): ?string
     {
