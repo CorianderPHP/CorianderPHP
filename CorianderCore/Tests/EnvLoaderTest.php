@@ -22,6 +22,8 @@ class EnvLoaderTest extends TestCase
         'ENV_LOADER_INLINE',
         'ENV_LOADER_EXPORTED',
         'ENV_LOADER_EXISTING',
+        'ENV_LOADER_RELOAD',
+        'ENV_LOADER_OVERWRITE_RELOAD',
     ];
 
     protected function setUp(): void
@@ -80,6 +82,34 @@ class EnvLoaderTest extends TestCase
         EnvLoader::load($this->tempRoot, overwrite: true);
 
         $this->assertSame('file', getenv('ENV_LOADER_EXISTING'));
+    }
+
+    public function testSkipsAlreadyLoadedPathWithoutOverwrite(): void
+    {
+        file_put_contents($this->tempRoot . '/.env', 'ENV_LOADER_RELOAD=first');
+
+        EnvLoader::load($this->tempRoot);
+        putenv('ENV_LOADER_RELOAD');
+        unset($_ENV['ENV_LOADER_RELOAD'], $_SERVER['ENV_LOADER_RELOAD']);
+        file_put_contents($this->tempRoot . '/.env', 'ENV_LOADER_RELOAD=second');
+
+        EnvLoader::load($this->tempRoot);
+
+        $this->assertFalse(getenv('ENV_LOADER_RELOAD'));
+        $this->assertArrayNotHasKey('ENV_LOADER_RELOAD', $_ENV);
+        $this->assertArrayNotHasKey('ENV_LOADER_RELOAD', $_SERVER);
+    }
+
+    public function testOverwriteReloadsAlreadyLoadedPath(): void
+    {
+        file_put_contents($this->tempRoot . '/.env', 'ENV_LOADER_OVERWRITE_RELOAD=first');
+
+        EnvLoader::load($this->tempRoot);
+        file_put_contents($this->tempRoot . '/.env', 'ENV_LOADER_OVERWRITE_RELOAD=second');
+
+        EnvLoader::load($this->tempRoot, overwrite: true);
+
+        $this->assertSame('second', getenv('ENV_LOADER_OVERWRITE_RELOAD'));
     }
 
     private function clearVariables(): void

@@ -5,6 +5,11 @@ namespace CorianderCore\Core\Bootstrap;
 
 final class EnvLoader
 {
+    /**
+     * @var array<string, true>
+     */
+    private static array $loadedPaths = [];
+
     public static function load(string $projectRoot, bool $createFromExample = true, bool $overwrite = false): void
     {
         $projectRoot = rtrim(str_replace('\\', '/', $projectRoot), '/');
@@ -19,6 +24,11 @@ final class EnvLoader
             return;
         }
 
+        $loadedPath = str_replace('\\', '/', realpath($envPath) ?: $envPath);
+        if (!$overwrite && isset(self::$loadedPaths[$loadedPath])) {
+            return;
+        }
+
         $lines = file($envPath, FILE_IGNORE_NEW_LINES);
         if ($lines === false) {
             return;
@@ -27,6 +37,8 @@ final class EnvLoader
         foreach ($lines as $line) {
             self::loadLine($line, $overwrite);
         }
+
+        self::$loadedPaths[$loadedPath] = true;
     }
 
     private static function loadLine(string $line, bool $overwrite): void
