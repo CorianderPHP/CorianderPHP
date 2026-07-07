@@ -147,15 +147,7 @@ class SQLManager
     {
         @trigger_error('SQLManager::findBy() is deprecated. Use findWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
-            $pdo = self::requirePdo();
-            $columnList = self::buildColumnList($columns);
-            $table = self::quoteIdentifier($table);
-            $sql = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return $data !== false ? $data : [];
+            return self::selectRows($columns, $table, $where, $params);
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] findBy exception', ['exception' => $e]);
             throw new DatabaseException('Unable to execute findBy query.', 0, $e);
@@ -170,7 +162,13 @@ class SQLManager
     public static function findWhere(array $columns, string $table, array $conditions): array
     {
         [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
-        return self::findBy($columns, $table, $whereClause, $params);
+
+        try {
+            return self::selectRows($columns, $table, $whereClause, $params);
+        } catch (Exception $e) {
+            self::getLogger()->error('[SQLManager] findWhere exception', ['exception' => $e]);
+            throw new DatabaseException('Unable to execute findWhere query.', 0, $e);
+        }
     }
 
     /**
@@ -191,19 +189,7 @@ class SQLManager
     {
         @trigger_error('SQLManager::update() is deprecated. Use updateWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
-            $pdo = self::requirePdo();
-            $table = self::quoteIdentifier($table);
-            $set = [];
-            foreach ($data as $column => $value) {
-                $placeholder = ':' . $column;
-                $set[] = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
-                $params[$column] = $value;
-            }
-            $sql = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-
-            return true;
+            return self::updateRows($table, $data, $where, $params);
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] update exception', ['exception' => $e]);
             throw new DatabaseException('Unable to execute update query.', 0, $e);
@@ -219,7 +205,13 @@ class SQLManager
     public static function updateWhere(string $table, array $data, array $conditions): bool
     {
         [$whereClause, $whereParams] = self::buildWhereFromArray($conditions, 'w_');
-        return self::update($table, $data, $whereClause, $whereParams);
+
+        try {
+            return self::updateRows($table, $data, $whereClause, $whereParams);
+        } catch (Exception $e) {
+            self::getLogger()->error('[SQLManager] updateWhere exception', ['exception' => $e]);
+            throw new DatabaseException('Unable to execute updateWhere query.', 0, $e);
+        }
     }
 
     /**
@@ -295,15 +287,7 @@ class SQLManager
     {
         @trigger_error('SQLManager::deleteFrom() is deprecated. Use deleteWhere() for simple equality conditions.', E_USER_DEPRECATED);
         try {
-            $pdo = self::requirePdo();
-            $table = self::quoteIdentifier($table);
-            $sql = $where === ''
-                ? sprintf('DELETE FROM %s', $table)
-                : sprintf('DELETE FROM %s WHERE %s', $table, $where);
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-
-            return true;
+            return self::deleteRows($table, $where, $params);
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] deleteFrom exception', ['exception' => $e]);
             throw new DatabaseException('Unable to execute delete query.', 0, $e);
@@ -318,7 +302,13 @@ class SQLManager
     public static function deleteWhere(string $table, array $conditions): bool
     {
         [$whereClause, $params] = self::buildWhereFromArray($conditions, 'w_');
-        return self::deleteFrom($table, $whereClause, $params);
+
+        try {
+            return self::deleteRows($table, $whereClause, $params);
+        } catch (Exception $e) {
+            self::getLogger()->error('[SQLManager] deleteWhere exception', ['exception' => $e]);
+            throw new DatabaseException('Unable to execute deleteWhere query.', 0, $e);
+        }
     }
 
     /**
@@ -376,6 +366,62 @@ class SQLManager
         }
 
         return [implode(' AND ', $clauses), $params];
+    }
+
+    /**
+     * @param array<int,string> $columns
+     * @param array<string,mixed> $params
+     */
+    private static function selectRows(array $columns, string $table, string $where, array $params = []): array
+    {
+        $pdo = self::requirePdo();
+        $columnList = self::buildColumnList($columns);
+        $table = self::quoteIdentifier($table);
+        $sql = sprintf('SELECT %s FROM %s WHERE %s', $columnList, $table, $where);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $data !== false ? $data : [];
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @param array<string,mixed> $params
+     */
+    private static function updateRows(string $table, array $data, string $where, array $params = []): bool
+    {
+        $pdo = self::requirePdo();
+        $table = self::quoteIdentifier($table);
+        $set = [];
+
+        foreach ($data as $column => $value) {
+            $placeholder = ':' . $column;
+            $set[] = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
+            $params[$column] = $value;
+        }
+
+        $sql = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return true;
+    }
+
+    /**
+     * @param array<string,mixed> $params
+     */
+    private static function deleteRows(string $table, string $where = '', array $params = []): bool
+    {
+        $pdo = self::requirePdo();
+        $table = self::quoteIdentifier($table);
+        $sql = $where === ''
+            ? sprintf('DELETE FROM %s', $table)
+            : sprintf('DELETE FROM %s WHERE %s', $table, $where);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return true;
     }
 
     /**

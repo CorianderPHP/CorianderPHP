@@ -42,18 +42,9 @@ class SQLManagerTest extends TestCase
 
     public function testFindAllSupportsWildcardColumn(): void
     {
-        $pdo = new \PDO('sqlite::memory:');
-        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo = $this->createSqliteHandler();
         $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
         $pdo->exec("INSERT INTO users (name) VALUES ('alice')");
-
-        $handler = new DatabaseHandler();
-        $reflection = new \ReflectionClass($handler);
-        $pdoProperty = $reflection->getProperty('pdo');
-        $pdoProperty->setAccessible(true);
-        $pdoProperty->setValue($handler, $pdo);
-
-        SQLManager::setDatabaseHandler($handler);
 
         $rows = SQLManager::findAll(['*'], 'users');
 
@@ -63,23 +54,44 @@ class SQLManagerTest extends TestCase
 
     public function testFindAllSupportsTableOnlySignature(): void
     {
-        $pdo = new \PDO('sqlite::memory:');
-        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo = $this->createSqliteHandler();
         $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
         $pdo->exec("INSERT INTO users (name) VALUES ('bob')");
-
-        $handler = new DatabaseHandler();
-        $reflection = new \ReflectionClass($handler);
-        $pdoProperty = $reflection->getProperty('pdo');
-        $pdoProperty->setAccessible(true);
-        $pdoProperty->setValue($handler, $pdo);
-
-        SQLManager::setDatabaseHandler($handler);
 
         $rows = SQLManager::findAll('users');
 
         $this->assertCount(1, $rows);
         $this->assertSame('bob', $rows[0]['name']);
+    }
+
+    public function testSafeWhereMethodsDoNotTriggerDeprecatedRawMethods(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+        $pdo->exec("INSERT INTO users (name) VALUES ('alice')");
+
+        $deprecations = 0;
+        set_error_handler(static function (int $severity) use (&$deprecations): bool {
+            if ($severity === E_USER_DEPRECATED) {
+                $deprecations++;
+            }
+
+            return true;
+        });
+
+        try {
+            $rows = SQLManager::findWhere(['id', 'name'], 'users', ['name' => 'alice']);
+            $updated = SQLManager::updateWhere('users', ['name' => 'bob'], ['id' => 1]);
+            $deleted = SQLManager::deleteWhere('users', ['name' => 'bob']);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame(0, $deprecations);
+        $this->assertSame([['id' => 1, 'name' => 'alice']], $rows);
+        $this->assertTrue($updated);
+        $this->assertTrue($deleted);
+        $this->assertSame([], SQLManager::findAll('users'));
     }
 
     public function testBuildColumnListSupportsQualifiedWildcard(): void
@@ -99,5 +111,21 @@ class SQLManagerTest extends TestCase
 
         $this->expectException(DatabaseException::class);
         $method->invoke(null, '');
+    }
+
+    private function createSqliteHandler(): \PDO
+    {
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        $handler = new DatabaseHandler();
+        $reflection = new \ReflectionClass($handler);
+        $pdoProperty = $reflection->getProperty('pdo');
+        $pdoProperty->setAccessible(true);
+        $pdoProperty->setValue($handler, $pdo);
+
+        SQLManager::setDatabaseHandler($handler);
+
+        return $pdo;
     }
 }
