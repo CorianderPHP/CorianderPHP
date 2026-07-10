@@ -65,7 +65,6 @@ class DatabaseHandlerTest extends TestCase
     {
         $reflection = new \ReflectionClass($handler);
         $pdoProperty = $reflection->getProperty('pdo');
-        $pdoProperty->setAccessible(true);
         $pdoProperty->setValue($handler, $pdo);
     }
 }

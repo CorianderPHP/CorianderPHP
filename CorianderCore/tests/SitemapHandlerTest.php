@@ -100,7 +100,6 @@ class SitemapHandlerTest extends TestCase
 
         $reflection = new ReflectionClass($sitemapHandler);
         $dynamicPagesProperty = $reflection->getProperty('dynamicPages');
-        $dynamicPagesProperty->setAccessible(true);
         $dynamicPages = $dynamicPagesProperty->getValue($sitemapHandler);
 
         $this->assertCount(1, $dynamicPages, 'Dynamic pages count does not match expected value.');
