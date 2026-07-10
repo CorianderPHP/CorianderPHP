@@ -34,7 +34,7 @@ class GitHubReleaseService
 
                 return [
                     'tag' => $tag,
-                    'zip_url' => (string) ($release['zipball_url'] ?? $this->buildZipUrl($tag)),
+                    'zip_url' => $this->buildZipUrl($tag),
                     'prerelease' => (bool) ($release['prerelease'] ?? false),
                     'prerelease_fallback' => (bool) ($release['prerelease_fallback'] ?? false),
                 ];
