@@ -94,6 +94,70 @@ class SQLManagerTest extends TestCase
         $this->assertSame([], SQLManager::findAll('users'));
     }
 
+    public function testSqlScriptReturnsAllRowsForCustomSelect(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)');
+        $pdo->exec("INSERT INTO users (name, status) VALUES ('alice', 'active')");
+        $pdo->exec("INSERT INTO users (name, status) VALUES ('bob', 'active')");
+        $pdo->exec("INSERT INTO users (name, status) VALUES ('charlie', 'disabled')");
+
+        $rows = SQLManager::sqlScript(
+            'SELECT id, name FROM users WHERE status = :status ORDER BY id ASC',
+            ['status' => 'active']
+        );
+
+        $this->assertSame([
+            ['id' => 1, 'name' => 'alice'],
+            ['id' => 2, 'name' => 'bob'],
+        ], $rows);
+    }
+
+    public function testSqlScriptReturnsSingleRowForCustomSelectWithOneResult(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)');
+        $pdo->exec("INSERT INTO users (name, status) VALUES ('alice', 'active')");
+
+        $row = SQLManager::sqlScript(
+            'SELECT id, name FROM users WHERE status = :status',
+            ['status' => 'active']
+        );
+
+        $this->assertSame(['id' => 1, 'name' => 'alice'], $row);
+    }
+
+    public function testSqlScriptReturnsEmptyArrayForCustomSelectWithNoResults(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)');
+
+        $rows = SQLManager::sqlScript(
+            'SELECT id, name FROM users WHERE status = :status',
+            ['status' => 'active']
+        );
+
+        $this->assertSame([], $rows);
+    }
+
+    public function testSqlScriptReturnsTrueForCustomWriteStatement(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)');
+        $pdo->exec("INSERT INTO users (name, status) VALUES ('alice', 'active')");
+
+        $result = SQLManager::sqlScript(
+            'UPDATE users SET status = :status WHERE name = :name',
+            ['status' => 'disabled', 'name' => 'alice']
+        );
+
+        $this->assertTrue($result);
+        $this->assertSame(
+            [['status' => 'disabled']],
+            SQLManager::findWhere(['status'], 'users', ['name' => 'alice'])
+        );
+    }
+
     public function testBuildColumnListSupportsQualifiedWildcard(): void
     {
         $method = new \ReflectionMethod(SQLManager::class, 'buildColumnList');

@@ -312,24 +312,41 @@ class SQLManager
     }
 
     /**
-     * Executes a given SQL query and retrieves a row of data from the database table.
+     * Executes a custom SQL statement with bound parameters.
      *
-     * @param string $sqlScript The SQL query to execute.
-     * @param array  $params    Named parameters to bind to the SQL query (optional).
+     * SELECT-like statements return one associative row when one row is found,
+     * all rows when multiple rows are found, and an empty array when no rows are found.
+     * Write statements return true when execution succeeds.
      *
-     * @return array The retrieved row data as an associative array.
+     * @param string $sqlScript The SQL statement to execute.
+     * @param array  $params    Named parameters to bind to the SQL statement (optional).
+     *
+     * @return array|bool Result rows for SELECT-like statements, or true for write statements.
      *
      * @throws DatabaseException If the query fails.
      */
-    public static function sqlScript(string $sqlScript, array $params = []): array
+    public static function sqlScript(string $sqlScript, array $params = []): array|bool
     {
         try {
             $pdo = self::requirePdo();
             $stmt = $pdo->prepare($sqlScript);
             $stmt->execute($params);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            return $data !== false ? $data : [];
+            if ($stmt->columnCount() === 0) {
+                return true;
+            }
+
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($data === false || $data === []) {
+                return [];
+            }
+
+            if (count($data) === 1) {
+                return $data[0];
+            }
+
+            return $data;
         } catch (Exception $e) {
             self::getLogger()->error('[SQLManager] sqlScript exception', ['exception' => $e]);
             throw new DatabaseException('Unable to execute SQL script.', 0, $e);
