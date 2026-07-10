@@ -28,11 +28,11 @@ class FrameworkUpdateService
     }
 
     /**
-     * @return array{tag:string, zip_url:string}
+     * @return array{tag:string, zip_url:string, prerelease?:bool, prerelease_fallback?:bool}
      */
-    public function fetchLatestRelease(): array
+    public function fetchLatestRelease(bool $includePrerelease = false): array
     {
-        return $this->releaseService->fetchLatestRelease();
+        return $this->releaseService->fetchLatestRelease($includePrerelease);
     }
 
     public function isUpdateAvailable(string $localVersion, string $latestVersion): bool

@@ -74,11 +74,16 @@ class Update
     private function executeUpdate(UpdateOptions $options): int
     {
         $localVersion = $this->updateService->getLocalVersion();
-        $latestRelease = $this->updateService->fetchLatestRelease();
+        $latestRelease = $this->updateService->fetchLatestRelease($options->includePrerelease);
         $latestVersion = $latestRelease['tag'];
         $backupScope = $localVersion . '-to-' . $latestVersion;
 
         $this->presenter->printVersions($localVersion, $latestVersion);
+        if (($latestRelease['prerelease_fallback'] ?? false) === true) {
+            $this->presenter->printPrereleaseFallbackWarning();
+        } elseif (($latestRelease['prerelease'] ?? false) === true) {
+            $this->presenter->printPrereleaseSelectedWarning();
+        }
 
         if (!$this->updateService->isUpdateAvailable($localVersion, $latestVersion)) {
             $this->presenter->printAlreadyUpToDate();

@@ -59,6 +59,7 @@ Behavior:
 - `--dry-run`: preview the update plan without writing files.
 - `--force`: overwrite files detected as locally modified.
 - `--clear-cache`: run `php coriander cache clear` after update.
+- `--pre-release`: allow updating to the latest GitHub pre-release. Stable releases are preferred by default; if no stable release exists, the updater falls back to the latest pre-release and prints a warning.
 - `--backup-dir=backups/custom`: override backup output directory for this run (must stay inside project).
 - `--auth-token=<token>`: required only when `CORIANDER_UPDATER_AUTH_TOKEN` is configured.
 
@@ -78,6 +79,7 @@ php coriander update --yes
 php coriander update --dry-run
 php coriander update --yes --force
 php coriander update --yes --clear-cache
+php coriander update --yes --pre-release
 php coriander update --yes --backup-dir=backups/custom
 php coriander update --yes --auth-token=your-token
 ```

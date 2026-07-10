@@ -40,6 +40,16 @@ final class UpdateOutputPresenter
         ConsoleOutput::print('Latest version: &2' . $latestVersion);
     }
 
+    public function printPrereleaseSelectedWarning(): void
+    {
+        ConsoleOutput::print('&ePre-release update selected because --pre-release was provided.');
+    }
+
+    public function printPrereleaseFallbackWarning(): void
+    {
+        ConsoleOutput::print('&eNo stable release was found; falling back to the latest pre-release.');
+    }
+
     public function printAlreadyUpToDate(): void
     {
         ConsoleOutput::print('&2Framework is already up to date.');
