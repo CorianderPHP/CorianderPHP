@@ -100,4 +100,15 @@ class GitHubReleaseServiceTest extends TestCase
         $this->assertSame('v0.2.0-beta', $release['tag_name']);
         $this->assertTrue($release['prerelease_fallback']);
     }
+
+    public function testBuildZipUrlUsesBrowserArchiveUrl(): void
+    {
+        $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
+        $method = new \ReflectionMethod($service, 'buildZipUrl');
+
+        $this->assertSame(
+            'https://github.com/CorianderPHP/CorianderPHP/archive/refs/tags/v0.2.0.zip',
+            $method->invoke($service, 'v0.2.0')
+        );
+    }
 }
