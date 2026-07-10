@@ -13,6 +13,7 @@ php coriander <command> [arguments]
 Examples:
 
 - `php coriander make:view Home`
+- `php coriander make:route admin`
 - `php coriander make:migration CreateUsersTable`
 - `php coriander migrate:status`
 - `php coriander cache controllers`
@@ -88,6 +89,17 @@ Create a timestamped migration file under `database/migrations`.
 ```bash
 php coriander make:migration CreateUsersTable
 ```
+
+### `make:route`
+
+Create an app-owned route file under `src/Routes`.
+
+```bash
+php coriander make:route admin
+php coriander make:route admin/users
+```
+
+Use this when `public/routes.php` becomes too large for a single small-project route list. The generated file returns a closure that receives the router and can be included from `public/routes.php`.
 
 ### `migrate`
 

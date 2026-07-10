@@ -28,6 +28,34 @@ class AutoloaderTest extends TestCase
         $this->assertTrue(class_exists('CorianderCore\Core\Console\CommandHandler'));
     }
 
+    public function testCanLoadAppOwnedMiddlewareAndModules(): void
+    {
+        $middlewareDir = PROJECT_ROOT . '/src/Middleware';
+        $moduleDir = PROJECT_ROOT . '/src/Modules/CorianderAutoloadTest';
+
+        if (!is_dir($middlewareDir)) {
+            mkdir($middlewareDir, 0755, true);
+        }
+        if (!is_dir($moduleDir)) {
+            mkdir($moduleDir, 0755, true);
+        }
+
+        $middlewareFile = $middlewareDir . '/CorianderAutoloadTestMiddleware.php';
+        $moduleFile = $moduleDir . '/Service.php';
+
+        file_put_contents($middlewareFile, "<?php\nnamespace Middleware;\nfinal class CorianderAutoloadTestMiddleware {}\n");
+        file_put_contents($moduleFile, "<?php\nnamespace Modules\\CorianderAutoloadTest;\nfinal class Service {}\n");
+
+        try {
+            $this->assertTrue(class_exists('Middleware\\CorianderAutoloadTestMiddleware'));
+            $this->assertTrue(class_exists('Modules\\CorianderAutoloadTest\\Service'));
+        } finally {
+            @unlink($middlewareFile);
+            @unlink($moduleFile);
+            @rmdir($moduleDir);
+        }
+    }
+
     /**
      * Test that an Error is thrown when attempting to load a non-existent class.
      *
