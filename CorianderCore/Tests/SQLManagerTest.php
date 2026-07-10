@@ -32,8 +32,6 @@ class SQLManagerTest extends TestCase
     public function testBuildWhereFromArrayCreatesUniquePlaceholders(): void
     {
         $method = new \ReflectionMethod(SQLManager::class, 'buildWhereFromArray');
-        $method->setAccessible(true);
-
         [$clause, $params] = $method->invoke(null, ['a-b' => 1, 'a_b' => 2], 'w_');
 
         $this->assertSame('`a-b` = :w_a_b AND `a_b` = :w_a_b_1', $clause);
@@ -161,8 +159,6 @@ class SQLManagerTest extends TestCase
     public function testBuildColumnListSupportsQualifiedWildcard(): void
     {
         $method = new \ReflectionMethod(SQLManager::class, 'buildColumnList');
-        $method->setAccessible(true);
-
         $columnList = $method->invoke(null, ['users.*', 'users.name']);
 
         $this->assertSame('`users`.*, `users`.`name`', $columnList);
@@ -171,8 +167,6 @@ class SQLManagerTest extends TestCase
     public function testQuoteIdentifierRejectsEmptyIdentifier(): void
     {
         $method = new \ReflectionMethod(SQLManager::class, 'quoteIdentifier');
-        $method->setAccessible(true);
-
         $this->expectException(DatabaseException::class);
         $method->invoke(null, '');
     }
@@ -185,7 +179,6 @@ class SQLManagerTest extends TestCase
         $handler = new DatabaseHandler();
         $reflection = new \ReflectionClass($handler);
         $pdoProperty = $reflection->getProperty('pdo');
-        $pdoProperty->setAccessible(true);
         $pdoProperty->setValue($handler, $pdo);
 
         SQLManager::setDatabaseHandler($handler);

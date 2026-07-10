@@ -91,7 +91,6 @@ class CommandHandlerTest extends TestCase
         });
 
         $commandsProperty = (new \ReflectionClass(CommandHandler::class))->getProperty('commands');
-        $commandsProperty->setAccessible(true);
         $commands = $commandsProperty->getValue($this->commandHandler);
         $commands['returnsCode'] = $mockCommandClass;
         $commandsProperty->setValue($this->commandHandler, $commands);
@@ -126,7 +125,6 @@ class CommandHandlerTest extends TestCase
 
         // Modify the 'commands' property of CommandHandler to include the mock command
         $commandsProperty = (new \ReflectionClass(CommandHandler::class))->getProperty('commands');
-        $commandsProperty->setAccessible(true);
         $commands = $commandsProperty->getValue($this->commandHandler);
         $commands['noExecute'] = $mockCommandClass; // Add the mock command without execute method
         $commandsProperty->setValue($this->commandHandler, $commands);

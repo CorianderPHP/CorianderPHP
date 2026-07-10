@@ -26,8 +26,6 @@ class GitHubReleaseServiceTest extends TestCase
         ];
 
         $method = new \ReflectionMethod($service, 'extractStatusCode');
-        $method->setAccessible(true);
-
         $statusCode = $method->invoke($service, $headers);
 
         $this->assertSame(200, $statusCode);
@@ -70,8 +68,6 @@ class GitHubReleaseServiceTest extends TestCase
     {
         $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
         $method = new \ReflectionMethod($service, 'selectRelease');
-        $method->setAccessible(true);
-
         $release = $method->invoke($service, [
             ['tag_name' => 'v0.2.0-beta', 'prerelease' => true],
             ['tag_name' => 'v0.1.9', 'prerelease' => false],
@@ -85,8 +81,6 @@ class GitHubReleaseServiceTest extends TestCase
     {
         $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
         $method = new \ReflectionMethod($service, 'selectRelease');
-        $method->setAccessible(true);
-
         $release = $method->invoke($service, [
             ['tag_name' => 'v0.2.0-beta', 'prerelease' => true],
             ['tag_name' => 'v0.1.9', 'prerelease' => false],
@@ -99,8 +93,6 @@ class GitHubReleaseServiceTest extends TestCase
     {
         $service = new GitHubReleaseService('CorianderPHP/CorianderPHP');
         $method = new \ReflectionMethod($service, 'selectRelease');
-        $method->setAccessible(true);
-
         $release = $method->invoke($service, [
             ['tag_name' => 'v0.2.0-beta', 'prerelease' => true],
         ], false);
