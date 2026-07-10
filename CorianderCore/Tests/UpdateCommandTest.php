@@ -102,6 +102,38 @@ class UpdateCommandTest extends TestCase
         $this->assertSame('v0.1.0-to-v0.2.0', $service->lastBackupScope);
     }
 
+    public function testPreReleaseOptionIsForwardedToUpdateService(): void
+    {
+        $service = new FakeFrameworkUpdateService();
+        $postTasks = new FakePostUpdateTasksService();
+        $command = new Update($service, static fn(string $message): bool => true, $postTasks);
+
+        ob_start();
+        $command->execute(['--yes', '--pre-release']);
+        ob_end_clean();
+
+        $this->assertTrue($service->lastIncludePrereleaseFlag);
+    }
+
+    public function testPrereleaseFallbackPrintsWarning(): void
+    {
+        $service = new FakeFrameworkUpdateService();
+        $service->latestRelease = [
+            'tag' => 'v0.2.0-beta',
+            'zip_url' => 'https://example.com/fake.zip',
+            'prerelease' => true,
+            'prerelease_fallback' => true,
+        ];
+        $postTasks = new FakePostUpdateTasksService();
+        $command = new Update($service, static fn(string $message): bool => true, $postTasks);
+
+        ob_start();
+        $command->execute(['--yes']);
+        $output = (string) ob_get_clean();
+
+        $this->assertStringContainsString('No stable release was found', $output);
+    }
+
     public function testRollbackFlagRestoresFromLatestBackup(): void
     {
         $service = new FakeFrameworkUpdateService();
@@ -141,6 +173,14 @@ class FakeFrameworkUpdateService extends FrameworkUpdateService
     public bool $lastDryRunFlag = false;
     public ?string $lastBackupScope = null;
     public ?string $lastBackupDirectory = null;
+    public bool $lastIncludePrereleaseFlag = false;
+    /**
+     * @var array{tag:string, zip_url:string, prerelease?:bool, prerelease_fallback?:bool}
+     */
+    public array $latestRelease = [
+        'tag' => 'v0.2.0',
+        'zip_url' => 'https://example.com/fake.zip',
+    ];
 
     public function __construct()
     {
@@ -151,12 +191,10 @@ class FakeFrameworkUpdateService extends FrameworkUpdateService
         return 'v0.1.0';
     }
 
-    public function fetchLatestRelease(): array
+    public function fetchLatestRelease(bool $includePrerelease = false): array
     {
-        return [
-            'tag' => 'v0.2.0',
-            'zip_url' => 'https://example.com/fake.zip',
-        ];
+        $this->lastIncludePrereleaseFlag = $includePrerelease;
+        return $this->latestRelease;
     }
 
     public function isUpdateAvailable(string $localVersion, string $latestVersion): bool

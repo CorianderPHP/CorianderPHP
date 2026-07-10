@@ -6,6 +6,7 @@ namespace CorianderCore\Core\Console\Commands;
 use CorianderCore\Core\Console\Commands\Make\Controller\MakeController;
 use CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase;
 use CorianderCore\Core\Console\Commands\Make\Migration\MakeMigration;
+use CorianderCore\Core\Console\Commands\Make\Route\MakeRoute;
 use CorianderCore\Core\Console\Commands\Make\Sitemap\MakeSitemap;
 use CorianderCore\Core\Console\Commands\Make\View\MakeView;
 use CorianderCore\Core\Console\CommandExitCode;
@@ -19,6 +20,7 @@ class Make
     protected array $validSubcommands = [
         'view',
         'controller',
+        'route',
         'database',
         'sitemap',
         'migration',
@@ -26,6 +28,7 @@ class Make
 
     protected MakeView $makeViewInstance;
     protected MakeController $makeControllerInstance;
+    protected MakeRoute $makeRouteInstance;
     protected MakeDatabase $makeDatabaseInstance;
     protected MakeSitemap $makeSitemapInstance;
     protected MakeMigration $makeMigrationInstance;
@@ -34,6 +37,7 @@ class Make
     {
         $this->makeViewInstance = new MakeView();
         $this->makeControllerInstance = new MakeController();
+        $this->makeRouteInstance = new MakeRoute();
         $this->makeDatabaseInstance = new MakeDatabase();
         $this->makeSitemapInstance = new MakeSitemap();
         $this->makeMigrationInstance = new MakeMigration();
@@ -64,6 +68,9 @@ class Make
 
             case 'controller':
                 return $this->makeController($resourceArgs);
+
+            case 'route':
+                return $this->makeRoute($resourceArgs);
 
             case 'database':
                 return $this->makeDatabase($resourceArgs);
@@ -102,6 +109,19 @@ class Make
         }
 
         return $this->makeControllerInstance->execute($args);
+    }
+
+    /**
+     * @param array<int, string> $args
+     */
+    protected function makeRoute(array $args): int
+    {
+        if ($args === []) {
+            ConsoleOutput::print("&4[Error]&7 Please specify a route file name, e.g., 'make:route admin'.");
+            return CommandExitCode::INVALID_USAGE;
+        }
+
+        return $this->makeRouteInstance->execute($args);
     }
 
     /**

@@ -11,6 +11,7 @@ final class UpdateOptions
         public readonly bool $force,
         public readonly bool $clearCache,
         public readonly bool $rollback,
+        public readonly bool $includePrerelease,
         public readonly ?string $backupDirectory,
     ) {
     }
@@ -26,6 +27,7 @@ final class UpdateOptions
             force: in_array('--force', $args, true),
             clearCache: in_array('--clear-cache', $args, true),
             rollback: in_array('--rollback', $args, true),
+            includePrerelease: in_array('--pre-release', $args, true),
             backupDirectory: self::extractOptionValue($args, '--backup-dir'),
         );
     }

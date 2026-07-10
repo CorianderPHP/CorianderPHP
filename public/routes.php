@@ -7,6 +7,13 @@ use Nyholm\Psr7\ServerRequest;
 
 // Register custom routes here. This file is included by index.php and
 // has access to the `$router` and `$notFound` variables.
+//
+// Small projects can keep all custom routes in this file. Larger projects can
+// split routes into src/Routes/*.php and include them here:
+// $adminRoutes = PROJECT_ROOT . '/src/Routes/admin.php';
+// if (is_file($adminRoutes)) {
+//     (require $adminRoutes)($router);
+// }
 
 // Example dynamic route: /user/42 -> "User ID: 42"
 // $router->get('user/{id}', function (ServerRequest $request) {

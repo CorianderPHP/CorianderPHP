@@ -16,6 +16,7 @@ class UpdateOptionsTest extends TestCase
             '--force',
             '--clear-cache',
             '--rollback',
+            '--pre-release',
             '--backup-dir=backups/custom',
         ]);
 
@@ -24,6 +25,7 @@ class UpdateOptionsTest extends TestCase
         $this->assertTrue($options->force);
         $this->assertTrue($options->clearCache);
         $this->assertTrue($options->rollback);
+        $this->assertTrue($options->includePrerelease);
         $this->assertSame('backups/custom', $options->backupDirectory);
     }
 

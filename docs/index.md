@@ -7,8 +7,9 @@ Use this index as the recommended reading order for CorianderPHP documentation.
 1. [CLI](cli.md)
 2. [Routing](routing.md)
 3. [Controllers](controllers.md)
-4. [Views](views.md)
-5. [Database](database.md)
+4. [Middleware](middleware.md)
+5. [Views](views.md)
+6. [Database](database.md)
 
 ## Operations
 

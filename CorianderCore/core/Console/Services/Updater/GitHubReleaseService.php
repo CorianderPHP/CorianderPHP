@@ -22,16 +22,23 @@ class GitHubReleaseService
     }
 
     /**
-     * @return array{tag:string, zip_url:string}
+     * @return array{tag:string, zip_url:string, prerelease:bool, prerelease_fallback:bool}
      */
-    public function fetchLatestRelease(): array
+    public function fetchLatestRelease(bool $includePrerelease = false): array
     {
-        $release = $this->requestJson(self::API_BASE . $this->repository . '/releases/latest', true);
-        if (is_array($release) && isset($release['tag_name'])) {
-            return [
-                'tag' => (string) $release['tag_name'],
-                'zip_url' => (string) ($release['zipball_url'] ?? $this->buildZipUrl((string) $release['tag_name'])),
-            ];
+        $releases = $this->requestJson(self::API_BASE . $this->repository . '/releases?per_page=20', true);
+        if (is_array($releases)) {
+            $release = $this->selectRelease($releases, $includePrerelease);
+            if ($release !== null) {
+                $tag = (string) $release['tag_name'];
+
+                return [
+                    'tag' => $tag,
+                    'zip_url' => (string) ($release['zipball_url'] ?? $this->buildZipUrl($tag)),
+                    'prerelease' => (bool) ($release['prerelease'] ?? false),
+                    'prerelease_fallback' => (bool) ($release['prerelease_fallback'] ?? false),
+                ];
+            }
         }
 
         $tags = $this->requestJson(self::API_BASE . $this->repository . '/tags?per_page=1', false);
@@ -43,7 +50,41 @@ class GitHubReleaseService
         return [
             'tag' => $tag,
             'zip_url' => $this->buildZipUrl($tag),
+            'prerelease' => false,
+            'prerelease_fallback' => false,
         ];
+    }
+
+    /**
+     * @param array<int, mixed> $releases
+     * @return array<string, mixed>|null
+     */
+    private function selectRelease(array $releases, bool $includePrerelease): ?array
+    {
+        $latestPrerelease = null;
+
+        foreach ($releases as $release) {
+            if (!is_array($release) || !isset($release['tag_name'])) {
+                continue;
+            }
+
+            $isPrerelease = (bool) ($release['prerelease'] ?? false);
+            if ($includePrerelease) {
+                return $release;
+            }
+
+            if (!$isPrerelease) {
+                return $release;
+            }
+
+            $latestPrerelease ??= $release;
+        }
+
+        if ($latestPrerelease !== null) {
+            $latestPrerelease['prerelease_fallback'] = true;
+        }
+
+        return $latestPrerelease;
     }
 
     public function downloadArchive(string $url, string $destination): void

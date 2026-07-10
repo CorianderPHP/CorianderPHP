@@ -24,6 +24,10 @@
     },
     "autoload": {
         "psr-4": {
+            "Controllers\\": "src/Controllers/",
+            "ApiControllers\\": "src/ApiControllers/",
+            "Middleware\\": "src/Middleware/",
+            "Modules\\": "src/Modules/",
             "CorianderCore\\Core\\": "CorianderCore/core/",
             "CorianderCore\\Modules\\": "CorianderCore/modules/"
         }

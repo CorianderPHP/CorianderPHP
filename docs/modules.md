@@ -1,40 +1,54 @@
 # Custom Module Guide
 
-Modules extend the framework with reusable packages. They live under `CorianderCore/modules` and are autoloaded via the `CorianderCore\\Modules` namespace defined in Composer:
+Modules are reusable project services or packages. User-created modules should live in the app-owned `src/Modules` directory so framework updates never overwrite them.
 
-```php
-'CorianderCore\\Modules\\' => PROJECT_ROOT . '/CorianderCore/modules/',
-```
+Framework or official reusable modules can still live under `CorianderCore/modules`, but application code should not be added there.
 
-## Example: ImageDataExtractor Module
+## Project Modules
 
-Create the module directory:
+Create a project module under `src/Modules`:
 
 ```bash
-mkdir -p CorianderCore/modules/ImageDataExtractor
+mkdir -p src/Modules/ImageDataExtractor
 ```
 
-Then create `CorianderCore/modules/ImageDataExtractor/Extractor.php` with:
+Then create `src/Modules/ImageDataExtractor/Extractor.php`:
 
 ```php
 <?php
-namespace CorianderCore\\Modules\\ImageDataExtractor;
+declare(strict_types=1);
 
-class Extractor
+namespace Modules\ImageDataExtractor;
+
+final class Extractor
 {
     public function extract(string $path): array
     {
-        // extraction logic returning metadata
         return [];
     }
 }
 ```
 
-The framework's autoloader discovers modules automatically, so the `CorianderCore\\Modules\\ImageDataExtractor\\Extractor` class is available immediately across your project.
+Use it from controllers, route files, or middleware:
+
+```php
+use Modules\ImageDataExtractor\Extractor;
+
+$metadata = (new Extractor())->extract($path);
+```
+
+The framework autoloader maps `Modules\` to `src/Modules/`.
+
+## Framework Modules
+
+`CorianderCore/modules` is reserved for framework-owned or official modules using the `CorianderCore\Modules\` namespace.
+
+Do not place project-specific code there. The folder is inside the framework-managed `CorianderCore` tree and should be treated as core-owned.
 
 ## Best Practices
 
-- Keep modules self-contained; they should not depend on application-specific code.
+- Put application modules in `src/Modules`.
+- Keep modules self-contained and reusable.
 - Use descriptive namespaces and follow PSR-4 conventions.
-- Document module APIs and include tests to ease reuse.
-
+- Keep framework-owned code under `CorianderCore`, and project-owned code under `src`.
+- Document module APIs and include tests when the module contains important business logic.

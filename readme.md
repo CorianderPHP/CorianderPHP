@@ -21,6 +21,7 @@ Detailed guides live in the [docs/](docs) directory. Start with [Documentation I
 - [Routing](docs/routing.md)
 - [Views](docs/views.md)
 - [Controllers](docs/controllers.md)
+- [Middleware](docs/middleware.md)
 - [Database](docs/database.md)
 - [Sitemap](docs/sitemap.md)
 - [Cache](docs/cache.md)
@@ -73,6 +74,7 @@ All commands are invoked via `php coriander`:
 
 - `php coriander make:view Home` - create a view ([Views](docs/views.md)).
 - `php coriander make:controller Home` - create a controller ([Controllers](docs/controllers.md)).
+- `php coriander make:route admin` - create a route file under `src/Routes` for larger route sets ([Routing](docs/routing.md)).
 - `php coriander make:database` - interactive database setup ([Database](docs/database.md)).
 - `php coriander make:migration CreateUsersTable` - create a migration file ([Database](docs/database.md)).
 - `php coriander migrate` - apply pending migrations ([Database](docs/database.md)).
@@ -87,16 +89,19 @@ All commands are invoked via `php coriander`:
 - `php coriander update --dry-run` - show planned framework changes without writing files.
 - `php coriander update --force` - overwrite locally modified framework-managed files.
 - `php coriander update --clear-cache` - clear framework cache after update.
+- `php coriander update --pre-release` - allow updating to GitHub pre-releases.
 - `php coriander update --backup-dir=backups/custom` - override backup output directory for this run (relative path only, no `..`).
 - `php coriander update --auth-token=<token>` - provide updater token when guard is enabled.
 - `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
 - `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
 - Runtime variables load from `.env`; `.env-example` is copied automatically when `.env` is missing ([Environment](docs/environment.md)).
-- Place reusable packages under `CorianderCore/modules` to create custom modules ([Modules](docs/modules.md)).
+- Place project middleware under `src/Middleware` ([Middleware](docs/middleware.md)).
+- Place project modules under `src/Modules`; `CorianderCore/modules` is reserved for framework-owned modules ([Modules](docs/modules.md)).
 
 ## Framework Update Notes
 
 - Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
+- Stable releases are preferred by default. Use `--pre-release` to allow pre-release updates; if no stable release exists, the updater falls back to the latest pre-release and prints a warning.
 - Updater execution can be restricted with environment policy (`CORIANDER_UPDATER_ENABLED`, `CORIANDER_UPDATER_ALLOW_PRODUCTION`, optional `CORIANDER_UPDATER_AUTH_TOKEN`, and rate-limit controls).
 - Only framework-managed paths are updated by the updater, and partial failures trigger automatic rollback.
 - Backups are written under `backups/coriander/<from-version>-to-<to-version>/` by default (configurable via `CORIANDER_UPDATE_BACKUP_DIR` in `config/config.php`).
