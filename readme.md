@@ -67,6 +67,7 @@ Database note: prefer `findWhere`, `updateWhere`, and `deleteWhere`; raw-string 
 Use `findAll(['col1', 'col2'], $table)` to request specific columns.
 Use `findAll($table)` for all columns.
 `findAll(['*'], $table)` remains supported for compatibility but is not recommended.
+Use `sqlScript($sql, $params)` for custom SQL such as joins, aggregates, and repository-owned queries; SELECT-like statements return `[]`, one associative row, or multiple rows depending on the result size, and write statements return `true` on success.
 
 ## CLI Quick Reference
 

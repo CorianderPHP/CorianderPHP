@@ -107,7 +107,8 @@ try {
 
 - Use prepared statements and parameter binding to prevent SQL injection.
 - Prefer `findWhere`, `updateWhere`, and `deleteWhere` when your conditions are simple equality checks.
-- `findBy`, `update`, and `deleteFrom` remain available for advanced SQL conditions but are deprecated for routine use.
+- Use `sqlScript` when a repository needs custom SQL such as joins, aggregates, or multi-table reads.
+- `findBy`, `update`, and `deleteFrom` remain available for compatibility but are deprecated for routine use.
 - Keep long-lived connections to a minimum; enable `DatabaseHandler::setAutoCloseConnection(false)` only when necessary.
 - Centralize complex queries in repository classes to maintain SOLID principles.
 - Close connections explicitly in long-running scripts.
@@ -161,17 +162,61 @@ SQLManager::deleteWhere('users', ['status' => 'inactive']);
 ```
 Removes all users currently flagged as inactive.
 
-## Advanced Conditions
+## Custom SQL
 
-For non-equality expressions (`IN`, range queries, SQL functions), use the lower-level methods with explicit placeholders (deprecated for routine use):
+Use `sqlScript` when a repository needs free SQL for joins, aggregates, reports, or custom filtering that does not fit the table-oriented helpers.
+
+SELECT-like statements return data based on the number of rows found:
+
+- no rows: `[]`
+- one row: one associative array
+- multiple rows: a list of associative arrays
 
 ```php
-SQLManager::findBy(
-    ['id', 'email'],
-    'users',
-    'created_at >= :from AND status IN (:s1, :s2)',
-    ['from' => '2026-01-01', 's1' => 'active', 's2' => 'pending']
+use CorianderCore\Core\Database\SQLManager;
+
+$topics = SQLManager::sqlScript(
+    'SELECT topics.id, topics.title, users.username
+     FROM topics
+     JOIN users ON users.id = topics.user_id
+     WHERE topics.status = :status
+     ORDER BY topics.created_at DESC',
+    ['status' => 'published']
 );
+```
+
+For one row, write the query naturally and use the returned associative array:
+
+```php
+$topic = SQLManager::sqlScript(
+    'SELECT id, title FROM topics WHERE id = :id',
+    ['id' => $topicId]
+);
+```
+
+For a single value, select an alias and read it from the first row:
+
+```php
+$row = SQLManager::sqlScript('SELECT COUNT(*) AS total FROM topics');
+
+$total = (int) ($row['total'] ?? 0);
+```
+
+Write statements return `true` when execution succeeds:
+
+```php
+SQLManager::sqlScript(
+    'UPDATE topics SET locked = :locked WHERE id = :id',
+    ['locked' => 1, 'id' => $topicId]
+);
+```
+
+For simple equality-based CRUD, prefer the table helpers:
+
+```php
+SQLManager::findWhere(['id', 'title'], 'topics', ['status' => 'published']);
+SQLManager::updateWhere('topics', ['locked' => 1], ['id' => $topicId]);
+SQLManager::deleteWhere('topics', ['status' => 'draft']);
 ```
 
 
