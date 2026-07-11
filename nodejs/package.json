@@ -11,7 +11,7 @@
     "watch-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch=always --minify",
     "build-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
     "build-all": "node build.js && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
-    "build-prod": "node build.min.js && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
+    "build-prod": "tsc && node build.min.js && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
   },
   "author": "Dancuo Lohan",
   "license": "MIT",

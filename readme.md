@@ -84,6 +84,7 @@ All commands are invoked via `php coriander`:
 - `php coriander make:sitemap` - generate sitemap helper ([Sitemap](docs/sitemap.md)).
 - `php coriander cache controllers|all|clear` - manage caches ([Cache](docs/cache.md)).
 - `php coriander nodejs run build-ts` - compile TypeScript ([NodeJS Integration](docs/nodejs.md)).
+- `php coriander nodejs run build-prod` - compile TypeScript, minify JavaScript, and minify TailwindCSS for production ([NodeJS Integration](docs/nodejs.md)).
 - `php coriander version` - display installed framework version.
 - `php coriander update` - update framework managed files (asks confirmation by default).
 - `php coriander update --yes` - update without interactive prompt.

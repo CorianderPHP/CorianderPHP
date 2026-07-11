@@ -18,6 +18,7 @@ Examples:
 - `php coriander migrate:status`
 - `php coriander cache controllers`
 - `php coriander nodejs run build-ts`
+- `php coriander nodejs run build-prod`
 - `php coriander version`
 - `php coriander update --dry-run`
 
