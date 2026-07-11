@@ -48,6 +48,14 @@ Example:
 - Include compatibility and upgrade guidance.
 - Keep release notes focused on user-visible behavior and developer UX.
 
+## Versioning
+
+- Before preparing a release, compare `CorianderCore/VERSION` with the latest
+  release tag.
+- If `CorianderCore/VERSION` is equal to the latest release tag, bump the
+  framework version.
+- The default bump is a patch increment: `+0.0.1`.
+
 ## Documentation Repository
 
 Framework releases dispatch documentation updates to `CorianderPHP/Documentation`
