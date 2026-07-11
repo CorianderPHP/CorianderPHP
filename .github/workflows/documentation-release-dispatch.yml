@@ -1,0 +1,58 @@
+name: Documentation Release Dispatch
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-documentation-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout framework repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build release documentation context
+        id: release-context
+        shell: bash
+        run: |
+          current_tag="${{ github.event.release.tag_name }}"
+          release_commit="$(git rev-list -n 1 "$current_tag")"
+          previous_tag="$(git describe --tags --abbrev=0 "${current_tag}^" 2>/dev/null || true)"
+
+          if [ -n "$previous_tag" ]; then
+            changed_files="$(git diff --name-only "$previous_tag" "$current_tag" | jq -R -s -c 'split("\n")[:-1]')"
+            compare_url="https://github.com/CorianderPHP/CorianderPHP/compare/${previous_tag}...${current_tag}"
+          else
+            changed_files="$(git ls-tree -r --name-only "$current_tag" | jq -R -s -c 'split("\n")[:-1]')"
+            compare_url="${{ github.event.release.html_url }}"
+          fi
+
+          {
+            echo "previous_tag=$previous_tag"
+            echo "release_commit=$release_commit"
+            echo "compare_url=$compare_url"
+            echo "changed_files=$changed_files"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Trigger documentation update PR
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DOCUMENTATION_REPO_TOKEN }}
+          repository: CorianderPHP/Documentation
+          event-type: framework-released
+          client-payload: |
+            {
+              "version": "${{ github.event.release.tag_name }}",
+              "release_url": "${{ github.event.release.html_url }}",
+              "release_body": ${{ toJson(github.event.release.body) }},
+              "previous_version": "${{ steps.release-context.outputs.previous_tag }}",
+              "release_commit": "${{ steps.release-context.outputs.release_commit }}",
+              "compare_url": "${{ steps.release-context.outputs.compare_url }}",
+              "changed_files": ${{ steps.release-context.outputs.changed_files }}
+            }
