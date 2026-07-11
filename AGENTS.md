@@ -60,3 +60,11 @@ Example:
 
 Framework releases dispatch documentation updates to `CorianderPHP/Documentation`
 through the `framework-released` repository dispatch event.
+
+When preparing framework changes that affect documentation, include useful
+references for the documentation agent in release notes or PR descriptions:
+
+- changed file paths
+- changed public methods, functions, commands, or configuration keys
+- behavior changes that require guide updates
+- migration steps or compatibility notes
