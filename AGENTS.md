@@ -50,10 +50,10 @@ Example:
 
 ## Versioning
 
-- Before preparing a release, compare `CorianderCore/VERSION` with the latest
-  release tag.
-- If `CorianderCore/VERSION` is equal to the latest release tag, bump the
-  framework version.
+- If an agent notices that `CorianderCore/VERSION` is equal to the latest
+  release tag, bump the framework version immediately.
+- Do not wait for release preparation; forgetting the version bump can create a
+  release with the wrong tag/version.
 - The default bump is a patch increment: `+0.0.1`.
 
 ## Documentation Repository
