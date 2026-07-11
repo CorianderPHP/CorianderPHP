@@ -10,16 +10,8 @@ permissions:
 jobs:
   trigger-documentation-update:
     runs-on: ubuntu-latest
-    env:
-      DOCUMENTATION_REPO_TOKEN: ${{ secrets.DOCUMENTATION_REPO_TOKEN }}
 
     steps:
-      - name: Require documentation repository token
-        if: ${{ env.DOCUMENTATION_REPO_TOKEN == '' }}
-        run: |
-          echo "DOCUMENTATION_REPO_TOKEN is required to trigger the documentation repository."
-          exit 1
-
       - name: Checkout framework repository
         uses: actions/checkout@v4
         with:
