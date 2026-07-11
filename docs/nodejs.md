@@ -83,6 +83,8 @@ Run all commands from the project root.
   ```bash
   php coriander nodejs run build-prod
   ```
+  Runs TypeScript compilation, bundles/minifies JavaScript, and generates
+  minified TailwindCSS output.
 
 ## Project Layout
 
