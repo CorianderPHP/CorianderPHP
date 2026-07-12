@@ -96,7 +96,7 @@ class RouterTest extends TestCase
         $output = (string) $response->getBody();
 
         // Assert that the output contains expected content from the home page
-        $this->assertStringContainsString('Installation Successful!', $output);
+        $this->assertStringContainsString('Welcome to CorianderPHP', $output);
         // Assert that the requested view is correctly set to 'home'
         $this->assertSame(200, $response->getStatusCode());
     }
@@ -197,7 +197,7 @@ class RouterTest extends TestCase
         $output = (string) $response->getBody();
 
         // Assert that the home page content is loaded by default
-        $this->assertStringContainsString('Installation Successful!', $output);
+        $this->assertStringContainsString('Welcome to CorianderPHP', $output);
         // Assert that the requested view is correctly set to 'home'
         $this->assertSame(200, $response->getStatusCode());
     }
