@@ -55,6 +55,52 @@ class NodeJSTest extends TestCase
         $this->assertStringContainsString('npm command failed with exit code', $output);
     }
 
+    public function testSuccessfulWrappedCommandReturnsSuccess(): void
+    {
+        $scriptPath = $this->createTemporaryPhpScript(<<<'PHP'
+<?php
+echo "npm completed\n";
+exit(0);
+PHP);
+
+        try {
+            $command = new NodeJS(PHP_BINARY);
+
+            ob_start();
+            $exitCode = $command->execute([$scriptPath]);
+            $output = (string) ob_get_clean();
+
+            $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
+            $this->assertStringContainsString('npm completed', $output);
+            $this->assertStringNotContainsString('npm command failed', $output);
+        } finally {
+            @unlink($scriptPath);
+        }
+    }
+
+    public function testFailingWrappedCommandPreservesChildExitCode(): void
+    {
+        $scriptPath = $this->createTemporaryPhpScript(<<<'PHP'
+<?php
+fwrite(STDERR, "npm failed\n");
+exit(7);
+PHP);
+
+        try {
+            $command = new NodeJS(PHP_BINARY);
+
+            ob_start();
+            $exitCode = $command->execute([$scriptPath]);
+            $output = (string) ob_get_clean();
+
+            $this->assertSame(7, $exitCode);
+            $this->assertStringContainsString('npm failed', $output);
+            $this->assertStringContainsString('npm command failed with exit code 7', $output);
+        } finally {
+            @unlink($scriptPath);
+        }
+    }
+
     public function testResolveNpmExecutableUsesEnvironmentOverride(): void
     {
         putenv('CORIANDER_NPM_EXECUTABLE=C:\Tools\nodejs\npm.cmd');
@@ -118,5 +164,13 @@ class NodeJSTest extends TestCase
         }
 
         putenv($name . '=' . $value);
+    }
+
+    private function createTemporaryPhpScript(string $contents): string
+    {
+        $scriptPath = sys_get_temp_dir() . '/coriander-nodejs-command-' . bin2hex(random_bytes(4)) . '.php';
+        file_put_contents($scriptPath, $contents);
+
+        return $scriptPath;
     }
 }

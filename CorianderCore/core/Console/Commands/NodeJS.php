@@ -63,12 +63,15 @@ class NodeJS
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
 
-        $this->streamProcessOutput($process, $pipes[1], $pipes[2]);
+        $observedExitCode = $this->streamProcessOutput($process, $pipes[1], $pipes[2]);
 
         fclose($pipes[1]);
         fclose($pipes[2]);
 
-        $exitCode = proc_close($process);
+        $closedExitCode = proc_close($process);
+        $exitCode = $closedExitCode === -1 && $observedExitCode !== null
+            ? $observedExitCode
+            : $closedExitCode;
         if ($exitCode !== 0) {
             ConsoleOutput::print('&4[Error]&7 npm command failed with exit code ' . (string) $exitCode . '.');
             ConsoleOutput::print('&8|&7 Resolved npm executable: ' . $npmExecutable);
@@ -83,7 +86,7 @@ class NodeJS
      * @param resource $stdoutPipe
      * @param resource $stderrPipe
      */
-    private function streamProcessOutput($process, $stdoutPipe, $stderrPipe): void
+    private function streamProcessOutput($process, $stdoutPipe, $stderrPipe): ?int
     {
         while (true) {
             $read = [$stdoutPipe, $stderrPipe];
@@ -92,7 +95,7 @@ class NodeJS
             $changed = @stream_select($read, $write, $except, 0, 200000);
 
             if ($changed === false) {
-                break;
+                return null;
             }
 
             foreach ($read as $pipe) {
@@ -116,9 +119,18 @@ class NodeJS
                     echo $remainingStderr;
                 }
 
-                break;
+                return $this->normalizeObservedExitCode($status['exitcode'] ?? null);
             }
         }
+    }
+
+    private function normalizeObservedExitCode(mixed $exitCode): ?int
+    {
+        if (!is_int($exitCode) || $exitCode < 0) {
+            return null;
+        }
+
+        return $exitCode;
     }
 
     /**
