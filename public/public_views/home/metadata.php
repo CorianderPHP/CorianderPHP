@@ -4,8 +4,8 @@ $lang = isset($lang) ? $lang : 'en';
 
 // SEO metadata: Title and meta tags for the home page.
 $metadata = isset($metadata) ? $metadata : '
-<title>home page</title>
-<meta name="description" content="This is the home page description.">
+<title>Welcome to CorianderPHP</title>
+<meta name="description" content="CorianderPHP starter home page with documentation and framework source links.">
 ';
 
 // Include this page in the sitemap for SEO purposes.

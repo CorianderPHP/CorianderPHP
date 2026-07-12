@@ -14,18 +14,18 @@ export default {
         'concert-one': ['"ConcertOne"', 'sans-serif'],
       },
       colors: {
-        'black': '#1F1F1F',
+        'black': '#111827',
         'true-black': '#000000',
-        'peach': '#FFBE98',
-        'white': '#EAE4DF',
+        'mint': '#8FE3B4',
+        'white': '#F6FAF7',
         'true-white': '#FFFFFF',
-        'dark-green': '#0A5321'
+        'dark-green': '#0F6B4F'
       },
       boxShadow: {
-        'white': 'inset 0px 0px 30px 35px #EAE4DF',
-        'black': 'inset 0px 0px 30px 35px #1F1F1F',
-        'outer-white': '0px 0px 30px 35px #EAE4DF',
-        'outer-black': '0px 0px 30px 35px #1F1F1F',
+        'white': 'inset 0px 0px 30px 35px #F6FAF7',
+        'black': 'inset 0px 0px 30px 35px #111827',
+        'outer-white': '0px 0px 30px 35px #F6FAF7',
+        'outer-black': '0px 0px 30px 35px #111827',
       },
       animation: {
         'slow-bounce': 'slow-bounce 3s infinite ease',
