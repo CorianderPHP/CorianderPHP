@@ -31,8 +31,6 @@ if (file_exists($metaDataPath)) {
             <nav class="relative mx-auto flex h-16 w-full max-w-screen-2xl justify-center overflow-x-auto px-4 pointer-events-auto sm:px-6 md:overflow-visible lg:px-8">
                 <div class="flex min-w-max items-center justify-center gap-5 text-sm sm:gap-6 sm:text-base sm:tracking-1 md:gap-10 md:text-2xl">
                     <a href="/home" title="Go to the Home Page" class="relative flex h-16 items-center whitespace-nowrap after:absolute after:content-[''] after:bottom-3 after:h-[2px] md:after:h-[3px] after:inset-x-0 after:mx-auto after:bg-dark-green dark:after:bg-mint <?= $requestedView === 'home' ? "after:w-full" : "after:w-0 hover:after:w-full after:transition-['width']" ?>">Home</a>
-                    <a href="https://corianderphp.com/documentation" target="_blank" rel="noopener noreferrer" title="Read the documentation" class="relative flex h-16 items-center whitespace-nowrap after:absolute after:content-[''] after:bottom-3 after:h-[2px] md:after:h-[3px] after:inset-x-0 after:mx-auto after:bg-dark-green dark:after:bg-mint after:w-0 hover:after:w-full after:transition-['width']">Documentation</a>
-                    <a href="https://github.com/CorianderPHP/CorianderPHP" target="_blank" rel="noopener noreferrer" title="Open the GitHub repository" class="relative flex h-16 items-center whitespace-nowrap after:absolute after:content-[''] after:bottom-3 after:h-[2px] md:after:h-[3px] after:inset-x-0 after:mx-auto after:bg-dark-green dark:after:bg-mint after:w-0 hover:after:w-full after:transition-['width']">GitHub</a>
                 </div>
             </nav>
         </div>
