@@ -95,7 +95,7 @@ All commands are invoked via `php coriander`:
 - `php coriander update --backup-dir=backups/custom` - override backup output directory for this run (relative path only, no `..`).
 - `php coriander update --auth-token=<token>` - provide updater token when guard is enabled.
 - `php coriander update --rollback` - restore framework-managed files from the latest backup scope.
-- `\CorianderCore\Core\Image\ImageHandler::render()` - convert images to WebP in views ([Views](docs/views.md)).
+- `\CorianderCore\Core\Image\ImageHandler::render()` - render safe image markup with WebP support in views ([Views](docs/views.md)).
 - Runtime variables load from `.env`; `.env-example` is copied automatically when `.env` is missing ([Environment](docs/environment.md)).
 - Place project middleware under `src/Middleware` ([Middleware](docs/middleware.md)).
 - Place project modules under `src/Modules`; `CorianderCore/modules` is reserved for framework-owned modules ([Modules](docs/modules.md)).

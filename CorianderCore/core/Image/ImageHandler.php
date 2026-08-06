@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /*
- * ImageHandler converts images to WebP and builds responsive <picture> tags
+ * ImageHandler converts supported images to WebP and builds responsive <picture> tags
  * for efficient image delivery.
  */
 
@@ -12,7 +12,7 @@ use CorianderCore\Core\Logging\StaticLoggerTrait;
 use CorianderCore\Core\Support\PublicUrl;
 
 /**
- * Handles image conversion and rendering for PNG, JPG, and JPEG files.
+ * Handles image conversion and rendering for PNG, JPG, JPEG, WebP, and SVG files.
  * Converts images to WebP format with a customizable quality setting,
  * and generates a <picture> tag with the necessary <source> elements
  * for WebP and original image formats, along with customizable CSS classes
@@ -41,9 +41,10 @@ class ImageHandler
      * @param string $pictureClass Custom CSS classes for the picture tag.
      * @param string $imgClass Custom CSS classes for the img tag.
      * @param int $quality The quality for the WebP conversion (default: 80).
+     * @param array<string, bool|int|float|string|null> $attributes Optional img attributes. Use ['convert' => false] to skip WebP conversion.
      * @return string The generated HTML for the picture element.
      */
-    public static function render(string $imagePath, string $altText = '', string $pictureClass = '', string $imgClass = '', int $quality = 80): string
+    public static function render(string $imagePath, string $altText = '', string $pictureClass = '', string $imgClass = '', int $quality = 80, array $attributes = []): string
     {
         $normalizedPath = self::normalizeImagePath($imagePath);
         if ($normalizedPath === null) {
@@ -51,15 +52,20 @@ class ImageHandler
             return '';
         }
 
-        // Convert the image to WebP format if it doesn't already exist
-        $webpPath = self::convertToWebP($normalizedPath, $quality);
-
-        // Generate the paths for the original image and WebP image
         $fullImagePath = self::resolveFullImagePath($normalizedPath);
         if ($fullImagePath === null) {
             self::getLogger()->warning('Unable to resolve image path: ' . $normalizedPath);
             return '';
         }
+
+        $mimeType = self::getMimeType($normalizedPath, $fullImagePath);
+        if ($mimeType === null) {
+            self::getLogger()->warning('Unsupported image type: ' . $normalizedPath);
+            return '';
+        }
+
+        $shouldConvert = self::shouldConvert($attributes) && self::isConvertibleMimeType($mimeType);
+        $webpPath = $shouldConvert ? self::convertToWebP($normalizedPath, $quality) : false;
 
         // Check if the original image exists to get dimensions; otherwise, set default dimensions
         $imageSize = @getimagesize($fullImagePath);
@@ -71,23 +77,28 @@ class ImageHandler
         $safePictureClass = self::escapeHtmlAttribute($pictureClass);
         $safeImgClass = self::escapeHtmlAttribute($imgClass);
         $safeAltText = self::escapeHtmlAttribute($altText);
+        $safeAttributes = self::renderImageAttributes($attributes);
 
-        // Prepare the HTML for the <picture> element
         $pictureHTML = "<picture class=\"{$safePictureClass}\">";
 
-        if ($webpPath) {
+        if ($mimeType === 'image/webp') {
+            $webpRelativePath = self::escapeHtmlAttribute(self::toPublicUrl($normalizedPath));
+            $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
+        } elseif ($webpPath) {
             $webpRelativePath = self::escapeHtmlAttribute(self::getWebPRelativePath($normalizedPath, $quality));
             $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
         }
 
         $originalRelativePath = self::escapeHtmlAttribute(self::toPublicUrl($normalizedPath));
-        $originalExtension = strtolower((string) pathinfo($normalizedPath, PATHINFO_EXTENSION));
-        $safeOriginalType = preg_replace('/[^a-z0-9.+-]/', '', $originalExtension);
+        $safeOriginalType = self::escapeHtmlAttribute($mimeType);
         $safeWidth = $width !== '' ? (string) (int) $width : '';
         $safeHeight = $height !== '' ? (string) (int) $height : '';
 
-        $pictureHTML .= "<source srcset=\"{$originalRelativePath}\" type=\"image/{$safeOriginalType}\" />";
-        $pictureHTML .= "<img alt=\"{$safeAltText}\" width=\"{$safeWidth}\" height=\"{$safeHeight}\" class=\"{$safeImgClass}\" src=\"{$originalRelativePath}\" />";
+        if ($mimeType !== 'image/svg+xml' && $mimeType !== 'image/webp') {
+            $pictureHTML .= "<source srcset=\"{$originalRelativePath}\" type=\"{$safeOriginalType}\" />";
+        }
+
+        $pictureHTML .= "<img alt=\"{$safeAltText}\" width=\"{$safeWidth}\" height=\"{$safeHeight}\" class=\"{$safeImgClass}\" src=\"{$originalRelativePath}\"{$safeAttributes} />";
 
         $pictureHTML .= "</picture>";
 
@@ -122,8 +133,7 @@ class ImageHandler
 
         $webpPath = self::getWebPPath($normalizedPath, $quality);
 
-        // If WebP file already exists, no need to convert
-        if (file_exists($webpPath)) {
+        if (file_exists($webpPath) && filemtime($webpPath) >= filemtime($fullImagePath)) {
             return $webpPath;
         }
 
@@ -167,6 +177,86 @@ class ImageHandler
         }
 
         return $webpPath;
+    }
+
+    private static function shouldConvert(array $attributes): bool
+    {
+        return ($attributes['convert'] ?? true) !== false;
+    }
+
+    private static function isConvertibleMimeType(string $mimeType): bool
+    {
+        return in_array($mimeType, ['image/jpeg', 'image/png'], true);
+    }
+
+    private static function getMimeType(string $imagePath, string $fullImagePath): ?string
+    {
+        $extension = strtolower((string) pathinfo($imagePath, PATHINFO_EXTENSION));
+        if ($extension === 'svg') {
+            return 'image/svg+xml';
+        }
+
+        if ($extension === 'webp') {
+            return 'image/webp';
+        }
+
+        $imageSize = @getimagesize($fullImagePath);
+        if ($imageSize === false || !isset($imageSize['mime']) || !is_string($imageSize['mime'])) {
+            return null;
+        }
+
+        return match ($imageSize['mime']) {
+            'image/jpeg', 'image/png' => $imageSize['mime'],
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<string, bool|int|float|string|null> $attributes
+     */
+    private static function renderImageAttributes(array $attributes): string
+    {
+        unset($attributes['convert']);
+
+        $html = '';
+        foreach ($attributes as $name => $value) {
+            if ($value === false || $value === null) {
+                continue;
+            }
+
+            $safeName = self::sanitizeAttributeName((string) $name);
+            if ($safeName === '') {
+                continue;
+            }
+
+            if ($value === true) {
+                $html .= " {$safeName}";
+                continue;
+            }
+
+            $safeValue = self::escapeHtmlAttribute((string) $value);
+            $html .= " {$safeName}=\"{$safeValue}\"";
+        }
+
+        return $html;
+    }
+
+    private static function sanitizeAttributeName(string $name): string
+    {
+        if (preg_match('/^[a-zA-Z_:][a-zA-Z0-9:_.-]*$/', $name) !== 1) {
+            return '';
+        }
+
+        $lowercaseName = strtolower($name);
+        if (str_starts_with($lowercaseName, 'on')) {
+            return '';
+        }
+
+        if (in_array($lowercaseName, ['alt', 'class', 'height', 'src', 'srcset', 'width'], true)) {
+            return '';
+        }
+
+        return $name;
     }
 
     /**
