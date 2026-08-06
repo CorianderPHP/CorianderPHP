@@ -143,7 +143,12 @@ class ImageHandlerTest extends TestCase
     public function testRender()
     {
         // Test rendering the picture tag
-        $html = ImageHandler::render(self::$testImagePath, 'Test Image', 'picture-class', 'img-class', 80);
+        $html = ImageHandler::render(self::$testImagePath, [
+            'alt' => 'Test Image',
+            'pictureClass' => 'picture-class',
+            'class' => 'img-class',
+            'quality' => 80,
+        ]);
 
         $this->assertStringContainsString('<picture class="picture-class">', $html, 'Picture tag was not rendered correctly.');
         $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/webp/test_image_80.webp" type="image/webp"', $html, 'WebP source tag was not rendered correctly.');
@@ -153,7 +158,9 @@ class ImageHandlerTest extends TestCase
 
     public function testRenderSupportsOptionalImageAttributes(): void
     {
-        $html = ImageHandler::render(self::$testImagePath, 'Test Image', '', 'img-class', 80, [
+        $html = ImageHandler::render(self::$testImagePath, [
+            'alt' => 'Test Image',
+            'class' => 'img-class',
             'loading' => 'lazy',
             'decoding' => 'async',
             'draggable' => false,
@@ -172,6 +179,19 @@ class ImageHandlerTest extends TestCase
         $this->assertStringNotContainsString('/unsafe.png', $html);
     }
 
+    public function testRenderSupportsWidthAndHeightOptions(): void
+    {
+        $html = ImageHandler::render(self::$testImagePath, [
+            'alt' => 'Sized Image',
+            'width' => 40,
+            'height' => 30,
+        ]);
+
+        $this->assertStringContainsString('width="40"', $html);
+        $this->assertStringContainsString('height="30"', $html);
+        $this->assertStringContainsString('alt="Sized Image"', $html);
+    }
+
     public function testRenderCanSkipWebpConversion(): void
     {
         $sourcePath = self::$testImageDir . 'no_convert.png';
@@ -181,7 +201,10 @@ class ImageHandlerTest extends TestCase
         $this->createPngImage($sourcePath);
         @unlink($webpPath);
 
-        $html = ImageHandler::render($relativePath, 'No Convert', '', '', 80, ['convert' => false]);
+        $html = ImageHandler::render($relativePath, [
+            'alt' => 'No Convert',
+            'convert' => false,
+        ]);
 
         $this->assertFileDoesNotExist($webpPath);
         $this->assertStringNotContainsString('webp/no_convert_80.webp', $html);
@@ -199,7 +222,7 @@ class ImageHandlerTest extends TestCase
         $relativePath = '/CorianderCore/tests/_tmp/assets/already.webp';
         $this->createWebpImage($sourcePath);
 
-        $html = ImageHandler::render($relativePath, 'Already WebP');
+        $html = ImageHandler::render($relativePath, ['alt' => 'Already WebP']);
 
         $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/already.webp" type="image/webp"', $html);
         $this->assertStringContainsString('src="/CorianderCore/tests/_tmp/assets/already.webp"', $html);
@@ -212,7 +235,7 @@ class ImageHandlerTest extends TestCase
         $relativePath = '/CorianderCore/tests/_tmp/assets/icon.svg';
         file_put_contents($sourcePath, '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><rect width="20" height="10" /></svg>');
 
-        $html = ImageHandler::render($relativePath, 'SVG Icon');
+        $html = ImageHandler::render($relativePath, ['alt' => 'SVG Icon']);
 
         $this->assertStringContainsString('<picture class="">', $html);
         $this->assertStringContainsString('alt="SVG Icon"', $html);
@@ -231,7 +254,7 @@ class ImageHandlerTest extends TestCase
         $relativePath = '/CorianderCore/tests/_tmp/assets/photo.jpg';
         $this->createJpegImage($sourcePath);
 
-        $html = ImageHandler::render($relativePath, 'Photo');
+        $html = ImageHandler::render($relativePath, ['alt' => 'Photo']);
 
         $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/photo.jpg" type="image/jpeg"', $html);
         $this->assertStringNotContainsString('type="image/jpg"', $html);
@@ -283,7 +306,7 @@ class ImageHandlerTest extends TestCase
         imagepng($image, $imagePath);
         imagedestroy($image);
 
-        $html = ImageHandler::render('/public/assets/_tmp_image_handler/test_image.png', 'Test Image');
+        $html = ImageHandler::render('/public/assets/_tmp_image_handler/test_image.png', ['alt' => 'Test Image']);
 
         $this->assertStringContainsString(
             'srcset="/public/assets/_tmp_image_handler/webp/test_image_80.webp"',
