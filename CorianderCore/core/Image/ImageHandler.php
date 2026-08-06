@@ -37,20 +37,18 @@ class ImageHandler
      * Renders a picture tag with WebP and original format support.
      *
      * @param string $imagePath The path to the original image (relative to image directory).
-     * @param string $altText The alt attribute for the img tag.
-     * @param string $pictureClass Custom CSS classes for the picture tag.
-     * @param string $imgClass Custom CSS classes for the img tag.
-     * @param int $quality The quality for the WebP conversion (default: 80).
-     * @param array<string, bool|int|float|string|null> $attributes Optional img attributes. Use ['convert' => false] to skip WebP conversion.
+     * @param array<string, bool|int|float|string|null> $options Rendering options and optional img attributes.
      * @return string The generated HTML for the picture element.
      */
-    public static function render(string $imagePath, string $altText = '', string $pictureClass = '', string $imgClass = '', int $quality = 80, array $attributes = []): string
+    public static function render(string $imagePath, array $options = []): string
     {
         $normalizedPath = self::normalizeImagePath($imagePath);
         if ($normalizedPath === null) {
             self::getLogger()->warning('Rejected unsafe image path: ' . $imagePath);
             return '';
         }
+
+        $renderOptions = self::normalizeRenderOptions($options);
 
         $fullImagePath = self::resolveFullImagePath($normalizedPath);
         if ($fullImagePath === null) {
@@ -64,8 +62,8 @@ class ImageHandler
             return '';
         }
 
-        $shouldConvert = self::shouldConvert($attributes) && self::isConvertibleMimeType($mimeType);
-        $webpPath = $shouldConvert ? self::convertToWebP($normalizedPath, $quality) : false;
+        $shouldConvert = $renderOptions['convert'] && self::isConvertibleMimeType($mimeType);
+        $webpPath = $shouldConvert ? self::convertToWebP($normalizedPath, $renderOptions['quality']) : false;
 
         // Check if the original image exists to get dimensions; otherwise, set default dimensions
         $imageSize = @getimagesize($fullImagePath);
@@ -74,10 +72,10 @@ class ImageHandler
             [$width, $height] = $imageSize;
         }
 
-        $safePictureClass = self::escapeHtmlAttribute($pictureClass);
-        $safeImgClass = self::escapeHtmlAttribute($imgClass);
-        $safeAltText = self::escapeHtmlAttribute($altText);
-        $safeAttributes = self::renderImageAttributes($attributes);
+        $safePictureClass = self::escapeHtmlAttribute($renderOptions['pictureClass']);
+        $safeImgClass = self::escapeHtmlAttribute($renderOptions['imgClass']);
+        $safeAltText = self::escapeHtmlAttribute($renderOptions['alt']);
+        $safeAttributes = self::renderImageAttributes($options);
 
         $pictureHTML = "<picture class=\"{$safePictureClass}\">";
 
@@ -85,14 +83,14 @@ class ImageHandler
             $webpRelativePath = self::escapeHtmlAttribute(self::toPublicUrl($normalizedPath));
             $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
         } elseif ($webpPath) {
-            $webpRelativePath = self::escapeHtmlAttribute(self::getWebPRelativePath($normalizedPath, $quality));
+            $webpRelativePath = self::escapeHtmlAttribute(self::getWebPRelativePath($normalizedPath, $renderOptions['quality']));
             $pictureHTML .= "<source srcset=\"{$webpRelativePath}\" type=\"image/webp\" />";
         }
 
         $originalRelativePath = self::escapeHtmlAttribute(self::toPublicUrl($normalizedPath));
         $safeOriginalType = self::escapeHtmlAttribute($mimeType);
-        $safeWidth = $width !== '' ? (string) (int) $width : '';
-        $safeHeight = $height !== '' ? (string) (int) $height : '';
+        $safeWidth = self::normalizeDimension($renderOptions['width'] ?? $width);
+        $safeHeight = self::normalizeDimension($renderOptions['height'] ?? $height);
 
         if ($mimeType !== 'image/svg+xml' && $mimeType !== 'image/webp') {
             $pictureHTML .= "<source srcset=\"{$originalRelativePath}\" type=\"{$safeOriginalType}\" />";
@@ -179,14 +177,49 @@ class ImageHandler
         return $webpPath;
     }
 
-    private static function shouldConvert(array $attributes): bool
-    {
-        return ($attributes['convert'] ?? true) !== false;
-    }
-
     private static function isConvertibleMimeType(string $mimeType): bool
     {
         return in_array($mimeType, ['image/jpeg', 'image/png'], true);
+    }
+
+    /**
+     * @param array<string, bool|int|float|string|null> $options
+     * @return array{alt:string,pictureClass:string,imgClass:string,quality:int,convert:bool,width:mixed,height:mixed}
+     */
+    private static function normalizeRenderOptions(array $options): array
+    {
+        return [
+            'alt' => (string) ($options['alt'] ?? ''),
+            'pictureClass' => (string) ($options['pictureClass'] ?? ''),
+            'imgClass' => (string) ($options['imgClass'] ?? $options['class'] ?? ''),
+            'quality' => self::normalizeQuality($options['quality'] ?? 80),
+            'convert' => ($options['convert'] ?? true) !== false,
+            'width' => $options['width'] ?? null,
+            'height' => $options['height'] ?? null,
+        ];
+    }
+
+    private static function normalizeQuality(mixed $quality): int
+    {
+        if (!is_int($quality) && !is_float($quality) && !is_string($quality)) {
+            return 80;
+        }
+
+        return max(0, min(100, (int) $quality));
+    }
+
+    private static function normalizeDimension(mixed $dimension): string
+    {
+        if (!is_int($dimension) && !is_float($dimension) && !is_string($dimension)) {
+            return '';
+        }
+
+        $dimension = (int) $dimension;
+        if ($dimension <= 0) {
+            return '';
+        }
+
+        return (string) $dimension;
     }
 
     private static function getMimeType(string $imagePath, string $fullImagePath): ?string
@@ -216,7 +249,9 @@ class ImageHandler
      */
     private static function renderImageAttributes(array $attributes): string
     {
-        unset($attributes['convert']);
+        foreach (['alt', 'class', 'convert', 'height', 'imgClass', 'pictureClass', 'quality', 'width'] as $reservedOption) {
+            unset($attributes[$reservedOption]);
+        }
 
         $html = '';
         foreach ($attributes as $name => $value) {
