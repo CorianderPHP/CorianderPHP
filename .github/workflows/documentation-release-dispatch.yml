@@ -3,6 +3,20 @@ name: Documentation Release Dispatch
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag to send to the documentation repository, for example v0.2.3.1
+        required: true
+        type: string
+      release_url:
+        description: Optional release URL. Defaults to the GitHub release URL for the tag.
+        required: false
+        type: string
+      release_body:
+        description: Optional release notes body to send to the documentation repository.
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -17,25 +31,56 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate documentation dispatch token
+        shell: bash
+        env:
+          DOCUMENTATION_REPO_TOKEN: ${{ secrets.DOCUMENTATION_REPO_TOKEN }}
+        run: |
+          if [ -z "$DOCUMENTATION_REPO_TOKEN" ]; then
+            echo "::error::DOCUMENTATION_REPO_TOKEN is missing. Add it in repository secrets before dispatching documentation updates."
+            exit 1
+          fi
+
       - name: Build release documentation context
         id: release-context
         shell: bash
+        env:
+          CURRENT_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.version }}
+          RELEASE_URL: ${{ github.event_name == 'release' && github.event.release.html_url || inputs.release_url }}
         run: |
-          current_tag="${{ github.event.release.tag_name }}"
+          current_tag="$CURRENT_TAG"
+
+          if [ -z "$current_tag" ]; then
+            echo "::error::Release version is empty. Provide a version when manually running this workflow."
+            exit 1
+          fi
+
+          if ! git rev-parse --verify --quiet "$current_tag" >/dev/null; then
+            echo "::error::Release tag '$current_tag' was not found in this repository."
+            exit 1
+          fi
+
           release_commit="$(git rev-list -n 1 "$current_tag")"
           previous_tag="$(git describe --tags --abbrev=0 "${current_tag}^" 2>/dev/null || true)"
+          release_url="$RELEASE_URL"
+
+          if [ -z "$release_url" ]; then
+            release_url="https://github.com/CorianderPHP/CorianderPHP/releases/tag/${current_tag}"
+          fi
 
           if [ -n "$previous_tag" ]; then
             changed_files="$(git diff --name-only "$previous_tag" "$current_tag" | jq -R -s -c 'split("\n")[:-1]')"
             compare_url="https://github.com/CorianderPHP/CorianderPHP/compare/${previous_tag}...${current_tag}"
           else
             changed_files="$(git ls-tree -r --name-only "$current_tag" | jq -R -s -c 'split("\n")[:-1]')"
-            compare_url="${{ github.event.release.html_url }}"
+            compare_url="$release_url"
           fi
 
           {
+            echo "current_tag=$current_tag"
             echo "previous_tag=$previous_tag"
             echo "release_commit=$release_commit"
+            echo "release_url=$release_url"
             echo "compare_url=$compare_url"
             echo "changed_files=$changed_files"
           } >> "$GITHUB_OUTPUT"
@@ -48,9 +93,9 @@ jobs:
           event-type: framework-released
           client-payload: |
             {
-              "version": "${{ github.event.release.tag_name }}",
-              "release_url": "${{ github.event.release.html_url }}",
-              "release_body": ${{ toJson(github.event.release.body) }},
+              "version": "${{ steps.release-context.outputs.current_tag }}",
+              "release_url": "${{ steps.release-context.outputs.release_url }}",
+              "release_body": ${{ github.event_name == 'release' && toJson(github.event.release.body) || toJson(inputs.release_body) }},
               "previous_version": "${{ steps.release-context.outputs.previous_tag }}",
               "release_commit": "${{ steps.release-context.outputs.release_commit }}",
               "compare_url": "${{ steps.release-context.outputs.compare_url }}",

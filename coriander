@@ -35,7 +35,7 @@ $argv = $_SERVER['argv'];
 /**
  * @var string $command The command to be executed, e.g., 'make:controller'.
  */
-$command = $argv[1] ?? 'help';
+$command = $argv[1] ?? '';
 
 /**
  * @var array $args Array of additional arguments passed to the command.
