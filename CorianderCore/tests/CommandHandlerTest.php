@@ -44,23 +44,63 @@ class CommandHandlerTest extends TestCase
         $this->assertStringContainsString(", how can I help you?", $output);
     }
 
-    /**
-     * Test that the 'help' command lists all available commands.
-     * This test ensures that when the 'help' command is executed,
-     * it outputs the list of available commands, including 'hello' and 'help.'
-     */
-    public function testListCommands()
+    public function testEmptyCommandOutputsShortOverview()
     {
-        // Start output buffering to capture the output of the 'help' command
+        ob_start();
+        $exitCode = $this->commandHandler->handle('', []);
+        $output = ob_get_clean();
+
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
+        $this->assertStringContainsString('CorianderPHP CLI', $output);
+        $this->assertStringContainsString('Common commands:', $output);
+        $this->assertStringContainsString('Run php coriander help for detailed usage.', $output);
+    }
+
+    public function testHelpCommandOutputsDetailedUsage()
+    {
         ob_start();
         $exitCode = $this->commandHandler->handle('help', []);
         $output = ob_get_clean();
 
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
-        // Assert that the output contains the expected command list
-        $this->assertStringContainsString('Available commands:', $output);
-        $this->assertStringContainsString('hello', $output);
-        $this->assertStringContainsString('help', $output);
+        $this->assertStringContainsString('CorianderPHP CLI Help', $output);
+        $this->assertStringContainsString('Commands:', $output);
+        $this->assertStringContainsString('Show CLI help.', $output);
+        $this->assertStringContainsString('Generate project files', $output);
+        $this->assertStringContainsString('php coriander nodejs run build-prod', $output);
+    }
+
+    public function testFocusedHelpOutputsCommandUsage(): void
+    {
+        ob_start();
+        $exitCode = $this->commandHandler->handle('help', ['make']);
+        $output = ob_get_clean();
+
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
+        $this->assertStringContainsString('make', $output);
+        $this->assertStringContainsString('php coriander make:controller <name> [api]', $output);
+        $this->assertStringContainsString('php coriander make:route admin/users', $output);
+    }
+
+    public function testHelpFlagsOutputDetailedUsage(): void
+    {
+        ob_start();
+        $exitCode = $this->commandHandler->handle('--help', []);
+        $output = ob_get_clean();
+
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
+        $this->assertStringContainsString('CorianderPHP CLI Help', $output);
+    }
+
+    public function testCommandHelpFlagOutputsFocusedUsage(): void
+    {
+        ob_start();
+        $exitCode = $this->commandHandler->handle('nodejs', ['--help']);
+        $output = ob_get_clean();
+
+        $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
+        $this->assertStringContainsString('nodejs', $output);
+        $this->assertStringContainsString('php coriander nodejs install', $output);
     }
 
     /**
@@ -78,7 +118,7 @@ class CommandHandlerTest extends TestCase
         $this->assertSame(CommandExitCode::UNKNOWN_COMMAND, $exitCode);
         // Assert that the output contains the expected error message and command list
         $this->assertStringContainsString('Unknown command: invalidCommand', $output);
-        $this->assertStringContainsString('Available commands:', $output);
+        $this->assertStringContainsString('Common commands:', $output);
     }
 
     public function testCommandReturnCodeIsPropagated(): void

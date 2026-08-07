@@ -10,8 +10,15 @@ Invoke commands from the project root:
 php coriander <command> [arguments]
 ```
 
+Use `php coriander` for a short command overview. Use `php coriander help` for
+detailed command descriptions and examples.
+
 Examples:
 
+- `php coriander`
+- `php coriander help`
+- `php coriander help make`
+- `php coriander nodejs --help`
 - `php coriander make:view Home`
 - `php coriander make:route admin`
 - `php coriander make:migration CreateUsersTable`
@@ -23,6 +30,25 @@ Examples:
 - `php coriander update --dry-run`
 
 ## Command Reference
+
+### `help`
+
+Show CLI usage, command descriptions, and examples.
+
+```bash
+php coriander help
+php coriander help make
+php coriander help nodejs
+```
+
+Help flags are also supported:
+
+```bash
+php coriander --help
+php coriander -h
+php coriander make --help
+php coriander nodejs --help
+```
 
 ### `version`
 
