@@ -163,3 +163,9 @@ We welcome contributions. Please submit pull requests or report issues on GitHub
 This project is licensed under the MIT License.
 
 
+
+## 0.3.0 file routes
+
+Create `src/Routes/users/[id].get.php` returning a callable that accepts a PSR request and returns a PSR response. Discovery is automatic. Use `Responses::html/json/view/redirect` from `CorianderCore\Core\Http`. Views live in `src/Views`, with inherited `_header.php`/`_footer.php` pairs. Directory `_middleware.php` files return PSR-15 middleware arrays. Application classes use the `App\` namespace under `src`.
+
+Optional generators: `php coriander make:route "users/[id].post"` and `php coriander make:view admin/profile`. Serve the starter using `php -S localhost:8000 -t public public/index.php`. Set `APP_ENV=production` for automatic caching. See [routing](docs/routing.md), [views](docs/views.md), [middleware](docs/middleware.md) and [route caching](docs/route-cache.md).

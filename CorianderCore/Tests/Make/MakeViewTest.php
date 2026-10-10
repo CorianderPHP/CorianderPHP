@@ -74,6 +74,8 @@ class MakeViewTest extends TestCase
         $this->makeView->execute([$viewName]);
 
         // Expect the output to indicate successful creation of the view
+        $this->assertFileExists(self::$testPath . 'newview.php');
+        $this->assertFileDoesNotExist(self::$testPath . 'newview/metadata.php');
         $this->expectOutputRegex("/Success/");
         $this->expectOutputRegex("/View 'newview' created successfully at/");
     }

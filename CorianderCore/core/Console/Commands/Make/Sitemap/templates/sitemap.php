@@ -1,26 +1,11 @@
 <?php
 declare(strict_types=1);
-
-// Set the path to the sitemap.xml file
-$sitemapPath = PROJECT_ROOT . '/public/sitemap.xml';
-
-// Check if the sitemap.xml file exists and if it was generated today
-if (!file_exists($sitemapPath) || date('Y-m-d', filemtime($sitemapPath)) !== date('Y-m-d')) {
-    // Initialize the SitemapHandler
-    $sitemapHandler = new \CorianderCore\Core\Sitemap\SitemapHandler();
-
-    // Fetch and add static pages to the sitemap
-    $sitemapHandler->fetchStaticPages();
-
-    // Add dynamic pages to the sitemap (Example)
-    // $sitemapHandler->addDynamicPage(PROJECT_URL . '/blog/post-1', 0.8, '2024-05-01');
-    // $sitemapHandler->addDynamicPage(PROJECT_URL . '/blog/post-1/more-informations', 0.6, '2024-06-15');
-
-    // Generate the sitemap (both static and dynamic pages)
-    $sitemapHandler->generateSitemap();
-}
-
-// Set the content type to XML
-header('Content-Type: application/xml');
-// Output the sitemap.xml file
-readfile($sitemapPath);
+use CorianderCore\Core\Sitemap\SitemapHandler;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ServerRequestInterface;
+return static function (ServerRequestInterface $request): Response {
+    $sitemap = new SitemapHandler();
+    $sitemap->addDynamicPage(rtrim(PROJECT_URL, '/') . '/', 0.8);
+    // Add other public URLs explicitly; never list protected routes automatically.
+    return new Response(200, ['Content-Type' => 'application/xml; charset=utf-8'], $sitemap->toXml());
+};

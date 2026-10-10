@@ -31,7 +31,7 @@ class MakeSitemap
      * 
      * @param string $sitemapFilePath The path where the sitemap will be generated (default: PROJECT_ROOT . '/public/sitemap.php').
      */
-    public function __construct(string $sitemapFilePath = PROJECT_ROOT . '/public/sitemap.php')
+    public function __construct(string $sitemapFilePath = PROJECT_ROOT . '/src/Routes/sitemap.xml.get.php')
     {
         $this->sitemapFilePath = $sitemapFilePath;
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Sitemap/templates';
@@ -55,6 +55,9 @@ class MakeSitemap
             }
 
             // Create the sitemap file from the template.
+            if (!is_dir(dirname($this->sitemapFilePath))) {
+                mkdir(dirname($this->sitemapFilePath), 0755, true);
+            }
             $this->createFileFromTemplate('sitemap.php', $this->sitemapFilePath);
 
             // Success message after sitemap creation.

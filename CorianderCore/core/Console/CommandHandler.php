@@ -56,7 +56,7 @@ class CommandHandler
             'usage' => [
                 'php coriander make:view <name>',
                 'php coriander make:controller <name> [api]',
-                'php coriander make:route <name>',
+                'php coriander make:route <path>[.<method>]',
                 'php coriander make:migration <name>',
                 'php coriander make:database',
                 'php coriander make:sitemap',
@@ -65,7 +65,7 @@ class CommandHandler
                 'php coriander make:view Home',
                 'php coriander make:controller Dashboard',
                 'php coriander make:controller Users api',
-                'php coriander make:route admin/users',
+                'php coriander make:route "users/[id].post"',
                 'php coriander make:migration CreateUsersTable',
             ],
         ],

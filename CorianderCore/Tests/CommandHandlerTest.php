@@ -79,7 +79,7 @@ class CommandHandlerTest extends TestCase
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
         $this->assertStringContainsString('make', $output);
         $this->assertStringContainsString('php coriander make:controller <name> [api]', $output);
-        $this->assertStringContainsString('php coriander make:route admin/users', $output);
+        $this->assertStringContainsString('php coriander make:route "users/[id].post"', $output);
     }
 
     public function testHelpFlagsOutputDetailedUsage(): void

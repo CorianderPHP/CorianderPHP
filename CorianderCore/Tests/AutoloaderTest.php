@@ -30,6 +30,7 @@ class AutoloaderTest extends TestCase
 
     public function testCanLoadAppOwnedMiddlewareAndModules(): void
     {
+        $this->assertTrue(class_exists('App\\Middleware\\NotFoundMiddleware'));
         $middlewareDir = PROJECT_ROOT . '/src/Middleware';
         $moduleDir = PROJECT_ROOT . '/src/Modules/CorianderAutoloadTest';
 

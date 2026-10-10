@@ -6,7 +6,7 @@ namespace CorianderCore\Core\Console\Commands\Benchmark;
 use CorianderCore\Core\Benchmark\BenchmarkHandler;
 use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
-use CorianderCore\Core\Router\Router;
+use CorianderCore\Core\Router\FileRouteDispatcher;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
@@ -20,21 +20,16 @@ class BenchmarkRouter
             ConsoleOutput::print('Iterations must be a positive integer.');
             return CommandExitCode::INVALID_USAGE;
         }
-        $router = new Router();
-        $notFound = static fn() => new Response(404, [], '404 Not Found');
-        $routesFile = PROJECT_ROOT . '/public/routes.php';
-        if (is_file($routesFile)) {
-            require $routesFile;
-        }
+        $router = new FileRouteDispatcher();
         $request = new ServerRequest('GET', '/' . ltrim($route, '/'));
-        $expected = $router->dispatch($request);
+        $expected = $router->handle($request);
         if ($expected->getStatusCode() >= 400) {
             ConsoleOutput::print("Route '{$route}' returned HTTP " . $expected->getStatusCode() . '; benchmark refused.');
             return CommandExitCode::INVALID_USAGE;
         }
         $body = (string) $expected->getBody();
         $operation = static function () use ($router, $request, $expected, $body): void {
-            $response = $router->dispatch($request);
+            $response = $router->handle($request);
             if ($response->getStatusCode() !== $expected->getStatusCode() || (string) $response->getBody() !== $body) {
                 throw new \RuntimeException('Route response changed during the benchmark. Use a deterministic fixture.');
             }
