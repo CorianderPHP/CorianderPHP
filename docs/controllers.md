@@ -26,6 +26,31 @@ public function show($id): void
 }
 ```
 
+## Automatic Action Methods
+
+Automatic web-controller actions enforce HTTP methods and return 405 with an
+`Allow` header when the method is unsupported. Defaults are GET/HEAD for read
+actions, POST for `store`, POST/PUT/PATCH for `update`, and POST/DELETE for
+`delete` or `destroy`. Action names are case-insensitive. POST requests without
+an explicit action still select `store` when it exists.
+
+Declare custom methods with a PHP attribute:
+
+```php
+use CorianderCore\Core\Router\HttpMethods;
+
+#[HttpMethods('POST')]
+public function resetPassword(): void
+{
+    // CSRF middleware validates this mutating web request before dispatch.
+}
+```
+
+Compatibility: actions that previously accepted arbitrary verbs must declare
+them with `HttpMethods` or use explicit router callbacks. Annotate every custom
+mutating action; GET and HEAD must never change application state. GET declarations
+also allow HEAD. API controller verb naming remains unchanged.
+
 ## Best Practices
 
 - Keep actions small and delegate business logic to separate classes.
