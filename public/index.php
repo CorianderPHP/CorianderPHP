@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
 
 use CorianderCore\Core\Bootstrap\{SessionBootstrap, TimezoneBootstrap};
-use CorianderCore\Core\Http\{BadRequestException, RequestFactory, ResponseEmitter, Responses, TrustedProxy};
+use CorianderCore\Core\Http\{BadRequestException, PayloadTooLargeException, RequestFactory, ResponseEmitter, Responses, TrustedProxy};
 use CorianderCore\Core\Logging\Logger;
 use CorianderCore\Core\Router\Router;
 
@@ -28,6 +28,8 @@ try {
     TimezoneBootstrap::applyFromEnvironment(is_string($timezone) ? $timezone : null);
     $request = RequestFactory::fromGlobals();
     $response = (new Router())->handle($request);
+} catch (PayloadTooLargeException $exception) {
+    $response = Responses::html('Payload Too Large', 413);
 } catch (BadRequestException $exception) {
     $response = Responses::html('Bad Request', 400);
 } catch (Throwable $exception) {

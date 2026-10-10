@@ -58,6 +58,8 @@ Creating route and view files manually works the same way. `php coriander update
 
 ## Validation
 
+Request bodies are limited by `API_MAX_BODY_BYTES` before parsing; oversized requests return 413. See the [stabilization roadmap](docs/0.3.0-stabilization.md) for the remaining 0.3.0 work.
+
 ```bash
 vendor/bin/phpunit --testdox
 ```

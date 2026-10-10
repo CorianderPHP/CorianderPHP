@@ -8,6 +8,38 @@ use PHPUnit\Framework\TestCase;
 
 class RequestFactoryTest extends TestCase
 {
+    public function testBodyLimitAcceptsBoundaryAndRejectsActualOverflowBeforeJsonParsing(): void
+    {
+        $request = RequestFactory::fromGlobals([], [], [], '1234', [], [], maxBodyBytes: 4);
+        self::assertSame('1234', (string) $request->getBody());
+        $this->expectException(\CorianderCore\Core\Http\PayloadTooLargeException::class);
+        RequestFactory::fromGlobals(['REQUEST_METHOD' => 'POST'], [], ['Content-Type' => 'application/json', 'Content-Length' => '1'], '{{{{{', [], [], maxBodyBytes: 4);
+    }
+
+    public function testDeclaredOverflowIsRejectedBeforeReadingStream(): void
+    {
+        $stream = \Nyholm\Psr7\Stream::create('body');
+        try {
+            RequestFactory::fromGlobals([], [], ['CONTENT-LENGTH' => '5'], $stream, [], [], maxBodyBytes: 4);
+            self::fail('Oversized declared body accepted');
+        } catch (\CorianderCore\Core\Http\PayloadTooLargeException) {
+            self::assertSame(0, $stream->tell());
+        }
+    }
+
+    public function testBodyWithoutDeclaredLengthReadsOnlyLimitPlusOneBytes(): void
+    {
+        $stream = \Nyholm\Psr7\Stream::create(str_repeat('x', 100));
+        try {
+            RequestFactory::fromGlobals([], [], [], $stream, [], [], maxBodyBytes: 4);
+            self::fail('Oversized stream accepted');
+        } catch (\CorianderCore\Core\Http\PayloadTooLargeException) {
+            self::assertSame(5, $stream->tell());
+        }
+        $request = RequestFactory::fromGlobals([], [], [], \Nyholm\Psr7\Stream::create('1234'), [], [], maxBodyBytes: 4);
+        self::assertSame('1234', (string) $request->getBody());
+    }
+
     public function testKeepsQueryBodyCookiesAndUploadedFilesSeparate(): void
     {
         $file = PROJECT_ROOT . '/CorianderCore/Tests/_tmp_upload.txt';
