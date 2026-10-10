@@ -10,7 +10,7 @@ class RouteMap
     {
         $groups = [];
         if (!is_dir($directory)) {
-            return ['static' => [], 'dynamic' => []];
+            return ['static' => [], 'dynamic' => [], 'middleware' => []];
         }
         $root = rtrim(str_replace('\\', '/', realpath($directory)), '/');
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS));
@@ -77,7 +77,7 @@ class RouteMap
                 'params' => $params, 'specificity' => $specificity, 'methods' => []];
             $groups[$key]['methods'][$method] = ['file' => $relative, 'directories' => $directories, 'middleware' => $knownMiddleware];
         }
-        $map = ['static' => [], 'dynamic' => []];
+        $map = ['static' => [], 'dynamic' => [], 'middleware' => is_file($root . '/_middleware.php') ? ['_middleware.php'] : []];
         foreach ($groups as $route) {
             if ($route['params'] === []) {
                 $map['static'][$route['path']] = $route;
