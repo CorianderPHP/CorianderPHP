@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Tests;
 
-use CorianderCore\Core\Router\{FileRouteDispatcher, RouteCache, RouteMap};
+use CorianderCore\Core\Router\{Router, RouteCache, RouteMap};
 use Nyholm\Psr7\ServerRequest;
 
 class RouteCacheTest extends RouteFixtureTestCase
@@ -59,7 +59,7 @@ class RouteCacheTest extends RouteFixtureTestCase
     {
         $this->response('admin/index.get.php');
         $cache = new RouteCache($this->directory, $this->directory . '/map.php', true);
-        $router = new FileRouteDispatcher($this->directory, $cache);
+        $router = new Router($this->directory, $cache);
         self::assertSame(200, $router->handle(new ServerRequest('GET', '/admin'))->getStatusCode());
         $this->put('admin/_middleware.php', 'return [new \\CorianderCore\\Tests\\FixtureMiddleware("auth", true)];');
         self::assertSame(403, $router->handle(new ServerRequest('GET', '/admin'))->getStatusCode());
@@ -77,7 +77,7 @@ class RouteCacheTest extends RouteFixtureTestCase
         $cache->get();
         unlink($this->directory . '/index.get.php');
         $this->expectExceptionMessage('Required application file is missing');
-        (new FileRouteDispatcher($this->directory, $cache))->handle(new ServerRequest('GET', '/'));
+        (new Router($this->directory, $cache))->handle(new ServerRequest('GET', '/'));
     }
 
     public function testInvalidRoutesDoNotReplaceTheLastCompleteMap(): void

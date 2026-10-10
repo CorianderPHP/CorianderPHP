@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace CorianderCore\Tests;
 
-use CorianderCore\Core\Router\FileRouteDispatcher;
+use CorianderCore\Core\Router\Router;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 
@@ -10,7 +10,7 @@ class StarterTest extends TestCase
 {
     public function testHomepageErrorAndSitemapUseNewWorkflow(): void
     {
-        $router = new FileRouteDispatcher();
+        $router = new Router();
         $home = $router->handle(new ServerRequest('GET', '/'));
         self::assertSame(200, $home->getStatusCode());
         self::assertStringContainsString('Welcome to CorianderPHP', (string) $home->getBody());

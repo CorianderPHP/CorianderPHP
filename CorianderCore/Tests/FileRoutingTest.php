@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Tests;
 
-use CorianderCore\Core\Router\FileRouteDispatcher;
+use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Router\RouteMap;
 use CorianderCore\Core\Http\ResponseEmitter;
 use CorianderCore\Core\Support\OutputBuffer;
@@ -15,7 +15,7 @@ class FileRoutingTest extends RouteFixtureTestCase
     {
         $this->response('index.get.php', 'root');
         $this->put('teams/[teamId]/users/[id].get.php', 'return static fn($r) => new \\Nyholm\\Psr7\\Response(200, [], $r->getAttribute("teamId") . ":" . $r->getAttribute("id"));');
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         self::assertSame('root', (string) $router->handle(new ServerRequest('GET', '/'))->getBody());
         self::assertSame('7:Alice Smith', (string) $router->handle(new ServerRequest('GET', '/teams/7/users/Alice%20Smith/'))->getBody());
         self::assertSame('7:%2F', (string) $router->handle(new ServerRequest('GET', '/teams/7/users/%252F'))->getBody());
@@ -25,7 +25,7 @@ class FileRoutingTest extends RouteFixtureTestCase
     {
         $this->response('users/[id].get.php', 'dynamic');
         $this->response('users/new.post.php', 'static');
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         $response = $router->handle(new ServerRequest('GET', '/users/new'));
         self::assertSame(405, $response->getStatusCode());
         self::assertSame('POST', $response->getHeaderLine('Allow'));
@@ -36,7 +36,7 @@ class FileRoutingTest extends RouteFixtureTestCase
     public function testHeadOverrideFallbackAndEmitter(): void
     {
         $this->response('index.get.php', 'body', 202);
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         $response = $router->handle(new ServerRequest('HEAD', '/'));
         self::assertSame(202, $response->getStatusCode());
         [, $output] = OutputBuffer::capture(fn() => ResponseEmitter::emit($response, 'HEAD'));
@@ -53,7 +53,7 @@ class FileRoutingTest extends RouteFixtureTestCase
         $this->put('index.get.php', 'throw new \\RuntimeException("must not load");');
         $map = (new RouteMap())->discover($this->directory);
         self::assertCount(1, $map['static']);
-        self::assertSame(404, (new FileRouteDispatcher($this->directory))->handle(new ServerRequest('GET', '/missing'))->getStatusCode());
+        self::assertSame(404, (new Router($this->directory))->handle(new ServerRequest('GET', '/missing'))->getStatusCode());
     }
 
     public function testAmbiguousParameterNamesAndDuplicateIndexAreRejected(): void
@@ -77,7 +77,7 @@ class FileRoutingTest extends RouteFixtureTestCase
     {
         $this->response('users/[id].get.php');
         $this->put('_header.php', 'throw new \\RuntimeException("not a handler");');
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         foreach (['/users/%2F', '/users/%5C', '/users/%00', '/users/%2E%2E', '/users//42'] as $path) {
             self::assertSame(400, $router->handle(new ServerRequest('GET', $path))->getStatusCode(), $path);
         }
@@ -90,7 +90,7 @@ class FileRoutingTest extends RouteFixtureTestCase
         $this->put('index.get.php', 'return static function () { echo "leak"; throw new \\RuntimeException("failure"); };');
         $level = ob_get_level();
         try {
-            (new FileRouteDispatcher($this->directory))->handle(new ServerRequest('GET', '/'));
+            (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
             self::fail('Expected handler failure');
         } catch (\RuntimeException $e) {
             self::assertSame('failure', $e->getMessage());
@@ -98,6 +98,6 @@ class FileRoutingTest extends RouteFixtureTestCase
         }
         $this->put('index.get.php', 'return static fn() => "invalid";');
         $this->expectException(\UnexpectedValueException::class);
-        (new FileRouteDispatcher($this->directory))->handle(new ServerRequest('GET', '/'));
+        (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
     }
 }

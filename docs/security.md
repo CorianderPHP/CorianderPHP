@@ -20,18 +20,9 @@ execution only through the front controller.
 
 ## Routing and View Path Safety
 
-- The default router exposes registered routes only. Automatic web/API controllers
-  and views require explicit opt-in through `new Router(automaticRouting: true)`.
-- When opting in, enforce authorization globally or within controller actions;
-  protecting one explicit route does not protect automatically discovered aliases.
+Routes are discovered under `src/Routes` by default. Protect directories using inherited `_middleware.php` files. Static paths cannot fall through to dynamic handlers on method mismatches. Discovery never executes handlers. Cached missing handlers or middleware fail closed.
 
-- View rendering accepts only normalized relative paths under `public/public_views`.
-- Rejected inputs include:
-  - dot segments (`.` and `..`)
-  - absolute paths
-  - null bytes
-  - Windows drive-prefixed paths
-- Shared templates (`header.php`, `footer.php`) use an internally normalized view key, not raw request path input.
+Views live under `src/Views` and never create public routes. Only normalized relative template paths are accepted; dot segments, absolute paths, NUL and escaping symlinks are rejected. Header/footer pairs are resolved from the view ancestry, independently of route ancestry.
 
 ## CSRF Protection
 
@@ -67,7 +58,7 @@ Custom header policy:
 Example:
 
 ```php
-$router->addMiddleware(new SecurityHeadersMiddleware([
+return [new SecurityHeadersMiddleware([
     'Content-Security-Policy' => "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.discordapp.com/ https://files.stripe.com/; font-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
     'X-Content-Type-Options' => 'nosniff',
     'X-Frame-Options' => 'DENY',
@@ -75,14 +66,14 @@ $router->addMiddleware(new SecurityHeadersMiddleware([
     'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
     'Cross-Origin-Opener-Policy' => 'same-origin',
     'Cross-Origin-Resource-Policy' => 'same-origin',
-]));
+])];
 ```
 
 To disable the middleware headers, pass `enabled: false` when registering it.
 
 ## API Request Limits
 
-`ApiRequestLimitsMiddleware` is enabled by default for `/api/*` endpoints.
+`ApiRequestLimitsMiddleware` is enabled for all starter routes through `apiPrefixes: []`. A prefix list can explicitly scope it.
 
 - Rejects payloads above `API_MAX_BODY_BYTES` (default: `1048576` bytes).
 - Applies request execution/input timeout via `API_TIMEOUT_SECONDS` (default: `15`).

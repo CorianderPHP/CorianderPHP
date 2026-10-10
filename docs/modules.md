@@ -18,7 +18,7 @@ Then create `src/Modules/ImageDataExtractor/Extractor.php`:
 <?php
 declare(strict_types=1);
 
-namespace Modules\ImageDataExtractor;
+namespace App\Modules\ImageDataExtractor;
 
 final class Extractor
 {
@@ -29,15 +29,15 @@ final class Extractor
 }
 ```
 
-Use it from controllers, route files, or middleware:
+Use it from route handlers or middleware:
 
 ```php
-use Modules\ImageDataExtractor\Extractor;
+use App\Modules\ImageDataExtractor\Extractor;
 
 $metadata = (new Extractor())->extract($path);
 ```
 
-The framework autoloader maps `Modules\` to `src/Modules/`.
+The framework autoloader maps `App\` to `src/`.
 
 ## Framework Modules
 

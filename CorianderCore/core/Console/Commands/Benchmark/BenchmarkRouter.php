@@ -6,7 +6,7 @@ namespace CorianderCore\Core\Console\Commands\Benchmark;
 use CorianderCore\Core\Benchmark\BenchmarkHandler;
 use CorianderCore\Core\Console\CommandExitCode;
 use CorianderCore\Core\Console\ConsoleOutput;
-use CorianderCore\Core\Router\FileRouteDispatcher;
+use CorianderCore\Core\Router\Router;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 
@@ -20,7 +20,7 @@ class BenchmarkRouter
             ConsoleOutput::print('Iterations must be a positive integer.');
             return CommandExitCode::INVALID_USAGE;
         }
-        $router = new FileRouteDispatcher();
+        $router = new Router();
         $request = new ServerRequest('GET', '/' . ltrim($route, '/'));
         $expected = $router->handle($request);
         if ($expected->getStatusCode() >= 400) {

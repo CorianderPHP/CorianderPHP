@@ -1,30 +1,5 @@
-# Cache Command Guide
+# Cache
 
-The `cache` command speeds up routing by precomputing controller file paths stored in `cache/controllers.php`.
+Route maps refresh automatically on incoming requests when `APP_ENV=production`. Development discovers files every request. See [route caching](route-cache.md) for locking, freshness and deployment behavior.
 
-## Usage
-
-Build the controller cache:
-
-```bash
-php coriander cache controllers
-```
-
-Generate every available cache:
-
-```bash
-php coriander cache all
-```
-
-Clear existing caches:
-
-```bash
-php coriander cache clear
-```
-
-## Best Practices
-
-- Regenerate the controller cache after adding or renaming controllers.
-- Do not commit generated cache files to version control.
-- Use `cache clear` before deploying to ensure caches rebuild on the target environment.
-
+`php coriander cache clear` is an optional diagnostic command. The next request rebuilds automatically. Controller caches and the `controllers`/`all` build commands were removed in 0.3.0.

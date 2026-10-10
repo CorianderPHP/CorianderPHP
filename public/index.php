@@ -7,7 +7,7 @@ require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
 use CorianderCore\Core\Bootstrap\{SessionBootstrap, TimezoneBootstrap};
 use CorianderCore\Core\Http\{BadRequestException, RequestFactory, ResponseEmitter, Responses, TrustedProxy};
 use CorianderCore\Core\Logging\Logger;
-use CorianderCore\Core\Router\FileRouteDispatcher;
+use CorianderCore\Core\Router\Router;
 
 // PHP's development server passes existing asset requests to its router script.
 if (PHP_SAPI === 'cli-server') {
@@ -27,7 +27,7 @@ try {
     $timezone = getenv('APP_TIMEZONE');
     TimezoneBootstrap::applyFromEnvironment(is_string($timezone) ? $timezone : null);
     $request = RequestFactory::fromGlobals();
-    $response = (new FileRouteDispatcher())->handle($request);
+    $response = (new Router())->handle($request);
 } catch (BadRequestException $exception) {
     $response = Responses::html('Bad Request', 400);
 } catch (Throwable $exception) {
