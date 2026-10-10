@@ -66,7 +66,7 @@ class Csrf
     public static function validateRequest(): bool
     {
         $token = $_POST['csrf_token'] ?? null;
-        return self::validate($token);
+        return self::validate(is_string($token) ? $token : null);
     }
 
 }

@@ -30,6 +30,7 @@ class AutoloaderTest extends TestCase
 
     public function testCanLoadAppOwnedMiddlewareAndModules(): void
     {
+        $this->assertTrue(class_exists('App\\Middleware\\NotFoundMiddleware'));
         $middlewareDir = PROJECT_ROOT . '/src/Middleware';
         $moduleDir = PROJECT_ROOT . '/src/Modules/CorianderAutoloadTest';
 
@@ -43,12 +44,12 @@ class AutoloaderTest extends TestCase
         $middlewareFile = $middlewareDir . '/CorianderAutoloadTestMiddleware.php';
         $moduleFile = $moduleDir . '/Service.php';
 
-        file_put_contents($middlewareFile, "<?php\nnamespace Middleware;\nfinal class CorianderAutoloadTestMiddleware {}\n");
-        file_put_contents($moduleFile, "<?php\nnamespace Modules\\CorianderAutoloadTest;\nfinal class Service {}\n");
+        file_put_contents($middlewareFile, "<?php\nnamespace App\\Middleware;\nfinal class CorianderAutoloadTestMiddleware {}\n");
+        file_put_contents($moduleFile, "<?php\nnamespace App\\Modules\\CorianderAutoloadTest;\nfinal class Service {}\n");
 
         try {
-            $this->assertTrue(class_exists('Middleware\\CorianderAutoloadTestMiddleware'));
-            $this->assertTrue(class_exists('Modules\\CorianderAutoloadTest\\Service'));
+            $this->assertTrue(class_exists('App\\Middleware\\CorianderAutoloadTestMiddleware'));
+            $this->assertTrue(class_exists('App\\Modules\\CorianderAutoloadTest\\Service'));
         } finally {
             @unlink($middlewareFile);
             @unlink($moduleFile);

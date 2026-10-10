@@ -5,7 +5,7 @@
  * Coriander CLI Entry Point
  * 
  * This script is the main entry for the CorianderPHP framework's CLI. It processes
- * commands and their arguments to perform various tasks, like creating controllers
+ * commands and their arguments to perform various tasks, like creating route files
  * or running migrations.
  * 
  * Usage:
@@ -33,7 +33,7 @@ use CorianderCore\Core\Console\ConsoleOutput;
 $argv = $_SERVER['argv'];
 
 /**
- * @var string $command The command to be executed, e.g., 'make:controller'.
+ * @var string $command The command to be executed, e.g., 'make:route'.
  */
 $command = $argv[1] ?? '';
 

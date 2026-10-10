@@ -23,7 +23,7 @@ Examples:
 - `php coriander make:route admin`
 - `php coriander make:migration CreateUsersTable`
 - `php coriander migrate:status`
-- `php coriander cache controllers`
+- `php coriander cache clear`
 - `php coriander nodejs run build-ts`
 - `php coriander nodejs run build-prod`
 - `php coriander version`
@@ -123,14 +123,7 @@ php coriander make:migration CreateUsersTable
 
 ### `make:route`
 
-Create an app-owned route file under `src/Routes`.
-
-```bash
-php coriander make:route admin
-php coriander make:route admin/users
-```
-
-Use this when `public/routes.php` becomes too large for a single small-project route list. The generated file returns a closure that receives the router and can be included from `public/routes.php`.
+Generate a method handler such as `src/Routes/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required. `make:view admin/profile` creates `src/Views/admin/profile.php`. Both generators are optional.
 
 ### `migrate`
 
@@ -180,6 +173,6 @@ Flags:
 
 - Run the CLI from the project root so generated files resolve to correct paths.
 - Inspect output carefully; many commands provide hints for missing dependencies or misconfigurations.
-- Rebuild caches (`php coriander cache controllers`) after adding controllers or clearing the `cache/` directory.
+Route maps rebuild automatically; cache clear is optional. Controllers and manual registration were removed in 0.3.0.
 - Use `php coriander update --dry-run` before production updates.
 - In shared/production environments, do not edit applied migration files.

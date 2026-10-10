@@ -1,173 +1,29 @@
-# Routing Module Guide
+# File routing
 
-CorianderPHP's routing system maps incoming HTTP requests to registered callbacks,
-controllers, or views. Only explicitly registered routes are exposed by default.
-This prevents controller aliases and view fallback from bypassing route middleware.
+Routes are discovered automatically under `src/Routes`. A route file returns a callable accepting `ServerRequestInterface` and returning `ResponseInterface`. Use `CorianderCore\Core\Http\Responses` for HTML, JSON, view and redirect helpers. Printed output and other return types are errors.
 
-Register controller actions explicitly in `public/routes.php` or `src/Routes`:
+| File | Request |
+| --- | --- |
+| `index.get.php` | `GET /` |
+| `users/[id].get.php` | `GET /users/42` |
+| `users/[id].post.php` | `POST /users/42` |
+| `teams/[team]/users/[id].patch.php` | `PATCH /teams/5/users/42` |
+| `admin/index.get.php` | `GET /admin` |
 
-```php
-$router->get('account', fn() => (new \Controllers\AccountController())->index(), [$auth]);
-$router->post('account', fn() => (new \Controllers\AccountController())->store(), [$auth]);
-```
+Access parameters through `$request->getAttribute('id')`. Read query values through `getQueryParams()` and form/JSON input through `getParsedBody()`. All supported suffixes are lowercase: get, post, put, patch, delete, head and options.
 
-Compatibility: existing applications relying on automatic controllers or views
-must register their routes, including the homepage, or explicitly construct
-`new Router(automaticRouting: true)` in their front controller. This enables
-legacy web/API controller and view discovery. In that mode, route middleware
-does not protect aliases: apply authorization globally or inside every action.
-The updated starter `public/routes.php` registers the homepage explicitly.
-The updater does not manage this application-owned file; update it manually.
+Static segments take precedence before method selection. With `users/new.get.php` and `users/[id].post.php`, `POST /users/new` returns 405 rather than invoking the dynamic handler. Duplicate routes, repeated parameter names and structurally identical routes with different parameter names are definition errors. Across dynamic patterns, static segments nearer the root take precedence.
 
-Custom route definitions start in `public/routes.php`. For small projects such as SPAs, marketing websites, brochure websites, and simple landing pages, keeping routes in this single file is usually the clearest option.
+GET supplies a HEAD fallback. An explicit `.head.php` wins. The emitter suppresses bodies for every HEAD response, including errors and redirects. Missing paths return 404; unsupported methods return 405 with `Allow`. OPTIONS is explicit rather than automatically generated. Paths are case-sensitive; trailing slashes are accepted. URL segments decode once. Dot segments, encoded separators, backslashes, NUL and double slashes are rejected.
 
-For larger applications, split route groups into app-owned files under `src/Routes/` and include them from `public/routes.php`.
+Dot/underscore-prefixed route files or directories are private. `_middleware.php` applies ordered PSR-15 middleware from root to leaf; see [middleware](middleware.md). Views never create routes. Discovery does not execute handlers. Only the selected handler loads after middleware permits the request.
 
-## Small Project Routes
-
-Custom routes are defined in `public/routes.php`. The front controller bootstraps the router and passes an instance to this file, so you can add routes directly:
+Custom bootstrap:
 
 ```php
-use CorianderCore\Core\Router\Router;
-use Nyholm\Psr7\ServerRequest;
-
-/** @var Router $router */
-
-$router->get('/hello/{name}', function (ServerRequest $request) {
-    $name = $request->getAttribute('name');
-    return new \Nyholm\Psr7\Response(200, [], "Hello {$name}");
-});
-
-$router->setNotFound(fn() => new \Nyholm\Psr7\Response(404, [], 'Not Found'));
+$router = new \CorianderCore\Core\Router\Router();
+$response = $router->handle($request);
+\CorianderCore\Core\Http\ResponseEmitter::emit($response, $request->getMethod());
 ```
 
-The router also provides `post()`, `put()`, `patch()`, and `delete()` shortcuts.
-Use `add($method, ...)` only when the method is dynamic or uncommon.
-
-Register the homepage with `$router->get('/', $callback)`. An explicit root
-route takes precedence over the legacy `home` fallback, regardless of registration
-order. Its method restrictions still apply. When no root route is registered,
-requests to `/` continue to resolve through `home` for compatibility.
-
-## Larger Project Route Files
-
-Use `src/Routes/` when `public/routes.php` becomes too large or when routes naturally split by feature area, such as admin, shop, account, or API-like web endpoints.
-
-Create a route file with:
-
-```bash
-php coriander make:route admin
-```
-
-This creates:
-
-```txt
-src/Routes/admin.php
-```
-
-The generated file returns a closure that receives the router:
-
-```php
-<?php
-declare(strict_types=1);
-
-use CorianderCore\Core\Router\Router;
-use Nyholm\Psr7\Response;
-use Nyholm\Psr7\ServerRequest;
-
-return static function (Router $router): void {
-    $router->get('admin', static function (ServerRequest $request): Response {
-        return new Response(200, [], 'admin route');
-    });
-};
-```
-
-Register it from `public/routes.php`:
-
-```php
-$adminRoutes = PROJECT_ROOT . '/src/Routes/admin.php';
-if (is_file($adminRoutes)) {
-    (require $adminRoutes)($router);
-}
-```
-
-Nested route files are also supported:
-
-```bash
-php coriander make:route admin/users
-```
-
-This creates `src/Routes/admin/users.php`.
-
-### Route Groups
-
-Group routes to share a common URI prefix or middleware:
-
-```php
-use Psr\Http\Server\MiddlewareInterface;
-
-$auth = new class implements MiddlewareInterface {
-    public function process($request, $handler) {
-        // authentication logic
-        return $handler->handle($request);
-    }
-};
-
-$router->group('/admin', [$auth], function (Router $r) {
-    $r->get('/dashboard', fn (ServerRequest $req) =>
-        new \Nyholm\Psr7\Response(200, [], 'Dashboard'));
-});
-```
-
-Routes inside the group inherit the `/admin` prefix and the `$auth` middleware.
-
-### Per-route Middleware
-
-Middleware can also be attached directly when registering a route:
-
-```php
-$router->get('/profile', fn (ServerRequest $r) =>
-    new \Nyholm\Psr7\Response(200, [], 'Profile'), [$auth]);
-```
-
-### Response Handling
-
-GET routes also accept HEAD. An explicitly registered HEAD route wins over the
-GET fallback in either registration order; use `$router->add('HEAD', $path, $handler)`.
-The original HEAD method, route parameters, and middleware are preserved.
-405 responses advertise HEAD whenever GET is supported.
-
-Dispatch preserves the response status, headers, and body. The emitter suppresses
-the body for all HEAD responses, including redirects and errors. Custom front
-controllers should call `ResponseEmitter::emit($response, $request->getMethod())`;
-omitting the method falls back to `$_SERVER['REQUEST_METHOD']` for compatibility.
-Update older app-owned front controllers and suppress any manually echoed HEAD
-error body as well.
-
-- Route callbacks and controller actions can return a `ResponseInterface`; status code, headers, and body are preserved.
-- API controller actions may return arrays, which are automatically encoded as JSON responses.
-- If an API action returns text output that is not valid JSON, it is wrapped as `{"data":"..."}` and returned as JSON.
-
-## Error Handling
-
-- Register a `setNotFound` callback to handle unmatched routes gracefully.
-- Wrap route logic in `try/catch` blocks to log and report exceptions without exposing sensitive data:
-
-```php
-$router->post('/user', function(ServerRequest $request) {
-    try {
-        // process request
-    } catch (\Throwable $e) {
-        // log and return 500 response
-    }
-});
-```
-
-## Best Practices
-
-- Group related routes into separate files and include them during bootstrap to keep definitions maintainable.
-- Keep `public/routes.php` for small custom route lists and for including route files from `src/Routes/`.
-- Leverage PSR-15 middleware for cross-cutting concerns such as authentication or CSRF protection on mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`).
-- Use URL parameters instead of query strings for cleaner, cache-friendly routes.
-- Register every public controller action explicitly; use global authorization if opting into automatic routing.
-
+`Router` accepts an optional route directory and `RouteCache`. See [automatic caching](route-cache.md). Controllers, action attributes, manual registration and automatic view fallback were removed in 0.3.0.

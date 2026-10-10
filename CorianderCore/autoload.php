@@ -5,11 +5,7 @@
  *
  * Provides PSR-4 compliant class loading using a simple namespace-to-directory map.
  *
- * Supported namespace prefixes:
- * - `Controllers\\`            -> `/src/Controllers/`
- * - `ApiControllers\\`         -> `/src/ApiControllers/`
- * - `Middleware\\`             -> `/src/Middleware/`
- * - `Modules\\`                -> `/src/Modules/`
+ * App\\ maps to src/; framework namespaces remain below. Supported prefixes:
  * - `CorianderCore\\Core\\`    -> `/CorianderCore/core/`
  * - `CorianderCore\\Modules\\` -> `/CorianderCore/modules/`
  * - `CorianderCore\\Tests\\`   -> `/CorianderCore/Tests/`
@@ -31,10 +27,7 @@ spl_autoload_register(function (string $class): void {
     }
 
     $prefixes = [
-        'Controllers\\'            => PROJECT_ROOT . '/src/Controllers/',
-        'ApiControllers\\'         => PROJECT_ROOT . '/src/ApiControllers/',
-        'Middleware\\'             => PROJECT_ROOT . '/src/Middleware/',
-        'Modules\\'                => PROJECT_ROOT . '/src/Modules/',
+        'App\\'                    => PROJECT_ROOT . '/src/',
         'CorianderCore\\Core\\'    => PROJECT_ROOT . '/CorianderCore/core/',
         'CorianderCore\\Modules\\' => PROJECT_ROOT . '/CorianderCore/modules/',
         'CorianderCore\\Tests\\'   => PROJECT_ROOT . '/CorianderCore/Tests/',

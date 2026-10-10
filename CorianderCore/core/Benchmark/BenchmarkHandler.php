@@ -67,7 +67,7 @@ class BenchmarkHandler
      */
     public function start(): void
     {
-        $this->startTime = microtime(true);
+        $this->startTime = hrtime(true) / 1e9;
         $this->initialMemory = memory_get_usage();
         $this->cpuStart = $this->getCpuUsage();
 
@@ -85,7 +85,7 @@ class BenchmarkHandler
      */
     public function stop(): void
     {
-        $this->endTime = microtime(true);
+        $this->endTime = hrtime(true) / 1e9;
         $this->cpuEnd = $this->getCpuUsage();
 
         // Update the final memory and CPU usage to track the highest peaks
@@ -100,7 +100,7 @@ class BenchmarkHandler
      */
     public function getInitializationTime(): float
     {
-        $end = $this->endTime ?: microtime(true);
+        $end = $this->endTime ?: hrtime(true) / 1e9;
         return $end - $this->startTime;
     }
 
@@ -343,18 +343,18 @@ class BenchmarkHandler
         // Initialize benchmark
         $this->start();
 
-        $startTime = microtime(true);
+        $startTime = hrtime(true) / 1e9;
         $iterations = 0;
         $iterationsPerSecond = [];
 
         // Run the benchmark for the specified duration
-        while ((microtime(true) - $startTime) < $duration) {
+        while ((hrtime(true) / 1e9 - $startTime) < $duration) {
             $function(); // Call the function being benchmarked
 
             $iterations++;
 
             // Track iterations per second
-            $currentSecond = (int)(microtime(true) - $startTime);
+            $currentSecond = (int)(hrtime(true) / 1e9 - $startTime);
             if ($currentSecond < $duration) { // Ensure we don't log beyond the specified duration
                 if (!isset($iterationsPerSecond[$currentSecond])) {
                     $iterationsPerSecond[$currentSecond] = 0;
@@ -363,15 +363,16 @@ class BenchmarkHandler
             }
 
             // Update memory and CPU peaks during each iteration
-            $this->updateMemoryPeak();
-            $this->updateCpuPeak();
+            if ($iterations % 1000 === 0) {
+                $this->updateMemoryPeak();
+            }
         }
 
         // Stop the benchmark
         $this->stop();
 
         // Calculate average iterations per second
-        $averageIterationsPerSecond = $iterations / $duration;
+        $averageIterationsPerSecond = $this->getThroughput($iterations);
 
         // Return benchmark results
         return [
@@ -388,6 +389,34 @@ class BenchmarkHandler
             'total_included_files' => $this->getIncludedFilesCount(),
             'total_execution_time' => $this->getInitializationTime(),
             'cpu_usage_percentage' => $this->getCpuUsagePercentage(),
+        ];
+    }
+    /** Repeated batch means; percentiles describe batches, not individual requests. */
+    public function measure(callable $operation, int $iterations = 1000, int $samples = 7): array
+    {
+        if ($iterations < 1 || $samples < 2) {
+            throw new InvalidArgumentException('Use positive iterations and at least two samples.');
+        }
+        $operation();
+        $latencies = [];
+        for ($sample = 0; $sample < $samples; $sample++) {
+            $start = hrtime(true);
+            for ($iteration = 0; $iteration < $iterations; $iteration++) {
+                $operation();
+            }
+            $latencies[] = (hrtime(true) - $start) / $iterations / 1000;
+        }
+        sort($latencies);
+        $middle = intdiv($samples, 2);
+        $median = $samples % 2 ? $latencies[$middle] : ($latencies[$middle - 1] + $latencies[$middle]) / 2;
+        return [
+            'median_batch_mean_us' => $median,
+            'p95_batch_mean_us' => $latencies[(int) ceil($samples * .95) - 1],
+            'samples' => $samples,
+            'iterations_per_sample' => $iterations,
+            'peak_process_memory_bytes' => memory_get_peak_usage(true),
+            'environment' => ['php' => PHP_VERSION, 'os' => PHP_OS_FAMILY,
+                'opcache' => ini_get('opcache.enable'), 'opcache_cli' => ini_get('opcache.enable_cli')],
         ];
     }
 }

@@ -8,6 +8,45 @@ namespace CorianderCore\Core\Router;
  */
 final class SafePath
 {
+    /** Validate existing ancestors before a generator creates directories. */
+    public static function destination(string $root, string $relative): string
+    {
+        $relative = self::normalizeRelativePath($relative);
+        if ($relative === null) {
+            throw new \RuntimeException('Invalid generated path');
+        }
+        if (!is_dir($root) && !mkdir($root, 0755, true)) {
+            throw new \RuntimeException('Cannot create generator root');
+        }
+        $realRoot = realpath($root);
+        $destination = $root . '/' . $relative;
+        $ancestor = dirname($destination);
+        while (!file_exists($ancestor) && !is_link($ancestor)) {
+            $ancestor = dirname($ancestor);
+        }
+        $realAncestor = realpath($ancestor);
+        if ($realRoot === false || $realAncestor === false || ($realAncestor !== $realRoot
+            && !str_starts_with($realAncestor, $realRoot . DIRECTORY_SEPARATOR))) {
+            throw new \RuntimeException('Generated path escapes its root');
+        }
+        return $destination;
+    }
+
+    public static function resolveFile(string $root, string $relative): string
+    {
+        $relative = self::normalizeRelativePath($relative);
+        $realRoot = realpath($root);
+        $file = $relative === null ? false : realpath($root . '/' . $relative);
+        if ($realRoot === false || $file === false || !is_file($file)) {
+            throw new \RuntimeException('Required application file is missing or invalid: ' . ($relative ?? '[invalid path]'));
+        }
+        $prefix = rtrim($realRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (!str_starts_with($file, $prefix)) {
+            throw new \RuntimeException('Application file escapes its directory: ' . $relative);
+        }
+        return $file;
+    }
+
     public static function normalizeRelativePath(string $path): ?string
     {
         if (str_contains($path, "\0")) {

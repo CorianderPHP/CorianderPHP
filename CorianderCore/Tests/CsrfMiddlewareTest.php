@@ -167,7 +167,7 @@ class CsrfMiddlewareTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
-    public function testBypassesApiRoutesByDefaultWhenTokenMissing(): void
+    public function testApiCsrfExemptionMustBeExplicit(): void
     {
         $middleware = new CsrfMiddleware();
         $request = new ServerRequest('POST', '/api/items');
@@ -182,6 +182,9 @@ class CsrfMiddlewareTest extends TestCase
 
         $response = $middleware->process($request, $handler);
 
+        $this->assertFalse($handler->called);
+        $this->assertSame(403, $response->getStatusCode());
+        $response = (new CsrfMiddleware(apiPrefixes: ['api']))->process($request, $handler);
         $this->assertTrue($handler->called);
         $this->assertSame(200, $response->getStatusCode());
     }

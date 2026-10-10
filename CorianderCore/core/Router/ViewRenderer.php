@@ -14,51 +14,46 @@ namespace CorianderCore\Core\Router;
  */
 class ViewRenderer
 {
-    /**
-     * Render a public view page.
-     *
-     * Looks for an index.php in the specified view directory and includes
-     * header and footer templates if found.
-     *
-     * @param string $viewPath Path relative to public/public_views.
-     * @param array  $data     Variables extracted into the view scope.
-     * @return bool True if the view was rendered, otherwise false.
-     */
-    public function render(string $viewPath, array $data = []): bool
+    public function __construct(private string $directory = PROJECT_ROOT . '/src/Views') {}
+
+    public function response(string $view, array $data = [], int $status = 200, bool $layout = true): \Psr\Http\Message\ResponseInterface
     {
-        $normalizedPath = SafePath::normalizeRelativePath($viewPath);
-        if ($normalizedPath === null) {
-            return false;
+        $name = SafePath::normalizeRelativePath($view);
+        if ($name === null || in_array(basename($name), ['_header', '_footer', '_header.php', '_footer.php'], true)) {
+            throw new \InvalidArgumentException('Invalid view name');
         }
-
-        $escapedData = $this->escapeData($data);
-        extract($escapedData, EXTR_OVERWRITE);
-
-        $viewsRoot = PROJECT_ROOT . '/public/public_views';
-        $fullViewPath = $viewsRoot . '/' . $normalizedPath . '/index.php';
-
-        if (!file_exists($fullViewPath)) {
-            return false;
+        $name = str_ends_with($name, '.php') ? $name : $name . '.php';
+        $file = SafePath::resolveFile($this->directory, $name);
+        $files = [$file];
+        if ($layout) {
+            $ancestor = dirname($name);
+            while (true) {
+                $prefix = $ancestor === '.' ? '' : $ancestor . '/';
+                $header = $prefix . '_header.php';
+                $footer = $prefix . '_footer.php';
+                $hasHeader = file_exists($this->directory . '/' . $header);
+                $hasFooter = file_exists($this->directory . '/' . $footer);
+                if ($hasHeader !== $hasFooter) {
+                    throw new \RuntimeException('Incomplete view layout in: ' . $ancestor);
+                }
+                if ($hasHeader) {
+                    $files = [SafePath::resolveFile($this->directory, $header), $file, SafePath::resolveFile($this->directory, $footer)];
+                    break;
+                }
+                if ($ancestor === '.') {
+                    break;
+                }
+                $ancestor = dirname($ancestor);
+            }
         }
-
-        $realViewsRoot = realpath($viewsRoot);
-        $realViewPath = realpath($fullViewPath);
-        if ($realViewsRoot === false || $realViewPath === false) {
-            return false;
-        }
-
-        $prefix = rtrim($realViewsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        if (!str_starts_with($realViewPath, $prefix)) {
-            return false;
-        }
-
-        $__corianderRequestedView = $normalizedPath;
-
-        require $viewsRoot . '/header.php';
-        require $fullViewPath;
-        require $viewsRoot . '/footer.php';
-
-        return true;
+        $render = static function (array $__files, array $__data): void {
+            extract($__data, EXTR_SKIP);
+            foreach ($__files as $__file) {
+                require $__file;
+            }
+        };
+        [, $html] = \CorianderCore\Core\Support\OutputBuffer::capture(fn() => $render($files, $this->escapeData($data)));
+        return \CorianderCore\Core\Http\Responses::html($html, $status);
     }
 
     /**

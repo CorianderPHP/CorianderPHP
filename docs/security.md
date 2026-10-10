@@ -5,8 +5,9 @@ This page summarizes framework-level security behavior and recommended usage pat
 ## Web Server Deployment
 
 Prefer `public/` as the document root. Configure the server to route nonexistent
-paths to `index.php` and deny direct access to `public_views/`, `routes.php`, and
-dotfiles. Only the front controller and public assets should be served directly.
+paths to `index.php`, deny dotfiles and restrict PHP execution to the front controller.
+Keep `src`, framework code, configuration and caches outside the document root.
+Remove old publicly served `public_views/` and `routes.php` files after migration.
 
 For Apache installations serving the repository root, the supplied `.htaccess`
 blocks dotfiles, application/framework directories, database files, logs, and
@@ -20,24 +21,16 @@ execution only through the front controller.
 
 ## Routing and View Path Safety
 
-- The default router exposes registered routes only. Automatic web/API controllers
-  and views require explicit opt-in through `new Router(automaticRouting: true)`.
-- When opting in, enforce authorization globally or within controller actions;
-  protecting one explicit route does not protect automatically discovered aliases.
+Routes are discovered under `src/Routes` by default. Protect directories using inherited `_middleware.php` files. Static paths cannot fall through to dynamic handlers on method mismatches. Discovery never executes handlers. Cached missing handlers or middleware fail closed.
 
-- View rendering accepts only normalized relative paths under `public/public_views`.
-- Rejected inputs include:
-  - dot segments (`.` and `..`)
-  - absolute paths
-  - null bytes
-  - Windows drive-prefixed paths
-- Shared templates (`header.php`, `footer.php`) use an internally normalized view key, not raw request path input.
+Views live under `src/Views` and never create public routes. Only normalized relative template paths are accepted; dot segments, absolute paths, NUL and escaping symlinks are rejected. Header/footer pairs are resolved from the view ancestry, independently of route ancestry.
 
 ## CSRF Protection
 
 - CSRF middleware validates mutating web methods: `POST`, `PUT`, `PATCH`, `DELETE`.
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
-- For non-API JSON requests, include the token in the JSON body as `csrf_token`.
+- For JSON requests, include the token in the JSON body as `csrf_token`.
+- No URL prefix bypasses CSRF by default. Pass `apiPrefixes: ['api']` only for an explicitly stateless API that does not use cookie authentication.
 
 ## Proxy and TLS Detection
 
@@ -66,7 +59,7 @@ Custom header policy:
 Example:
 
 ```php
-$router->addMiddleware(new SecurityHeadersMiddleware([
+return [new SecurityHeadersMiddleware([
     'Content-Security-Policy' => "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.discordapp.com/ https://files.stripe.com/; font-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'",
     'X-Content-Type-Options' => 'nosniff',
     'X-Frame-Options' => 'DENY',
@@ -74,14 +67,14 @@ $router->addMiddleware(new SecurityHeadersMiddleware([
     'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
     'Cross-Origin-Opener-Policy' => 'same-origin',
     'Cross-Origin-Resource-Policy' => 'same-origin',
-]));
+])];
 ```
 
 To disable the middleware headers, pass `enabled: false` when registering it.
 
 ## API Request Limits
 
-`ApiRequestLimitsMiddleware` is enabled by default for `/api/*` endpoints.
+`ApiRequestLimitsMiddleware` is enabled for all starter routes through `apiPrefixes: []`. A prefix list can explicitly scope it.
 
 - Rejects payloads above `API_MAX_BODY_BYTES` (default: `1048576` bytes).
 - Applies request execution/input timeout via `API_TIMEOUT_SECONDS` (default: `15`).

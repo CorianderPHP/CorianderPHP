@@ -1,0 +1,258 @@
+{
+    "description": "Verified batch means in microseconds; not individual-request latency percentiles.",
+    "cases": {
+        "10": {
+            "discovery": {
+                "median_batch_mean_us": 149.974,
+                "p95_batch_mean_us": 217.004,
+                "samples": 7,
+                "iterations_per_sample": 1,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "cached_request_startup": {
+                "median_batch_mean_us": 93.1913,
+                "p95_batch_mean_us": 182.47725,
+                "samples": 7,
+                "iterations_per_sample": 20,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_static": {
+                "median_batch_mean_us": 7.155385,
+                "p95_batch_mean_us": 10.64226,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_dynamic": {
+                "median_batch_mean_us": 9.284379999999999,
+                "p95_batch_mean_us": 11.116865,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_404": {
+                "median_batch_mean_us": 4.1822550000000005,
+                "p95_batch_mean_us": 4.740935,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "middleware_and_layout": {
+                "median_batch_mean_us": 27.491695,
+                "p95_batch_mean_us": 51.989760000000004,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            }
+        },
+        "100": {
+            "discovery": {
+                "median_batch_mean_us": 1119.323,
+                "p95_batch_mean_us": 1140.575,
+                "samples": 7,
+                "iterations_per_sample": 1,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "cached_request_startup": {
+                "median_batch_mean_us": 9.31595,
+                "p95_batch_mean_us": 26.4345,
+                "samples": 7,
+                "iterations_per_sample": 20,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_static": {
+                "median_batch_mean_us": 6.928109999999999,
+                "p95_batch_mean_us": 6.98624,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_dynamic": {
+                "median_batch_mean_us": 11.321525,
+                "p95_batch_mean_us": 12.198784999999999,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_404": {
+                "median_batch_mean_us": 6.23832,
+                "p95_batch_mean_us": 6.278035,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "middleware_and_layout": {
+                "median_batch_mean_us": 27.419535,
+                "p95_batch_mean_us": 29.632845,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 6291456,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            }
+        },
+        "1000": {
+            "discovery": {
+                "median_batch_mean_us": 11414.693,
+                "p95_batch_mean_us": 11694.661,
+                "samples": 7,
+                "iterations_per_sample": 1,
+                "peak_process_memory_bytes": 8388608,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "cached_request_startup": {
+                "median_batch_mean_us": 9.293899999999999,
+                "p95_batch_mean_us": 19.09355,
+                "samples": 7,
+                "iterations_per_sample": 20,
+                "peak_process_memory_bytes": 10485760,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_static": {
+                "median_batch_mean_us": 6.9609049999999995,
+                "p95_batch_mean_us": 6.976375,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 10485760,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_dynamic": {
+                "median_batch_mean_us": 43.195964999999994,
+                "p95_batch_mean_us": 43.774980000000006,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 10485760,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "repeated_404": {
+                "median_batch_mean_us": 36.680080000000004,
+                "p95_batch_mean_us": 40.844355,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 10485760,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            },
+            "middleware_and_layout": {
+                "median_batch_mean_us": 27.925945,
+                "p95_batch_mean_us": 30.45933,
+                "samples": 7,
+                "iterations_per_sample": 200,
+                "peak_process_memory_bytes": 10485760,
+                "environment": {
+                    "php": "8.5.11",
+                    "os": "Linux",
+                    "opcache": "1",
+                    "opcache_cli": "1"
+                }
+            }
+        }
+    },
+    "http": {
+        "median_batch_mean_us": 452.26655,
+        "p95_batch_mean_us": 832.21745,
+        "samples": 7,
+        "iterations_per_sample": 20,
+        "peak_process_memory_bytes": 10485760,
+        "environment": {
+            "php": "8.5.11",
+            "os": "Linux",
+            "opcache": "1",
+            "opcache_cli": "1"
+        }
+    }
+}

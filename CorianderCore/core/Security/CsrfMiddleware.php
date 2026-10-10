@@ -14,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * Workflow:
  * 1. For methods outside the protected set the middleware is bypassed.
- * 2. API routes are excluded from CSRF checks for stateless clients.
+ * 2. Explicitly configured stateless prefixes can bypass validation.
  * 3. On protected methods, the token from parsed body (or recoverable raw body)
  *    is validated via {@see Csrf::validate()}.
  * 4. When validation fails a 403 response is returned.
@@ -52,7 +52,7 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         $this->protectedMethods = array_values(array_unique($this->protectedMethods));
-        $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? ['api']);
+        $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? []);
     }
 
     /**

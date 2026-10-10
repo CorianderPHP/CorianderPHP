@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace CorianderCore\Core\Console\Commands;
 
-use CorianderCore\Core\Console\Commands\Make\Controller\MakeController;
 use CorianderCore\Core\Console\Commands\Make\Database\MakeDatabase;
 use CorianderCore\Core\Console\Commands\Make\Migration\MakeMigration;
 use CorianderCore\Core\Console\Commands\Make\Route\MakeRoute;
@@ -19,7 +18,6 @@ class Make
      */
     protected array $validSubcommands = [
         'view',
-        'controller',
         'route',
         'database',
         'sitemap',
@@ -27,7 +25,6 @@ class Make
     ];
 
     protected MakeView $makeViewInstance;
-    protected MakeController $makeControllerInstance;
     protected MakeRoute $makeRouteInstance;
     protected MakeDatabase $makeDatabaseInstance;
     protected MakeSitemap $makeSitemapInstance;
@@ -36,7 +33,6 @@ class Make
     public function __construct()
     {
         $this->makeViewInstance = new MakeView();
-        $this->makeControllerInstance = new MakeController();
         $this->makeRouteInstance = new MakeRoute();
         $this->makeDatabaseInstance = new MakeDatabase();
         $this->makeSitemapInstance = new MakeSitemap();
@@ -66,9 +62,6 @@ class Make
             case 'view':
                 return $this->makeView($resourceArgs);
 
-            case 'controller':
-                return $this->makeController($resourceArgs);
-
             case 'route':
                 return $this->makeRoute($resourceArgs);
 
@@ -96,19 +89,6 @@ class Make
         }
 
         return $this->makeViewInstance->execute($args);
-    }
-
-    /**
-     * @param array<int, string> $args
-     */
-    protected function makeController(array $args): int
-    {
-        if ($args === []) {
-            ConsoleOutput::print("&4[Error]&7 Please specify a controller name, e.g., 'make:controller Agenda'.");
-            return CommandExitCode::INVALID_USAGE;
-        }
-
-        return $this->makeControllerInstance->execute($args);
     }
 
     /**

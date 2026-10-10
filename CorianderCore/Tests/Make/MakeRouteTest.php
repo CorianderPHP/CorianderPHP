@@ -41,10 +41,10 @@ class MakeRouteTest extends TestCase
 
         $this->expectOutputRegex('/Success/');
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
-        $this->assertFileExists(self::$testPath . 'src/Routes/admin.php');
+        $this->assertFileExists(self::$testPath . 'src/Routes/admin.get.php');
         $this->assertStringContainsString(
-            "\$router->get('admin'",
-            (string) file_get_contents(self::$testPath . 'src/Routes/admin.php')
+            'return static',
+            (string) file_get_contents(self::$testPath . 'src/Routes/admin.get.php')
         );
     }
 
@@ -54,7 +54,7 @@ class MakeRouteTest extends TestCase
 
         $this->expectOutputRegex('/Success/');
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
-        $this->assertFileExists(self::$testPath . 'src/Routes/admin/users.php');
+        $this->assertFileExists(self::$testPath . 'src/Routes/admin/users.get.php');
     }
 
     public function testRouteFileAlreadyExists(): void
@@ -65,6 +65,16 @@ class MakeRouteTest extends TestCase
 
         $this->expectOutputRegex('/already exists/');
         $this->assertSame(CommandExitCode::FAILURE, $exitCode);
+    }
+
+    public function testDynamicMethodHandlerRunsWithoutRegistration(): void
+    {
+        $this->expectOutputRegex('/Success/');
+        self::assertSame(0, $this->makeRoute->execute(['users/[id].post']));
+        $router = new \CorianderCore\Core\Router\Router(self::$testPath . 'src/Routes');
+        $response = $router->handle(new \Nyholm\Psr7\ServerRequest('POST', '/users/42'));
+        self::assertSame('Hello', (string) $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
     }
 
     public function testNoRouteNameProvided(): void
