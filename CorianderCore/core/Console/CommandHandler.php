@@ -27,6 +27,7 @@ class CommandHandler
         'make' => \CorianderCore\Core\Console\Commands\Make::class,
         'benchmark' => \CorianderCore\Core\Console\Commands\Benchmark::class,
         'cache' => \CorianderCore\Core\Console\Commands\Cache::class,
+        'routes' => \CorianderCore\Core\Console\Commands\Routes::class,
         'version' => \CorianderCore\Core\Console\Commands\Version::class,
         'update' => \CorianderCore\Core\Console\Commands\Update::class,
         'migrate' => \CorianderCore\Core\Console\Commands\Migrate::class,
@@ -97,6 +98,11 @@ class CommandHandler
                 'php coriander cache clear',
             ],
             'examples' => ['php coriander cache clear'],
+        ],
+        'routes' => [
+            'description' => 'List discovered methods, paths, handlers and inherited middleware files.',
+            'usage' => ['php coriander routes:list'],
+            'examples' => ['php coriander routes:list'],
         ],
         'benchmark' => [
             'description' => 'Run framework benchmark helpers.',
