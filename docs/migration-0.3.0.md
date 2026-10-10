@@ -48,7 +48,7 @@ There is no implicit `/api` CSRF exemption. Cookie-authenticated POST/PUT/PATCH/
 
 ## 4. Move templates and layouts
 
-Move `public/public_views/home/index.php` to `src/Views/home.php`. Move the shared header/footer to `_header.php`/`_footer.php` under `src/Views`. A complete pair under `src/Views/admin` overrides the public pair for admin views. Layouts do not stack and incomplete pairs fail clearly.
+Move `public/public_views/home/index.php` to `src/Views/home.php`. Move the shared header/footer to `_header.php`/`_footer.php` under `src/Views`. Each file under `src/Views/admin` overrides its corresponding parent file independently: an admin header can use the shared footer, and an admin footer can use the shared header. Layouts do not stack. Files absent throughout the view ancestry are omitted, allowing header-only, footer-only and bare views. Existing complete layouts behave as before; partial layouts now render instead of raising an incomplete-layout error.
 
 Replace metadata includes with explicit view data:
 

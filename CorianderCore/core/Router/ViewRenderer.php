@@ -6,7 +6,7 @@ namespace CorianderCore\Core\Router;
 /**
  * ViewRenderer
  *
- * Handles locating and rendering public views with sanitized data.
+ * Handles locating and rendering application views with sanitized data.
  * Workflow:
  * 1. Escape string data for safe HTML output.
  * 2. Extract the sanitized variables into the view scope.
@@ -26,25 +26,23 @@ class ViewRenderer
         $file = SafePath::resolveFile($this->directory, $name);
         $files = [$file];
         if ($layout) {
+            $header = null;
+            $footer = null;
             $ancestor = dirname($name);
             while (true) {
                 $prefix = $ancestor === '.' ? '' : $ancestor . '/';
-                $header = $prefix . '_header.php';
-                $footer = $prefix . '_footer.php';
-                $hasHeader = file_exists($this->directory . '/' . $header);
-                $hasFooter = file_exists($this->directory . '/' . $footer);
-                if ($hasHeader !== $hasFooter) {
-                    throw new \RuntimeException('Incomplete view layout in: ' . $ancestor);
+                if ($header === null && file_exists($this->directory . '/' . $prefix . '_header.php')) {
+                    $header = SafePath::resolveFile($this->directory, $prefix . '_header.php');
                 }
-                if ($hasHeader) {
-                    $files = [SafePath::resolveFile($this->directory, $header), $file, SafePath::resolveFile($this->directory, $footer)];
-                    break;
+                if ($footer === null && file_exists($this->directory . '/' . $prefix . '_footer.php')) {
+                    $footer = SafePath::resolveFile($this->directory, $prefix . '_footer.php');
                 }
-                if ($ancestor === '.') {
+                if (($header !== null && $footer !== null) || $ancestor === '.') {
                     break;
                 }
                 $ancestor = dirname($ancestor);
             }
+            $files = array_filter([$header, $file, $footer], static fn(?string $path): bool => $path !== null);
         }
         $render = static function (array $__files, array $__data): void {
             extract($__data, EXTR_SKIP);

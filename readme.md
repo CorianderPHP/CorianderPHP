@@ -1,6 +1,6 @@
 # CorianderPHP 0.3.0
 
-A lightweight PHP framework focused on simple developer UX, performance and few dependencies. Routes are PHP files, middleware follows directories, and views inherit header/footer pairs. Application code lives in `src`; framework code lives in `CorianderCore`.
+A lightweight PHP framework focused on simple developer UX, performance and few dependencies. Routes are PHP files, middleware follows directories, and views inherit headers and footers independently. Application code lives in `src`; framework code lives in `CorianderCore`.
 
 ## Start
 
@@ -30,7 +30,7 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 `src/Routes/admin/_middleware.php` returns an array of PSR-15 middleware. Parents always apply, so child directories inherit authentication. Application classes use `App\` under `src`.
 
-`Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest complete `_header.php`/`_footer.php` pair. A nested pair replaces its parent. Pass `layout: false` for fragments.
+`Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; without both, only the view renders. Pass `layout: false` for fragments.
 
 ## Guides
 

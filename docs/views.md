@@ -19,11 +19,12 @@ src/Views/
   home.php
   admin/
     _header.php
-    _footer.php
     users/show.php
 ```
 
-The renderer searches from the view's directory toward the view root. The nearest complete `_header.php`/`_footer.php` pair wraps the page. The admin pair replaces the public pair; layouts do not stack. An incomplete pair is an error. Without any pair the page renders alone. `Responses::view('fragment', $data, layout: false)` explicitly skips layout lookup.
+The renderer searches from the view's directory toward `src/Views`, resolving `_header.php` and `_footer.php` independently. In this example, admin pages use the admin header and the root footer. A local footer with no local header similarly inherits the nearest parent header. Header and footer can come from different ancestor levels; each appears at most once, so layouts do not stack.
+
+If a header or footer is absent throughout the view ancestry, that part is omitted. A header-only layout renders header then page; a footer-only layout renders page then footer. With neither file anywhere, only the page renders. Without local files, parent files still apply. `Responses::view('fragment', $data, layout: false)` explicitly skips all layout lookup. Keep inherited header and footer HTML compatible.
 
 Header, page and footer receive the same recursively HTML-escaped string data. Use `$title`, `$id`, or other passed variables in PHP templates. Renderer internals cannot be replaced through data keys. Do not escape these variables a second time. HTML escaping does not validate URL schemes or JavaScript/CSS contexts; validate URLs and keep untrusted values out of executable contexts.
 
