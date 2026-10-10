@@ -1,0 +1,153 @@
+{
+  "benchmark": "nginx-fpm",
+  "source_commit": "52fdf117fb91d8b88d18ca917d6ca80885ef9a18",
+  "php": "8.3.35",
+  "sapi": "fpm-fcgi",
+  "opcache": true,
+  "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "client_python": "3.12.3",
+  "workers": 8,
+  "request_count_per_case": 80,
+  "cases": [
+    {
+      "name": "static",
+      "concurrency": 1,
+      "requests_per_second": 1205.992795278463,
+      "p50_ms": 0.7529819999945175,
+      "p95_ms": 0.8131640000073048,
+      "p99_ms": 1.476177000000689,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "dynamic",
+      "concurrency": 1,
+      "requests_per_second": 1231.7065973884874,
+      "p50_ms": 0.7592030000012073,
+      "p95_ms": 0.8051200000096514,
+      "p99_ms": 1.3086529999952745,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "layout",
+      "concurrency": 1,
+      "requests_per_second": 1220.7804110400673,
+      "p50_ms": 0.7708939999986342,
+      "p95_ms": 0.8058299999902374,
+      "p99_ms": 1.2150780000013128,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "404",
+      "concurrency": 1,
+      "requests_per_second": 1242.0047303922252,
+      "p50_ms": 0.7499050000063789,
+      "p95_ms": 0.7964130000033265,
+      "p99_ms": 1.1479619999903434,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "500",
+      "concurrency": 1,
+      "requests_per_second": 1264.038570367311,
+      "p50_ms": 0.7386050000093292,
+      "p95_ms": 0.8027649999888808,
+      "p99_ms": 1.2117909999886933,
+      "max_php_allocator_peak_bytes": null,
+      "session_active": null
+    },
+    {
+      "name": "public_same_cookie_delay",
+      "concurrency": 1,
+      "requests_per_second": 47.167617915277255,
+      "p50_ms": 21.11915499999384,
+      "p95_ms": 21.322486000002527,
+      "p99_ms": 21.75706100000241,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "session_same_cookie_hold",
+      "concurrency": 1,
+      "requests_per_second": 47.02248234223506,
+      "p50_ms": 21.18267499999149,
+      "p95_ms": 21.35577899998964,
+      "p99_ms": 21.77956199999187,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "1"
+    },
+    {
+      "name": "static",
+      "concurrency": 8,
+      "requests_per_second": 1753.8722265061845,
+      "p50_ms": 3.2885120000116785,
+      "p95_ms": 6.290008000007674,
+      "p99_ms": 7.552747000005411,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "dynamic",
+      "concurrency": 8,
+      "requests_per_second": 1752.185703824763,
+      "p50_ms": 3.1903190000122095,
+      "p95_ms": 6.2423999999907664,
+      "p99_ms": 7.266389000008644,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "layout",
+      "concurrency": 8,
+      "requests_per_second": 1728.4727469755496,
+      "p50_ms": 3.445436999996332,
+      "p95_ms": 6.398223999994457,
+      "p99_ms": 8.221741999989263,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "404",
+      "concurrency": 8,
+      "requests_per_second": 1720.2596723378313,
+      "p50_ms": 3.6364970000022367,
+      "p95_ms": 6.448148000004039,
+      "p99_ms": 7.129573000000278,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "500",
+      "concurrency": 8,
+      "requests_per_second": 1821.961933703759,
+      "p50_ms": 3.5040659999907575,
+      "p95_ms": 5.652984999997557,
+      "p99_ms": 8.121054000000072,
+      "max_php_allocator_peak_bytes": null,
+      "session_active": null
+    },
+    {
+      "name": "public_same_cookie_delay",
+      "concurrency": 8,
+      "requests_per_second": 365.7322755624376,
+      "p50_ms": 21.11877500000503,
+      "p95_ms": 22.428207999993788,
+      "p99_ms": 22.696621999998,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "0"
+    },
+    {
+      "name": "session_same_cookie_hold",
+      "concurrency": 8,
+      "requests_per_second": 49.239384274646504,
+      "p50_ms": 162.0947589999986,
+      "p95_ms": 162.25064900000064,
+      "p99_ms": 162.32113200000242,
+      "max_php_allocator_peak_bytes": 2097152,
+      "session_active": "1"
+    }
+  ]
+}
