@@ -18,6 +18,10 @@ php coriander make:controller Blog --api
 
 The command creates `BlogController.php` with basic `index`, `show`, and `store` methods. Controllers render views using the `ViewRenderer` helper and should wrap risky operations in `try`/`catch` blocks to log errors gracefully.
 
+Generated files declare the matching class (`Controllers\BlogController` or
+`ApiControllers\BlogController`). For older generated files, rename a remaining
+`ControllerTemplatePlaceholder` declaration to match the filename.
+
 ```php
 public function show($id): void
 {
