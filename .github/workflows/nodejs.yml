@@ -1,0 +1,41 @@
+name: Node.js assets
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: nodejs
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: nodejs/package-lock.json
+
+    - name: Install locked asset dependencies
+      run: npm ci --no-audit --no-fund
+
+    - name: Audit asset dependencies
+      run: npm audit --audit-level=high
+
+    - name: Build development assets
+      run: npm run build-all
+
+    - name: Build production assets
+      run: npm run build-prod

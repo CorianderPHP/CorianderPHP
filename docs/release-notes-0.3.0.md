@@ -9,6 +9,7 @@
 - Production route maps refresh automatically on incoming requests, without a deployment command. Development discovers files every request. Cache writes are locked and atomic; missing cached application files fail closed.
 - The starter and optional generators use the new structure and the `App\` namespace. Sitemaps list public URLs explicitly.
 - CI covers Linux and Windows on PHP 8.2–8.5, with real HTTP checks, concurrent cache builds and verified OPcache off/on benchmark artifacts. GD cleanup no longer triggers PHP 8.5 deprecations.
+- The optional Node.js asset toolchain locks `source-map-js` to patched version 1.2.2 for CVE-2026-93749. Node.js CI checks clean installs, audits and asset builds on Linux and Windows. Existing projects using this toolchain should update `nodejs/package-lock.json` and run `npm ci` from `nodejs`; PHP-only projects need no Node.js changes.
 
 ## Breaking changes and upgrade
 
