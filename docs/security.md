@@ -5,8 +5,9 @@ This page summarizes framework-level security behavior and recommended usage pat
 ## Web Server Deployment
 
 Prefer `public/` as the document root. Configure the server to route nonexistent
-paths to `index.php` and deny direct access to `public_views/`, `routes.php`, and
-dotfiles. Only the front controller and public assets should be served directly.
+paths to `index.php`, deny dotfiles and restrict PHP execution to the front controller.
+Keep `src`, framework code, configuration and caches outside the document root.
+Remove old publicly served `public_views/` and `routes.php` files after migration.
 
 For Apache installations serving the repository root, the supplied `.htaccess`
 blocks dotfiles, application/framework directories, database files, logs, and

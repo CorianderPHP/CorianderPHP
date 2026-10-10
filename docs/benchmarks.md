@@ -28,3 +28,7 @@ This demonstrates why production avoids recursive discovery. It also shows that 
 The [0.2 baseline](benchmark-baseline-0.2.json) used in-memory manually registered closures. It excludes the new handler-file and cache loading, so it is historical context rather than a like-for-like performance claim. Its old registration script was removed with the API.
 
 CI records reports with OPcache CLI off/on on Linux and Windows across PHP 8.2–8.5 and uploads them as artifacts. Response verification is required; no unstable absolute timing threshold blocks CI.
+
+## Linux CI example
+
+The [PHP 8.5 Linux report with OPcache](benchmark-results-0.3-linux-php85-opcache.json) and [matching report without it](benchmark-results-0.3-linux-php85.json) came from the same verified CI run. For 1,000 routes, cached startup plus dispatch measured about 9.3 microseconds with warmed OPcache versus 2,175 microseconds without it. Repeated static dispatch measured about 7.0 versus 13.7 microseconds. These CLI fixtures exclude process/application startup. Fresh-fixture file-update protection is disabled only in the OPcache benchmark command; production deployments use their normal PHP lifecycle policy.
