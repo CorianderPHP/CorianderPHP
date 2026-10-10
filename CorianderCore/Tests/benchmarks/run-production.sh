@@ -55,7 +55,7 @@ http {
     }
 }
 EOF
-APP_ENV=production APP_DEBUG=0 LOG_CHANNEL="$work/application.log" "${PHP_FPM_BINARY:-php-fpm8.5}" -F -y "$work/fpm.conf" &
+APP_ENV=production APP_DEBUG=0 LOG_CHANNEL="$work/application.log" "${PHP_FPM_BINARY:-php-fpm8.3}" -F -y "$work/fpm.conf" &
 fpm_pid=$!
 nginx -p "$work/" -c "$work/nginx.conf" -g 'daemon off;' &
 nginx_pid=$!

@@ -8,16 +8,16 @@ permissions:
   contents: read
 jobs:
   benchmark:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.5'
+        php-version: '8.3'
         extensions: opcache
         coverage: none
     - name: Install development benchmark tools
-      run: sudo apt-get update -qq && sudo apt-get install -y nginx php8.5-fpm
+      run: sudo apt-get update -qq && sudo apt-get install -y nginx php8.3-fpm
     - run: composer install --prefer-dist --no-progress --no-interaction
     - name: Verify complete production requests
       shell: bash

@@ -2,7 +2,7 @@
 
 ## Complete production requests
 
-On Linux with nginx, PHP-FPM, curl and Python 3 installed, run `bash CorianderCore/Tests/benchmarks/run-production.sh > benchmark-production.json`. `PHP_FPM_BINARY` defaults to `php-fpm8.5`; `BENCHMARK_REQUESTS` defaults to 80 requests per case. Composer dependencies must already be installed. These tools are optional benchmark prerequisites, not framework runtime dependencies.
+On Linux with nginx, PHP-FPM, curl and Python 3 installed, run `bash CorianderCore/Tests/benchmarks/run-production.sh > benchmark-production.json`. `PHP_FPM_BINARY` defaults to `php-fpm8.3`; `BENCHMARK_REQUESTS` defaults to 80 requests per case. Composer dependencies must already be installed. These tools are optional benchmark prerequisites, not framework runtime dependencies.
 
 The runner copies the current starter bootstrap into a disposable app, starts its own eight-worker FPM pool and nginx bound to localhost:8087, enables production caching/OPcache, and removes its processes and temporary files on exit. The fixture tests static/dynamic routes, root middleware, a three-file layout, 404/500 errors, and 20 ms public/session handlers under concurrency 1 and 8. Same-cookie public and session cases use a real session established beforehand; the session handler verifies all counter writes survive concurrency. Each case has five warmup requests and every measured response is validated.
 
