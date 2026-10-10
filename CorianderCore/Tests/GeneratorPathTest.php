@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Router\SafePath;
+use CorianderCore\Core\Console\{CommandExitCode, Commands\Make\Route\MakeRoute};
+use CorianderCore\Core\Support\OutputBuffer;
 
 class GeneratorPathTest extends RouteFixtureTestCase
 {
@@ -19,6 +21,10 @@ class GeneratorPathTest extends RouteFixtureTestCase
             self::fail('Escaping symlink accepted');
         } catch (\RuntimeException $e) {
             self::assertStringContainsString('escapes', $e->getMessage());
+            self::assertDirectoryDoesNotExist($this->directory . '/outside/new');
+            [$code, $output] = OutputBuffer::capture(fn() => (new MakeRoute($this->directory . '/root'))->execute(['link/new/index.get']));
+            self::assertSame(CommandExitCode::FAILURE, $code);
+            self::assertStringContainsString('escapes', $output);
             self::assertDirectoryDoesNotExist($this->directory . '/outside/new');
         } finally { unlink($link); }
     }
