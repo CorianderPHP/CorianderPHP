@@ -39,3 +39,5 @@ The release-published workflow dispatches `framework-released` to `CorianderPHP/
 - Validation: `.github/workflows/php.yml`, `CorianderCore/Tests/HttpIntegrationTest.php`, `RouteCacheConcurrencyTest.php` and `Tests/benchmarks/file-router.php`. Saved reports distinguish cold discovery, cached startup, repeated dispatch, layouts/middleware and actual HTTP; they do not claim production request latency.
 
 **Session migration:** `public/index.php` configures cookies but starts sessions on demand. Call `SessionBootstrap::start()` before application/authentication code uses `$_SESSION`; CSRF helpers start sessions automatically. `startForRequest()` remains available. See `docs/sessions.md`, `docs/middleware.md` and `docs/migration-0.3.0.md`.
+
+Route inspection: `php coriander routes:list` lists current method files and inherited middleware without executing them or modifying the cache. Documentation references: `CorianderCore/Core/Console/Commands/Routes.php`, command registration/help in `Console/CommandHandler.php`, `docs/cli.md`, `docs/routing.md` and `readme.md`.
