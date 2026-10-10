@@ -1,5 +1,13 @@
 # Benchmarks
 
+## Complete production requests
+
+On Linux with nginx, PHP-FPM, curl and Python 3 installed, run `bash CorianderCore/Tests/benchmarks/run-production.sh > benchmark-production.json`. `PHP_FPM_BINARY` defaults to `php-fpm8.3`; `BENCHMARK_REQUESTS` defaults to 80 requests per case. Composer dependencies must already be installed. These tools are optional benchmark prerequisites, not framework runtime dependencies.
+
+The runner copies the current starter bootstrap into a disposable app, starts its own eight-worker FPM pool and nginx bound to localhost:8087, enables production caching/OPcache, and removes its processes and temporary files on exit. The fixture tests static/dynamic routes, root middleware, a three-file layout, 404/500 errors, and 20 ms public/session handlers under concurrency 1 and 8. Same-cookie public and session cases use a real session established beforehand; the session handler verifies all counter writes survive concurrency. Each case has five warmup requests and every measured response is validated.
+
+Reports contain individual request p50/p95/p99 (nearest rank), completed throughput, PHP/FPM/OPcache metadata and PHP allocator peak bytes reported by the fixture. The memory figure excludes OS process RSS, nginx, shared OPcache and the load generator; error responses have no memory header and report null. The Python thread client and server share the machine, use new connections and closed-loop load, so these are reproducible comparisons rather than maximum server capacity or production guarantees. File-update protection is disabled for newly generated fixtures only. CI saves verified JSON artifacts without unstable absolute timing gates. Compare matching environments before changing routing or session behavior.
+
 `php coriander benchmark:router home 1000` measures a discovered GET handler using seven batches of 1,000 dispatches. It checks status and body and refuses unexpected errors. The second argument is iterations per sample.
 
 Run the fixture suite with:
@@ -32,3 +40,5 @@ CI records reports with OPcache CLI off/on on Linux and Windows across PHP 8.2â€
 ## Linux CI example
 
 The [PHP 8.5 Linux report with OPcache](benchmark-results-0.3-linux-php85-opcache.json) and [matching report without it](benchmark-results-0.3-linux-php85.json) came from the same verified CI run. For 1,000 routes, cached startup plus dispatch measured about 9.3 microseconds with warmed OPcache versus 2,175 microseconds without it. Repeated static dispatch measured about 7.0 versus 13.7 microseconds. These CLI fixtures exclude process/application startup. Fresh-fixture file-update protection is disabled only in the OPcache benchmark command; production deployments use their normal PHP lifecycle policy.
+
+The eager-session baseline is saved in [session-eager-baseline.json](benchmarks/session-eager-baseline.json), from [production CI run 38052972449](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38052972449). With eight concurrent same-cookie public requests and 20 ms of synthetic work, median latency was 164.02 ms (48.71 requests/s); the starter opened a session for every request. This shared-runner measurement is a baseline for the session change, not a general capacity claim.
