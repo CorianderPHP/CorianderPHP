@@ -23,6 +23,7 @@ Detailed guides live in the [docs/](docs) directory. Start with [Documentation I
 - [Controllers](docs/controllers.md)
 - [Middleware](docs/middleware.md)
 - [Benchmarks](docs/benchmarks.md)
+- [HTTP handlers](docs/http.md)
 - [Database](docs/database.md)
 - [Sitemap](docs/sitemap.md)
 - [Cache](docs/cache.md)

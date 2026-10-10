@@ -5,6 +5,7 @@ use CorianderCore\Core\Bootstrap\TimezoneBootstrap;
 use CorianderCore\Core\Container\Container;
 use CorianderCore\Core\Database\DatabaseHandler;
 use CorianderCore\Core\Http\RequestFactory;
+use CorianderCore\Core\Http\BadRequestException;
 use CorianderCore\Core\Http\ResponseEmitter;
 use CorianderCore\Core\Http\TrustedProxy;
 use CorianderCore\Core\Logging\Logger;
@@ -70,6 +71,8 @@ try {
 
     $request = RequestFactory::fromGlobals();
     ResponseEmitter::emit($router->dispatch($request), $request->getMethod());
+} catch (BadRequestException $exception) {
+    ResponseEmitter::emit(new Response(400, ['Content-Type' => 'text/plain; charset=utf-8'], $exception->getMessage()));
 } catch (Throwable $exception) {
     try {
         (new Logger())->error('Unhandled application exception.', ['exception' => $exception]);
