@@ -1,5 +1,7 @@
 # HTTP handlers
 
+`ErrorResponse::fromException($exception)` maps request errors to 400/413 and logs unexpected failures before returning 500. With `APP_ENV=local` or `development` and `APP_DEBUG=1`, unexpected errors include escaped exception details and an argument-free trace. Other environments always receive generic errors.
+
 The emitter suppresses bodies for HEAD, informational statuses, 204, 205 and 304. It omits forbidden framing headers for informational/204 responses and emits `Content-Length: 0` for 205. HEAD and 304 retain representation metadata such as a valid Content-Length; applications must supply that metadata accurately.
 
 `RequestFactory::fromGlobals()` checks `Content-Length` and bounds body reads before parsing. The default limit comes from `API_MAX_BODY_BYTES` (1 MiB without configuration); pass `maxBodyBytes:` to override it for an embedded application. Oversized input raises `PayloadTooLargeException`, emitted as 413 by the starter even when JSON is malformed. Injected raw bodies may be strings or PSR streams. PHP/web-server upload limits still apply before application code runs.

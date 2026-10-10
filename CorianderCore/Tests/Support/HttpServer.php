@@ -9,7 +9,7 @@ final class HttpServer
     private string $address;
     private string $log;
 
-    public function __construct(string $root, string $router)
+    public function __construct(string $root, string $router, array $environment = [])
     {
         $socket = stream_socket_server('tcp://127.0.0.1:0', $error, $message);
         if ($socket === false) {
@@ -19,7 +19,7 @@ final class HttpServer
         fclose($socket);
         $this->log = PROJECT_ROOT . '/CorianderCore/Tests/_tmp_server_' . bin2hex(random_bytes(5)) . '.log';
         $this->process = proc_open([PHP_BINARY, '-d', 'display_errors=0', '-S', $this->address, '-t', $root, $router],
-            [0 => ['pipe', 'r'], 1 => ['file', $this->log, 'a'], 2 => ['file', $this->log, 'a']], $pipes, PROJECT_ROOT, null, ['bypass_shell' => true]);
+            [0 => ['pipe', 'r'], 1 => ['file', $this->log, 'a'], 2 => ['file', $this->log, 'a']], $pipes, PROJECT_ROOT, $environment === [] ? null : array_merge(getenv(), $environment), ['bypass_shell' => true]);
         if (!is_resource($this->process)) {
             throw new \RuntimeException('Cannot start HTTP server');
         }

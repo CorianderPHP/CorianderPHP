@@ -13,6 +13,8 @@
 
 ## Breaking changes and upgrade
 
+`APP_DEBUG=1` now enables escaped exception details and argument-free traces only with `APP_ENV=local` or `development`. Production remains generic. Custom bootstraps may delegate their Throwable catch to `ErrorResponse::fromException()` for consistent 400/413/500 responses and logging.
+
 Response emission now suppresses content for informational/204/205/304 statuses as well as HEAD, and corrects prohibited framing headers. Existing ordinary responses keep their bodies and headers.
 
 Request bodies are bounded before parsing using `API_MAX_BODY_BYTES`. Oversized malformed JSON returns 413. Custom bootstraps must catch `PayloadTooLargeException` alongside `BadRequestException`; `RequestFactory::fromGlobals(maxBodyBytes: ...)` supports an explicit limit override.
