@@ -100,4 +100,17 @@ class FileRoutingTest extends RouteFixtureTestCase
         $this->expectException(\UnexpectedValueException::class);
         (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
     }
+
+    public function testNestedOutputCannotBypassHandlerResponseContract(): void
+    {
+        $this->put('index.get.php', 'return static function () { echo "outer"; ob_start(); echo "inner"; return new \\Nyholm\\Psr7\\Response(200); };');
+        $level = ob_get_level();
+        try {
+            (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
+            self::fail('Printed output accepted');
+        } catch (\UnexpectedValueException $e) {
+            self::assertStringContainsString('without printing', $e->getMessage());
+            self::assertSame($level, ob_get_level());
+        }
+    }
 }
