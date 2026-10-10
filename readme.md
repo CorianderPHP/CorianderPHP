@@ -76,6 +76,7 @@ Use `sqlScript($sql, $params)` for custom SQL such as joins, aggregates, and rep
 
 `make:controller` generates the requested class name. Older files declaring
 `ControllerTemplatePlaceholder` need their class declaration renamed to match the filename.
+Generated controllers return explicit error responses; use PSR responses for custom status codes and headers.
 
 All commands are invoked via `php coriander`:
 

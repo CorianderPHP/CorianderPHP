@@ -61,6 +61,19 @@ also allow HEAD. API controller verb naming remains unchanged.
 
 ## Best Practices
 
+Return a PSR `ResponseInterface` when choosing a status or headers. Calling
+`http_response_code()` or `header()` inside an echoed action does not configure
+the response returned by dispatch. Automatic API dispatch also accepts arrays
+for normal 200 JSON responses. Generated controllers return PSR responses for
+both explicit routes and automatic dispatch, including 403 on CSRF rejection.
+Update older application-owned controllers:
+
+```php
+return new \Nyholm\Psr7\Response(403,
+    ['Content-Type' => 'application/json; charset=utf-8'],
+    json_encode(['error' => 'Invalid CSRF token']));
+```
+
 - Keep actions small and delegate business logic to separate classes.
 - Name controllers in PascalCase; the CLI appends `Controller` automatically.
 - Place API controllers under `src/ApiControllers` and return JSON responses.
