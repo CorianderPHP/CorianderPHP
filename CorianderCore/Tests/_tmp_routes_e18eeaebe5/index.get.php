@@ -1,1 +1,0 @@
-<?php return static fn($request) => new \Nyholm\Psr7\Response(200, [], 'fixture');
