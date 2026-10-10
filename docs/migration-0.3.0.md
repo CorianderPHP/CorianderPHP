@@ -89,3 +89,7 @@ php coriander benchmark:router home 1000
 ```
 
 Verify authenticated and unauthenticated admin requests, form/JSON mutations, redirects, HEAD, 404/405, layouts and uploads. Use the [benchmark guide](benchmarks.md) for repeatable measurements. Database, migration, session, logger and asset APIs are otherwise retained.
+
+## Early request body limits
+
+Update custom bootstraps to catch `CorianderCore\Core\Http\PayloadTooLargeException` and return 413 before the generic exception handler. `RequestFactory::fromGlobals()` uses `API_MAX_BODY_BYTES` before parsing; embedded callers can pass `maxBodyBytes:`. Keep the root limits middleware configured with the same limit. The factory reads at most the limit plus one byte from a stream; PHP and web-server multipart upload limits apply before this code runs.

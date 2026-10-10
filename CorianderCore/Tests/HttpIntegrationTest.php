@@ -42,6 +42,7 @@ class HttpIntegrationTest extends TestCase
             }
             self::assertSame(400, $server->request('POST', '/form', '{broken', ['Content-Type' => 'application/json'])['status']);
             self::assertSame(413, $server->request('POST', '/form', str_repeat('x', 1025))['status']);
+            self::assertSame(413, $server->request('POST', '/form', str_repeat('{', 1025), ['Content-Type' => 'application/json'])['status']);
             self::assertSame(403, $server->request('GET', '/admin')['status']);
             $admin = $server->request('GET', '/admin', headers: ['Authorization' => 'Bearer fixture']);
             self::assertSame(200, $admin['status']);

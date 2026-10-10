@@ -13,6 +13,8 @@
 
 ## Breaking changes and upgrade
 
+Request bodies are bounded before parsing using `API_MAX_BODY_BYTES`. Oversized malformed JSON returns 413. Custom bootstraps must catch `PayloadTooLargeException` alongside `BadRequestException`; `RequestFactory::fromGlobals(maxBodyBytes: ...)` supports an explicit limit override.
+
 Controllers, manual registration, automatic controller/view fallback, HTTP method attributes, controller caches and their generator/build commands are removed. `Router::handle()` replaces the old registration/dispatch workflow; `ViewRenderer::response()` replaces `render()`. Handlers must return PSR responses without printing output. Parent middleware cannot be disabled by child files.
 
 There is no implicit `/api` CSRF exemption. Cookie-authenticated mutations need a token regardless of response format. Request limits apply to every starter route. Static paths take precedence before method selection; GET provides HEAD fallback and 405 advertises allowed methods.
