@@ -139,6 +139,16 @@ class SitemapHandler
         $sitemapXml->asXML($outputDir . 'sitemap.xml');
     }
 
+    /** Explicit pages only: route discovery must never publish private URLs. */
+    public function toXml(): string
+    {
+        $xml = new SimpleXMLElement('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>');
+        foreach ($this->dynamicPages as $page) {
+            $this->addPageToSitemap($xml, $page);
+        }
+        return $xml->asXML();
+    }
+
     /**
      * Add a page (static or dynamic) to the sitemap XML structure.
      *
@@ -148,7 +158,7 @@ class SitemapHandler
     protected function addPageToSitemap(SimpleXMLElement $sitemapXml, array $page): void
     {
         $urlElement = $sitemapXml->addChild('url');
-        $urlElement->addChild('loc', $page['url']);
+        $urlElement->addChild('loc', htmlspecialchars($page['url'], ENT_XML1, 'UTF-8'));
         $urlElement->addChild('lastmod', $page['lastmod']);
         $urlElement->addChild('priority', (string)$page['priority']);
     }

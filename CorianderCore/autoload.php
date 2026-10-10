@@ -31,6 +31,7 @@ spl_autoload_register(function (string $class): void {
     }
 
     $prefixes = [
+        'App\\'                    => PROJECT_ROOT . '/src/',
         'Controllers\\'            => PROJECT_ROOT . '/src/Controllers/',
         'ApiControllers\\'         => PROJECT_ROOT . '/src/ApiControllers/',
         'Middleware\\'             => PROJECT_ROOT . '/src/Middleware/',
