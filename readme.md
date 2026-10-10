@@ -11,7 +11,7 @@ composer install
 php -S localhost:8000 -t public public/index.php
 ```
 
-Open `/`. Node.js is optional for rebuilding the bundled assets; see [Node.js](docs/nodejs.md). Set `APP_ENV=production` for automatic route caching. No route build command is required.
+Open `/`. New applications default to production with debugging disabled and automatic route caching. For local development, set `APP_ENV=local` and `APP_DEBUG=1` in the automatically created `.env`. No route build command is required. Node.js is optional for rebuilding the bundled assets; see [Node.js](docs/nodejs.md).
 
 ## Create a route
 

@@ -4,11 +4,13 @@ CorianderPHP loads simple runtime variables from `.env`.
 
 When `.env` is missing and `.env-example` exists, the framework copies `.env-example` to `.env` before loading variables. The generated `.env` file is ignored by Git.
 
+New applications default to `APP_ENV=production` and `APP_DEBUG=0`. Missing files or missing keys use the same defaults. For local development, set `APP_ENV=local` and `APP_DEBUG=1` in `.env` to see exception details and discover route changes on every request. Existing `.env` files and explicit server settings are preserved.
+
 ## Supported Syntax
 
 ```env
-APP_ENV=local
-APP_DEBUG=1
+APP_ENV=production
+APP_DEBUG=0
 APP_TIMEZONE=Europe/Paris
 PROJECT_URL=http://localhost
 PUBLIC_URL_PREFIX=

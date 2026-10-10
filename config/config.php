@@ -10,6 +10,15 @@ if (file_exists($envLoader)) {
     \CorianderCore\Core\Bootstrap\EnvLoader::load(PROJECT_ROOT);
 }
 
+// Missing files or keys must not implicitly enable development behavior.
+foreach (['APP_ENV' => 'production', 'APP_DEBUG' => '0'] as $name => $default) {
+    if (getenv($name) === false) {
+        $value = $_ENV[$name] ?? $_SERVER[$name] ?? $default;
+        putenv($name . '=' . $value);
+        $_ENV[$name] = $_SERVER[$name] = $value;
+    }
+}
+
 if (!defined('PROJECT_URL')) {
     define('PROJECT_URL', getenv('PROJECT_URL') ?: '');
 }

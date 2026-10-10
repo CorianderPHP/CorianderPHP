@@ -79,6 +79,8 @@ Prefer `public` as the web-server document root, with missing paths routed to `i
 
 ## 6. Deploy and verify
 
+New `.env` files default to `APP_ENV=production` and `APP_DEBUG=0`; missing environment keys use these defaults too. Existing `.env` files are preserved. Set `APP_ENV=local` and `APP_DEBUG=1` explicitly for local development. Review existing deployment settings: an older `.env` containing local/debug values is not rewritten automatically.
+
 Set `APP_ENV=production`. Incoming requests create and refresh the data-only route map automatically after 30 seconds; no deployment build command is needed. New/renamed routes may take that interval to appear. Middleware candidates are checked on every request, independently of map freshness. Missing cached handlers/middleware fail closed. An unwritable cache falls back to discovery, with a performance cost. Apply your host's normal OPcache timestamp validation or worker restart policy when replacing application PHP.
 
 Run the framework suite and application-specific checks:

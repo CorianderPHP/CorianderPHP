@@ -5,6 +5,7 @@ namespace CorianderCore\Tests;
 
 use CorianderCore\Core\Router\Router;
 use CorianderCore\Core\Router\RouteMap;
+use CorianderCore\Core\Router\RouteCache;
 use CorianderCore\Core\Http\ResponseEmitter;
 use CorianderCore\Core\Support\OutputBuffer;
 use Nyholm\Psr7\ServerRequest;
@@ -36,7 +37,7 @@ class FileRoutingTest extends RouteFixtureTestCase
     public function testHeadOverrideFallbackAndEmitter(): void
     {
         $this->response('index.get.php', 'body', 202);
-        $router = new Router($this->directory);
+        $router = new Router($this->directory, new RouteCache($this->directory, production: false));
         $response = $router->handle(new ServerRequest('HEAD', '/'));
         self::assertSame(202, $response->getStatusCode());
         [, $output] = OutputBuffer::capture(fn() => ResponseEmitter::emit($response, 'HEAD'));
