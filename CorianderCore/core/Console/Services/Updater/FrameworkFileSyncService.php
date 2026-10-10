@@ -117,7 +117,7 @@ final class FrameworkFileSyncService
 
         try {
             foreach ($plan['operations'] as $operation) {
-                if ($operation['type'] === 'update' && !$force && $this->isLocallyModified($operation['relative_path'])) {
+                if (!$force && $this->isLocallyModified($operation['relative_path'])) {
                     $skippedLocalChanges[] = $operation['relative_path'];
                     continue;
                 }
@@ -284,34 +284,29 @@ final class FrameworkFileSyncService
 
         $root = escapeshellarg($this->projectRoot);
         $paths = implode(' ', array_map(static fn(string $path): string => escapeshellarg($path), $this->managedPaths));
-        $command = "git -C {$root} status --porcelain -- {$paths}";
+        $command = "git -C {$root} status --porcelain=v1 -z --untracked-files=all -- {$paths}";
         $output = shell_exec($command);
         if (!is_string($output) || trim($output) === '') {
             return $this->modifiedPathsIndex;
         }
 
-        $lines = preg_split('/\r\n|\r|\n/', trim($output));
-        if (!is_array($lines)) {
-            return $this->modifiedPathsIndex;
-        }
-
-        foreach ($lines as $line) {
-            if (strlen($line) < 4) {
+        $entries = explode("\0", $output);
+        for ($index = 0; $index < count($entries); $index++) {
+            $entry = $entries[$index];
+            if (strlen($entry) < 4) {
                 continue;
             }
+            $path = substr($entry, 3);
+            $this->modifiedPathsIndex[$path] = true;
 
-            $path = trim(substr($line, 3));
-            if ($path === '') {
-                continue;
+            // With -z, renamed/copied entries contain destination then source.
+            $status = substr($entry, 0, 2);
+            if (str_contains($status, 'R') || str_contains($status, 'C')) {
+                $originalPath = $entries[++$index] ?? '';
+                if ($originalPath !== '') {
+                    $this->modifiedPathsIndex[$originalPath] = true;
+                }
             }
-
-            if (str_contains($path, ' -> ')) {
-                $parts = explode(' -> ', $path);
-                $path = trim((string) end($parts));
-            }
-
-            $normalizedPath = str_replace('\\', '/', $path);
-            $this->modifiedPathsIndex[$normalizedPath] = true;
         }
 
         return $this->modifiedPathsIndex;

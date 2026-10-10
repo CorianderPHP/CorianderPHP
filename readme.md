@@ -107,6 +107,7 @@ All commands are invoked via `php coriander`:
 - Stable releases are preferred by default. Use `--pre-release` to allow pre-release updates; if no stable release exists, the updater falls back to the latest pre-release and prints a warning.
 - Updater execution can be restricted with environment policy (`CORIANDER_UPDATER_ENABLED`, `CORIANDER_UPDATER_ALLOW_PRODUCTION`, optional `CORIANDER_UPDATER_AUTH_TOKEN`, and rate-limit controls).
 - Only framework-managed paths are updated by the updater, and partial failures trigger automatic rollback.
+- Git-detected local edits, renames, deletions, and untracked files are preserved unless `--force` is used; this protection requires Git and a Git checkout.
 - Backups are written under `backups/coriander/<from-version>-to-<to-version>/` by default (configurable via `CORIANDER_UPDATE_BACKUP_DIR` in `config/config.php`).
 - Rollback restores from the most recent backup scope detected in the configured backup directory.
 - Rollback also removes files that were originally added by the update (when rollback metadata is available).

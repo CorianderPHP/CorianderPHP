@@ -150,6 +150,60 @@ class FrameworkFileSyncServiceIntegrationTest extends TestCase
         $service->rollbackBackupScope('../escape');
     }
 
+    public function testGitLocalChangesArePreservedUnlessForced(): void
+    {
+        if (!function_exists('proc_open') || !function_exists('shell_exec')) {
+            $this->markTestSkipped('Git subprocess support is required.');
+        }
+        mkdir($this->root . '/CorianderCore');
+        $spacedName = PHP_OS_FAMILY === 'Windows' ? 'space name.txt' : 'space -> name.txt';
+        $renamedName = PHP_OS_FAMILY === 'Windows' ? 'renamed destination.txt' : 'renamed -> destination.txt';
+        foreach (['00-first.txt', $spacedName, 'deleted.txt', 'old.txt'] as $filename) {
+            file_put_contents($this->root . '/CorianderCore/' . $filename, 'original');
+        }
+        $this->runGit('init', '--quiet');
+        $this->runGit('add', 'CorianderCore');
+        $this->runGit('-c', 'user.name=Framework Tests', '-c', 'user.email=tests@example.invalid', 'commit', '--quiet', '-m', '🧪 Create test baseline.');
+        file_put_contents($this->root . '/CorianderCore/00-first.txt', 'local');
+        file_put_contents($this->root . '/CorianderCore/' . $spacedName, 'local');
+        unlink($this->root . '/CorianderCore/deleted.txt');
+        $this->runGit('mv', 'CorianderCore/old.txt', 'CorianderCore/' . $renamedName);
+        file_put_contents($this->root . '/CorianderCore/untracked file.txt', 'local');
+
+        mkdir($this->root . '/download/CorianderCore', 0775, true);
+        foreach (['00-first.txt', $spacedName, 'deleted.txt', 'old.txt', $renamedName, 'untracked file.txt'] as $filename) {
+            file_put_contents($this->root . '/download/CorianderCore/' . $filename, 'remote');
+        }
+        $service = new FrameworkFileSyncService($this->root, ['CorianderCore']);
+        $plan = $service->buildPlan($this->root . '/download');
+        $result = $service->applyPlan($plan);
+        $this->assertSame(6, $result['skipped_local_changes_count']);
+        foreach (['00-first.txt', $spacedName, 'untracked file.txt'] as $filename) {
+            $this->assertSame('local', file_get_contents($this->root . '/CorianderCore/' . $filename));
+        }
+        $this->assertSame('original', file_get_contents($this->root . '/CorianderCore/' . $renamedName));
+        $this->assertFileDoesNotExist($this->root . '/CorianderCore/old.txt');
+        $this->assertFileDoesNotExist($this->root . '/CorianderCore/deleted.txt');
+
+        $forced = $service->applyPlan($plan, true);
+        $this->assertSame(0, $forced['skipped_local_changes_count']);
+        foreach ($plan['operations'] as $operation) {
+            $this->assertSame('remote', file_get_contents($operation['destination']));
+        }
+    }
+
+    private function runGit(string ...$args): void
+    {
+        $process = proc_open(array_merge(['git', '-C', $this->root], $args), [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        if (!is_resource($process)) {
+            throw new \RuntimeException('Unable to start test Git process.');
+        }
+        $output = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $this->assertSame(0, proc_close($process), $output);
+    }
+
     private function deleteDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
