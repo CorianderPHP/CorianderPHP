@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Http;
 
 use CorianderCore\Core\Router\ViewRenderer;
-use CorianderCore\Core\Support\OutputBuffer;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
@@ -29,12 +28,8 @@ final class Responses
         return new Response($status, ['Location' => $location]);
     }
 
-    public static function view(string $view, array $data = [], int $status = 200): ResponseInterface
+    public static function view(string $view, array $data = [], int $status = 200, bool $layout = true): ResponseInterface
     {
-        [$rendered, $html] = OutputBuffer::capture(fn() => (new ViewRenderer())->render($view, $data));
-        if (!$rendered) {
-            throw new \RuntimeException('View not found: ' . $view);
-        }
-        return self::html($html, $status);
+        return (new ViewRenderer())->response($view, $data, $status, $layout);
     }
 }
