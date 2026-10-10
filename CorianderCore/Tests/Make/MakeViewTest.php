@@ -8,6 +8,21 @@ use CorianderCore\Core\Utils\DirectoryHandler;
 
 class MakeViewTest extends TestCase
 {
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testGeneratedViewRendersWithoutOpeningSession(): void
+    {
+        ob_start();
+        try {
+            $this->assertSame(0, $this->makeView->execute(['PublicPage']));
+        } finally { ob_end_clean(); }
+        $response = (new \CorianderCore\Core\Router\ViewRenderer(self::$testPath))->response('public-page');
+        $html = (string) $response->getBody();
+        $this->assertStringContainsString('<h1>public-page</h1>', $html);
+        $this->assertStringNotContainsString('<form', $html);
+        $this->assertStringNotContainsString('<!--', $html);
+        $this->assertSame(PHP_SESSION_NONE, session_status());
+    }
+
     /**
      * @var MakeView Holds the instance of the MakeView class for testing.
      */

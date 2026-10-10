@@ -93,3 +93,7 @@ Verify authenticated and unauthenticated admin requests, form/JSON mutations, re
 ## Early request body limits
 
 Update custom bootstraps to catch `CorianderCore\Core\Http\PayloadTooLargeException` and return 413 before the generic exception handler. `RequestFactory::fromGlobals()` uses `API_MAX_BODY_BYTES` before parsing; embedded callers can pass `maxBodyBytes:`. Keep the root limits middleware configured with the same limit. The factory reads at most the limit plus one byte from a stream; PHP and web-server multipart upload limits apply before this code runs.
+
+## Removed unused container
+
+`CorianderCore\Core\Container\Container` is removed in 0.3.0. The framework did not use it. If your application registered services there, construct them in application-owned code and pass dependencies through constructors. Keep any application-specific factories in `src`; no replacement container dependency is required. `make:view` now generates a minimal section/heading without a form. Add `Csrf::input()` explicitly to actual mutating forms.

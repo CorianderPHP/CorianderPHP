@@ -41,3 +41,5 @@ The release-published workflow dispatches `framework-released` to `CorianderPHP/
 **Session migration:** `public/index.php` configures cookies but starts sessions on demand. Call `SessionBootstrap::start()` before application/authentication code uses `$_SESSION`; CSRF helpers start sessions automatically. `startForRequest()` remains available. See `docs/sessions.md`, `docs/middleware.md` and `docs/migration-0.3.0.md`.
 
 Route inspection: `php coriander routes:list` lists current method files and inherited middleware without executing them or modifying the cache. Documentation references: `CorianderCore/Core/Console/Commands/Routes.php`, command registration/help in `Console/CommandHandler.php`, `docs/cli.md`, `docs/routing.md` and `readme.md`.
+
+**Removed API:** unused `CorianderCore\Core\Container\Container`; migrate application registrations to direct construction and constructor injection in `src`. Generated views no longer include a default POST form or open sessions. Forms still use `Csrf::input()`. References: `CorianderCore/core/Console/Commands/Make/View/templates/view.php`, `docs/cli.md`, `docs/database.md`, `docs/migration-0.3.0.md`, `readme.md`.
