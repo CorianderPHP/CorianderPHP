@@ -71,7 +71,9 @@ Behavior:
 - Shows current and latest version before applying updates.
 - Asks for confirmation in interactive mode.
 - Updates only managed framework paths (`CorianderCore` and `coriander`).
-- Protects local modified files by skipping them unless `--force` is used.
+- Protects Git-detected local modifications, renames, deletions, and untracked
+  files by skipping affected paths unless `--force` is used. Git must be available
+  and the installation must be a Git checkout for this detection.
 - Creates `.bak` backups before overwriting managed files.
 - Automatically rolls back applied files if an update operation fails mid-way.
 - Runs post-update tasks (`composer dump-autoload`).
