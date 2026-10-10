@@ -135,16 +135,17 @@ class WebControllerHandler
         }
 
         $params = array_slice($segments, 2);
-
-        if ($action !== 'index' && ControllerActionInspector::isPublicInvokable($controller, $action)) {
-            return [true, call_user_func_array([$controller, $action], $params)];
-        }
-
-        if ($method === 'POST' && ControllerActionInspector::isPublicInvokable($controller, 'store')) {
-            return [true, call_user_func_array([$controller, 'store'], $params)];
+        $method = strtoupper($method);
+        if (($action === 'index' || !ControllerActionInspector::isPublicInvokable($controller, $action))
+            && $method === 'POST' && ControllerActionInspector::isPublicInvokable($controller, 'store')) {
+            $action = 'store';
         }
 
         if (ControllerActionInspector::isPublicInvokable($controller, $action)) {
+            $allowedMethods = ControllerActionInspector::allowedMethods($controller, $action);
+            if (!in_array($method, $allowedMethods, true)) {
+                return [true, new Response(405, ['Allow' => implode(', ', $allowedMethods)], 'Method Not Allowed')];
+            }
             return [true, call_user_func_array([$controller, $action], $params)];
         }
 

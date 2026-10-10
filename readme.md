@@ -115,6 +115,10 @@ All commands are invoked via `php coriander`:
 
 ## CSRF Protection
 
+Automatic web-controller actions enforce HTTP methods. Declare custom mutating
+actions with `#[HttpMethods('POST')]`; see [Controllers](docs/controllers.md#automatic-action-methods)
+for defaults and upgrade guidance.
+
 CorianderPHP ships with a token-based CSRF guard. Include the token inside forms:
 
 ```php
