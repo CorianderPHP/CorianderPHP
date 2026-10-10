@@ -5,8 +5,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once PROJECT_ROOT . '/CorianderCore/autoload.php';
 
 use CorianderCore\Core\Bootstrap\{SessionBootstrap, TimezoneBootstrap};
-use CorianderCore\Core\Http\{BadRequestException, PayloadTooLargeException, RequestFactory, ResponseEmitter, Responses, TrustedProxy};
-use CorianderCore\Core\Logging\Logger;
+use CorianderCore\Core\Http\{ErrorResponse, RequestFactory, ResponseEmitter, TrustedProxy};
 use CorianderCore\Core\Router\Router;
 
 // PHP's development server passes existing asset requests to its router script.
@@ -28,14 +27,7 @@ try {
     TimezoneBootstrap::applyFromEnvironment(is_string($timezone) ? $timezone : null);
     $request = RequestFactory::fromGlobals();
     $response = (new Router())->handle($request);
-} catch (PayloadTooLargeException $exception) {
-    $response = Responses::html('Payload Too Large', 413);
-} catch (BadRequestException $exception) {
-    $response = Responses::html('Bad Request', 400);
 } catch (Throwable $exception) {
-    try {
-        (new Logger())->error('Unhandled application exception.', ['exception' => $exception]);
-    } catch (Throwable) {}
-    $response = Responses::html('Internal Server Error', 500);
+    $response = ErrorResponse::fromException($exception);
 }
 ResponseEmitter::emit($response, $_SERVER['REQUEST_METHOD'] ?? 'GET');
