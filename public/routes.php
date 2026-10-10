@@ -21,9 +21,12 @@ use CorianderCore\Core\Router\ViewRenderer;
 //     echo 'User ID: ' . $request->getAttribute('id');
 // });
 
-// Route for handling sitemap.xml requests
-$router->get('home', static fn() => (new ViewRenderer())->render('home'));
+// Register the homepage and its /home alias explicitly.
+$homepage = static fn() => (new ViewRenderer())->render('home');
+$router->get('/', $homepage);
+$router->get('home', $homepage);
 
+// Route for handling sitemap.xml requests
 $router->get('sitemap.xml', function (ServerRequest $request) use ($notFound) {
     $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
     if (!file_exists($sitemapPath)) {
