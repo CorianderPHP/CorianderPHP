@@ -4,7 +4,7 @@
 
 - Routes are discovered automatically from `src/Routes`. Use `users/[id].get.php`, `users/[id].post.php` and nested parameter directories. Each file returns a request-to-response callable.
 - Directory `_middleware.php` files inherit parent middleware, so admin authentication remains active beneath child directories.
-- Views live in `src/Views`. The nearest complete `_header.php`/`_footer.php` pair wraps the page; admin layouts override public layouts. Fragments can skip layouts explicitly.
+- Views live in `src/Views`. `_header.php` and `_footer.php` inherit independently: an admin header can use the shared footer, or the reverse. Missing parts are omitted, allowing header-only, footer-only and bare views. Existing complete layouts behave as before; partial layouts render instead of raising an incomplete-layout error. Fragments can skip layouts explicitly.
 - `Responses::html/json/view/redirect` supply explicit PSR responses. Request parsing includes query values, form/JSON bodies, cookies and nested uploads. Malformed JSON returns 400.
 - Production route maps refresh automatically on incoming requests, without a deployment command. Development discovers files every request. Cache writes are locked and atomic; missing cached application files fail closed.
 - The starter and optional generators use the new structure and the `App\` namespace. Sitemaps list public URLs explicitly.

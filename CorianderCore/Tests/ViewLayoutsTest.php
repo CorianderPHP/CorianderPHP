@@ -7,7 +7,7 @@ use CorianderCore\Core\Router\ViewRenderer;
 
 class ViewLayoutsTest extends RouteFixtureTestCase
 {
-    public function testNearestPairSeparatesAdminAndPublicAndSharesEscapedData(): void
+    public function testNearestLayoutsSeparateAdminAndPublicAndShareEscapedData(): void
     {
         $this->put('_header.php', 'echo "public:" . $title;');
         $this->put('_footer.php', 'echo ":footer:" . $title;');
@@ -35,14 +35,75 @@ class ViewLayoutsTest extends RouteFixtureTestCase
         self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
     }
 
-    public function testIncompleteChildPairCannotMixWithParent(): void
+    public function testChildHeaderInheritsRootFooter(): void
     {
-        $this->put('_header.php', '');
-        $this->put('_footer.php', '');
-        $this->put('admin/_header.php', '');
-        $this->put('admin/home.php', '');
-        $this->expectExceptionMessage('Incomplete view layout');
-        (new ViewRenderer($this->directory))->response('admin/home');
+        $this->put('_header.php', 'echo "rootheader:";');
+        $this->put('_footer.php', 'echo ":rootfooter:" . $title;');
+        $this->put('admin/_header.php', 'echo "adminheader:" . $title . ":";');
+        $this->put('admin/users/home.php', 'echo "body";');
+        self::assertSame('adminheader:&lt;title&gt;:body:rootfooter:&lt;title&gt;', (string)
+            (new ViewRenderer($this->directory))->response('admin/users/home', ['title' => '<title>'])->getBody());
+    }
+
+    public function testChildFooterInheritsRootHeader(): void
+    {
+        $this->put('_header.php', 'echo "rootheader:";');
+        $this->put('_footer.php', 'echo ":rootfooter";');
+        $this->put('admin/_footer.php', 'echo ":adminfooter";');
+        $this->put('admin/users/home.php', 'echo "body";');
+        self::assertSame('rootheader:body:adminfooter', (string)
+            (new ViewRenderer($this->directory))->response('admin/users/home')->getBody());
+    }
+
+    public function testHeaderAndFooterCanComeFromDifferentNestedAncestors(): void
+    {
+        $this->put('_header.php', 'echo "rootheader:";');
+        $this->put('_footer.php', 'echo ":rootfooter";');
+        $this->put('admin/_header.php', 'echo "adminheader:";');
+        $this->put('admin/users/_footer.php', 'echo ":usersfooter";');
+        $this->put('admin/users/profile/home.php', 'echo "body";');
+        self::assertSame('adminheader:body:usersfooter', (string)
+            (new ViewRenderer($this->directory))->response('admin/users/profile/home')->getBody());
+    }
+
+    public function testHeaderWithoutAnyFooterAndFooterWithoutAnyHeader(): void
+    {
+        $this->put('header-only/_header.php', 'echo "header:";');
+        $this->put('header-only/pages/home.php', 'echo "body";');
+        $this->put('footer-only/_footer.php', 'echo ":footer";');
+        $this->put('footer-only/pages/home.php', 'echo "body";');
+        $renderer = new ViewRenderer($this->directory);
+        self::assertSame('header:body', (string) $renderer->response('header-only/pages/home')->getBody());
+        self::assertSame('body:footer', (string) $renderer->response('footer-only/pages/home')->getBody());
+        self::assertSame('body', (string) $renderer->response('header-only/pages/home', layout: false)->getBody());
+        self::assertSame('body', (string) $renderer->response('footer-only/pages/home', layout: false)->getBody());
+    }
+
+    public function testExistingInvalidLayoutFileIsNotSilentlyOmitted(): void
+    {
+        $this->put('home.php', 'echo "body";');
+        mkdir($this->directory . '/_header.php');
+        $this->expectExceptionMessage('Required application file is missing or invalid');
+        (new ViewRenderer($this->directory))->response('home');
+    }
+
+    public function testLayoutSymlinksCannotEscapeViewRoot(): void
+    {
+        $this->put('outside.php', 'echo "secret";');
+        foreach (['_header.php', '_footer.php'] as $part) {
+            $root = $this->directory . '/' . $part . '-views';
+            mkdir($root);
+            $this->put($part . '-views/home.php', 'echo "body";');
+            if (!@symlink($this->directory . '/outside.php', $root . '/' . $part)) {
+                self::markTestSkipped('Symlink creation requires host privileges');
+            }
+            try {
+                (new ViewRenderer($root))->response('home');
+                self::fail('Escaping layout symlink accepted');
+            } catch (\RuntimeException $error) {
+                self::assertStringContainsString('escapes its directory', $error->getMessage());
+            }
+        }
     }
 
     public function testUserDataCannotOverwriteRendererFileList(): void
