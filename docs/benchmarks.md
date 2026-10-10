@@ -42,3 +42,12 @@ CI records reports with OPcache CLI off/on on Linux and Windows across PHP 8.2â€
 The [PHP 8.5 Linux report with OPcache](benchmark-results-0.3-linux-php85-opcache.json) and [matching report without it](benchmark-results-0.3-linux-php85.json) came from the same verified CI run. For 1,000 routes, cached startup plus dispatch measured about 9.3 microseconds with warmed OPcache versus 2,175 microseconds without it. Repeated static dispatch measured about 7.0 versus 13.7 microseconds. These CLI fixtures exclude process/application startup. Fresh-fixture file-update protection is disabled only in the OPcache benchmark command; production deployments use their normal PHP lifecycle policy.
 
 The eager-session baseline is saved in [session-eager-baseline.json](benchmarks/session-eager-baseline.json), from [production CI run 38052972449](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38052972449). With eight concurrent same-cookie public requests and 20 ms of synthetic work, median latency was 164.02 ms (48.71 requests/s); the starter opened a session for every request. This shared-runner measurement is a baseline for the session change, not a general capacity claim.
+
+The lazy-session result is saved in [session-lazy-result.json](benchmarks/session-lazy-result.json), from [production CI run 38053341764](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38053341764). Both runs used PHP 8.3.35, FPM/OPcache, eight workers, 80 requests per case and the same fixture/client. They ran on separate hosted runners, so small differences are noise rather than evidence of general speed gains.
+
+| Same-cookie case, concurrency 8 | Eager p50 | Lazy p50 | Eager requests/s | Lazy requests/s |
+| --- | ---: | ---: | ---: | ---: |
+| Public handler, 20 ms work | 164.02 ms | 21.12 ms | 48.71 | 365.73 |
+| Session-writing handler, 20 ms holding lock | 164.15 ms | 162.09 ms | 48.64 | 49.24 |
+
+Public handlers no longer acquire a session lock. Session-writing handlers retain the lock and all counter writes persist. Reported PHP allocator peak stayed at 2 MiB for these cases; this coarse allocator figure does not prove unchanged process RSS. See [sessions](sessions.md) for migration and explicit early lock release.

@@ -22,7 +22,6 @@ if (PHP_SAPI === 'cli-server') {
 
 try {
     SessionBootstrap::configure(TrustedProxy::isSecureRequest($_SERVER));
-    SessionBootstrap::startForRequest($_SERVER, statelessPrefixes: []);
     $timezone = getenv('APP_TIMEZONE');
     TimezoneBootstrap::applyFromEnvironment(is_string($timezone) ? $timezone : null);
     $request = RequestFactory::fromGlobals();

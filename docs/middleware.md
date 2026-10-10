@@ -17,3 +17,5 @@ Discovery reads filenames without executing handlers or middleware. Middleware f
 The starter puts security headers, request limits and CSRF protection in the root `_middleware.php`. CSRF protection has no implicit `/api` exemption. JSON output does not make a cookie-authenticated endpoint stateless. Explicit prefix exceptions are available for applications that use separate stateless authentication.
 
 These conventions replace manual route-group registration in 0.3.0. Application middleware uses the App namespace under src.
+
+Session authentication middleware must call `SessionBootstrap::start()` before accessing `$_SESSION`. The starter configures cookies without eager startup; CSRF helpers open sessions automatically. See [sessions](sessions.md).

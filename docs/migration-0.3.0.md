@@ -44,7 +44,7 @@ Keep classes in `src/Middleware` with namespace `App\Middleware`. Root middlewar
 
 Compare your root `_middleware.php` with the starter: security headers, configured request limits, CSRF and an app-owned HTML 404 middleware. The request-limit class keeps its `ApiRequestLimitsMiddleware` name and existing configuration keys; `apiPrefixes: []` applies it to every route.
 
-There is no implicit `/api` CSRF exemption. Cookie-authenticated POST/PUT/PATCH/DELETE requests need a token even when returning JSON. Use `Csrf::input()` for forms or send `csrf_token` in parsed JSON. Only explicitly stateless authentication should use a configured prefix exemption. The starter starts sessions for all paths; custom bootstraps may explicitly pass stateless prefixes to `SessionBootstrap::startForRequest()`.
+There is no implicit `/api` CSRF exemption. Cookie-authenticated POST/PUT/PATCH/DELETE requests need a token even when returning JSON. Use `Csrf::input()` for forms or send `csrf_token` in parsed JSON. Only explicitly stateless authentication should use a configured prefix exemption. **The starter now opens sessions on demand.** Call `SessionBootstrap::start()` before application or authentication middleware reads/writes `$_SESSION`; CSRF helpers start it automatically. Custom bootstraps can retain explicit `startForRequest()` calls. See [sessions](sessions.md) for persistence and early lock release.
 
 ## 4. Move templates and layouts
 

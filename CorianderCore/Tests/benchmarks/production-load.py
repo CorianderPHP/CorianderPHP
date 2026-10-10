@@ -48,9 +48,15 @@ def run(port, count):
                 results = list(clients.map(lambda _: request(port, path, cookie), range(count)))
             elapsed = time.perf_counter() - started
             values = []
-            for response_status, response_body, _, latency in results:
+            for response_status, response_body, response_headers, latency in results:
                 if response_status != status or (expected is not None and response_body != expected):
                     raise RuntimeError(f"Unexpected response: {name} {response_status} {response_body!r}")
+                if name != "500":
+                    active = "1" if name == "session_same_cookie_hold" else "0"
+                    if response_headers.get("x-session-active") != active:
+                        raise RuntimeError(f"Unexpected session startup: {name}")
+                    if active == "0" and "set-cookie" in response_headers:
+                        raise RuntimeError(f"Public request created a cookie: {name}")
                 values.append(latency)
             if expected is None and sorted(json.loads(result[1])["count"] for result in results) != list(range(6, count + 6)):
                 raise RuntimeError("Concurrent session writes lost updates")
