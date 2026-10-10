@@ -49,6 +49,12 @@ The file is automatically loaded from `config/config.php` when present. Constant
 
 CorianderPHP supports timestamped migration files with batch tracking.
 
+Migration history is inserted/deleted within the same transaction as `up()` or
+`down()`, so failures in history bookkeeping roll back transactional database
+changes as well. This guarantee depends on the database operation: MySQL DDL can
+commit implicitly, and migrations that manually commit cannot be rolled back
+by the framework. Avoid manual transaction control when atomicity is required.
+
 ### Create migration files
 
 ```bash
