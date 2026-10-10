@@ -27,6 +27,8 @@ PHP 8.2 remains the minimum, with no added runtime dependencies. Database, migra
 
 ## References for documentation updates
 
+Production benchmark references: `CorianderCore/Tests/benchmarks/{production-fixture.php,production-load.py,run-production.sh}`, `.github/workflows/production-benchmark.yml` and `docs/benchmarks.md`. The optional nginx/FPM harness measures complete verified requests and concurrent sessions using only standard development tools.
+
 The release-published workflow dispatches `framework-released` to `CorianderPHP/Documentation`. Update the routing, HTTP, middleware, views, cache, CLI, sitemap, security and upgrade guides using:
 
 - Framework files: `CorianderCore/core/Router/{Router,RouteMap,RouteCache,SafePath,ViewRenderer}.php`, `core/Http/{RequestFactory,Responses,BadRequestException}.php`, `core/Security/{CsrfMiddleware,ApiRequestLimitsMiddleware}.php`, `core/Console/Commands/Make/{Route,View,Sitemap}`, `core/Sitemap/SitemapHandler.php`, `CorianderCore/autoload.php`.
