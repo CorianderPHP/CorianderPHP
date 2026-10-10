@@ -37,7 +37,8 @@ execution only through the front controller.
 
 - CSRF middleware validates mutating web methods: `POST`, `PUT`, `PATCH`, `DELETE`.
 - Use `\CorianderCore\Core\Security\Csrf::input()` in forms.
-- For non-API JSON requests, include the token in the JSON body as `csrf_token`.
+- For JSON requests, include the token in the JSON body as `csrf_token`.
+- No URL prefix bypasses CSRF by default. Pass `apiPrefixes: ['api']` only for an explicitly stateless API that does not use cookie authentication.
 
 ## Proxy and TLS Detection
 
