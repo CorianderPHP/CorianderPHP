@@ -64,6 +64,27 @@ class ViewRendererTest extends TestCase
         $this->assertFalse($renderer->render('C:/temp/example'));
     }
 
+    public function testRepeatedRenderingIncludesLayoutFreshDataAndViewMetadata(): void
+    {
+        mkdir($this->safeViewDir . '/second', 0775, true);
+        file_put_contents($this->safeViewDir . '/index.php', '<?php echo "VIEW:" . $label;');
+        file_put_contents($this->safeViewDir . '/metadata.php', '<?php $metadata = "<title>" . $label . "</title>";');
+        file_put_contents($this->safeViewDir . '/second/index.php', '<?php echo "VIEW:" . $label;');
+        file_put_contents($this->safeViewDir . '/second/metadata.php', '<?php $metadata = "<title>Second view</title>";');
+        $renderer = new ViewRenderer();
+        $view = basename($this->safeViewDir);
+        foreach ([[$view, '<first>', '&lt;first&gt;'], [$view . '/second', 'second', 'Second view'],
+            [$view, '<again>', '&lt;again&gt;']] as [$path, $label, $title]) {
+            [$rendered, $body] = \CorianderCore\Core\Support\OutputBuffer::capture(
+                fn() => $renderer->render($path, ['label' => $label]));
+            $this->assertTrue($rendered);
+            $this->assertStringContainsString('<!DOCTYPE html>', $body);
+            $this->assertStringContainsString('<title>' . $title . '</title>', $body);
+            $this->assertStringContainsString('VIEW:' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8'), $body);
+            $this->assertStringContainsString('</html>', $body);
+        }
+    }
+
     private function deleteDirectory(string $directory): void
     {
         if (!is_dir($directory)) {

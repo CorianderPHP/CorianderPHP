@@ -110,6 +110,7 @@ All commands are invoked via `php coriander`:
 ## Framework Update Notes
 
 Explicit routes for `/` now take precedence over the legacy `home` fallback.
+View rendering now includes templates and metadata on every call; see [Views](docs/views.md) for app-owned template compatibility.
 
 - Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
 - Stable releases are preferred by default. Use `--pre-release` to allow pre-release updates; if no stable release exists, the updater falls back to the latest pre-release and prints a warning.

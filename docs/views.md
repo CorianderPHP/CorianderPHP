@@ -96,6 +96,12 @@ When the document root is already `public/`, leave the prefix empty. URLs genera
 
 ## Output Safety
 
+Every `ViewRenderer::render()` call evaluates the page, shared header/footer,
+and its metadata with the current data, including repeated calls in one PHP
+process. Keep reusable functions and classes in autoloaded files rather than
+declaring them inside templates. Older app-owned headers and not-found handlers
+should use `require` for templates and metadata instead of `require_once`.
+
 Variables passed to view templates are automatically escaped for HTML output to mitigate XSS attacks.
 
 ## Path Safety

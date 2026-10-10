@@ -2,7 +2,7 @@
 $requestedView = isset($__corianderRequestedView) ? $__corianderRequestedView : 'home';
 $metaDataPath = PROJECT_ROOT . '/public/public_views/' . $requestedView . '/metadata.php';
 if (file_exists($metaDataPath)) {
-    require_once $metaDataPath;
+    require $metaDataPath;
 }
 ?>
 
