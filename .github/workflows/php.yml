@@ -41,7 +41,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install Composer dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+      run: composer install --prefer-dist --no-progress --no-interaction
 
     - name: Dependency audit
       run: composer audit --no-interaction
@@ -54,10 +54,10 @@ jobs:
       run: php vendor/phpunit/phpunit/phpunit --testdox
 
     - name: Record verified routing benchmarks
-      run: php CorianderCore/Tests/benchmarks/file-router.php benchmark-results.json
+      run: php -d opcache.enable_cli=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results.json
 
     - name: Record OPcache CLI benchmarks
-      run: php -d opcache.enable_cli=1 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
+      run: php -d opcache.enable_cli=1 -d opcache.file_update_protection=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4

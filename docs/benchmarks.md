@@ -6,12 +6,12 @@ Run the fixture suite with:
 
 ```bash
 php CorianderCore/Tests/benchmarks/file-router.php benchmark-results.json
-php -d opcache.enable_cli=1 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
+php -d opcache.enable_cli=1 -d opcache.file_update_protection=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
 ```
 
 It verifies 10/100/1000 total routes (half static, half dynamic), discovery, a new router loading a persisted map, repeated static/dynamic/404 dispatch and middleware with a three-file layout. It also sends actual HTTP requests through PHP's development server. Every measured route checks status and body; middleware cases verify response headers.
 
-Median and p95 are **batch means per operation**, not individual HTTP latency percentiles. Cached request startup includes reading the map and dispatch, but excludes creating the PSR request and process/application boot. Repeated dispatch reuses one router. HTTP includes socket/server/bootstrap costs, with development discovery enabled in the fixture. Discovery uses single-operation batches. Memory is the process-wide peak, not allocation per request. Reports include PHP, OS and OPcache settings; compare matching environments.
+Median and p95 are **batch means per operation**, not individual HTTP latency percentiles. Cached request startup includes reading the map and dispatch, but excludes creating the PSR request and process/application boot. Repeated dispatch reuses one router. HTTP includes socket/server/bootstrap costs, with development discovery enabled in the fixture. Discovery uses single-operation batches. Memory is the process-wide peak, not allocation per request. The OPcache run disables file-update protection for its freshly generated disposable fixtures. Reports include PHP, OS and OPcache settings; compare matching environments.
 
 ## Initial Windows results
 

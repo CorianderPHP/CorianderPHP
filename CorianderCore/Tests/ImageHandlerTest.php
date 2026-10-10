@@ -76,7 +76,7 @@ class ImageHandlerTest extends TestCase
             $backgroundColor = imagecolorallocate($image, 0, 0, 0); // Black background
             imagefilledrectangle($image, 0, 0, 100, 100, $backgroundColor);
             imagepng($image, self::$testImageFullPath);
-            imagedestroy($image);
+            unset($image);
         }
     }
 
@@ -304,7 +304,7 @@ class ImageHandlerTest extends TestCase
         $imagePath = $publicImageDir . '/test_image.png';
         $image = imagecreatetruecolor(10, 10);
         imagepng($image, $imagePath);
-        imagedestroy($image);
+        unset($image);
 
         $html = ImageHandler::render('/public/assets/_tmp_image_handler/test_image.png', ['alt' => 'Test Image']);
 
@@ -324,7 +324,7 @@ class ImageHandlerTest extends TestCase
         $backgroundColor = imagecolorallocate($image, $red, $green, $blue);
         imagefilledrectangle($image, 0, 0, 10, 10, $backgroundColor);
         imagepng($image, $path);
-        imagedestroy($image);
+        unset($image);
     }
 
     private function createJpegImage(string $path): void
@@ -333,7 +333,7 @@ class ImageHandlerTest extends TestCase
         $backgroundColor = imagecolorallocate($image, 0, 0, 0);
         imagefilledrectangle($image, 0, 0, 10, 10, $backgroundColor);
         imagejpeg($image, $path);
-        imagedestroy($image);
+        unset($image);
     }
 
     private function createWebpImage(string $path): void
@@ -342,6 +342,6 @@ class ImageHandlerTest extends TestCase
         $backgroundColor = imagecolorallocate($image, 0, 0, 0);
         imagefilledrectangle($image, 0, 0, 10, 10, $backgroundColor);
         imagewebp($image, $path);
-        imagedestroy($image);
+        unset($image);
     }
 }
