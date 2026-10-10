@@ -2,6 +2,22 @@
 
 This page summarizes framework-level security behavior and recommended usage patterns.
 
+## Web Server Deployment
+
+Prefer `public/` as the document root. Configure the server to route nonexistent
+paths to `index.php` and deny direct access to `public_views/`, `routes.php`, and
+dotfiles. Only the front controller and public assets should be served directly.
+
+For Apache installations serving the repository root, the supplied `.htaccess`
+blocks dotfiles, application/framework directories, database files, logs, and
+backups before routing. Enable `mod_rewrite` and allow these directives in the
+virtual host. Existing installations must copy the updated root `.htaccess`;
+`php coriander update` does not manage this application-owned file.
+
+nginx does not read `.htaccess`. Configure equivalent deny rules in its server
+block, keep secrets and backups outside its document root, and permit PHP
+execution only through the front controller.
+
 ## Routing and View Path Safety
 
 - View rendering accepts only normalized relative paths under `public/public_views`.
