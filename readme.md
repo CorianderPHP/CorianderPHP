@@ -66,6 +66,7 @@ Configure the PSR-3 logger using environment variables:
 
 Database note: prefer `findWhere`, `updateWhere`, and `deleteWhere`; raw-string helpers `findBy`, `update`, and `deleteFrom` are deprecated for routine usage.
 Transactional migrations commit their changes and history together; see [Database](docs/database.md#migrations) for database-specific limitations.
+Concurrent migration and rollback commands lock the database before choosing their work.
 Use `findAll(['col1', 'col2'], $table)` to request specific columns.
 Use `findAll($table)` for all columns.
 `findAll(['*'], $table)` remains supported for compatibility but is not recommended.

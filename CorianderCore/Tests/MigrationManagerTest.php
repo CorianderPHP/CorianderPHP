@@ -195,4 +195,75 @@ class MigrationManagerTest extends TestCase
     {
         return "<?php\ndeclare(strict_types=1);\n\nreturn new class {\n    public function up(\\PDO \$pdo): void\n    {\n        \$pdo->exec('" . addslashes($upSql) . "');\n    }\n\n    public function down(\\PDO \$pdo): void\n    {\n        \$pdo->exec('" . addslashes($downSql) . "');\n    }\n};\n" . ($extra !== '' ? $extra . "\n" : '');
     }
+
+    public function testConcurrentProcessesRecheckMigrationAndRollbackStateAfterLocking(): void
+    {
+        $this->pdo->exec('CREATE TABLE events (action TEXT)');
+        file_put_contents($this->migrationDir . '/20260101000000_record_event.php', <<<'PHP'
+<?php
+return new class {
+    public function up(PDO $pdo): void { $this->record($pdo, 'up'); }
+    public function down(PDO $pdo): void { $this->record($pdo, 'down'); }
+    private function record(PDO $pdo, string $action): void {
+        file_put_contents(__DIR__ . '/' . $action . '.started', 'ready');
+        usleep(500000);
+        $pdo->exec("INSERT INTO events VALUES ('$action')");
+    }
+};
+PHP);
+        $this->manager->status();
+        $worker = $this->tempRoot . '/worker.php';
+        file_put_contents($worker, <<<'PHP'
+<?php
+require $argv[1];
+$pdo = new PDO('sqlite:' . $argv[2], null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$manager = new CorianderCore\Core\Database\Migrations\MigrationManager($pdo, 'sqlite', $argv[3]);
+echo json_encode($manager->{$argv[4]}());
+PHP);
+
+        foreach (['migrate' => 'up', 'rollback' => 'down'] as $operation => $action) {
+            $first = $this->startMigrationWorker($worker, $operation);
+            $second = null;
+            try {
+                $deadline = microtime(true) + 5;
+                while (!is_file($this->migrationDir . '/' . $action . '.started') && microtime(true) < $deadline) {
+                    usleep(10000);
+                }
+                $this->assertFileExists($this->migrationDir . '/' . $action . '.started');
+                $second = $this->startMigrationWorker($worker, $operation);
+                $field = $operation === 'migrate' ? 'applied' : 'rolled_back';
+                $this->assertSame(1, $this->finishMigrationWorker($first)[$field]);
+                $this->assertSame(0, $this->finishMigrationWorker($second)[$field]);
+                $this->assertSame(1, (int) $this->pdo->query("SELECT COUNT(*) FROM events WHERE action = '$action'")->fetchColumn());
+            } finally {
+                foreach ([$first, $second] as $workerProcess) {
+                    if ($workerProcess !== null && is_resource($workerProcess[0])) {
+                        proc_terminate($workerProcess[0]);
+                        proc_close($workerProcess[0]);
+                    }
+                }
+            }
+        }
+    }
+
+    private function startMigrationWorker(string $worker, string $operation): array
+    {
+        $source = (new \ReflectionClass(MigrationManager::class))->getFileName();
+        $process = proc_open([PHP_BINARY, $worker, $source, $this->databaseFile, $this->migrationDir, $operation],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $this->assertIsResource($process);
+        fclose($pipes[0]);
+        return [$process, $pipes];
+    }
+
+    private function finishMigrationWorker(array $worker): array
+    {
+        [$process, $pipes] = $worker;
+        $output = stream_get_contents($pipes[1]);
+        $error = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $this->assertSame(0, proc_close($process), $error);
+        return json_decode($output, true, 512, JSON_THROW_ON_ERROR);
+    }
 }

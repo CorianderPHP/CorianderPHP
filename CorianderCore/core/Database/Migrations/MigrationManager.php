@@ -15,6 +15,9 @@ class MigrationManager
 
     private ?string $lockName = null;
 
+    /** @var resource|null */
+    private $lockHandle = null;
+
     public function __construct(
         private PDO $pdo,
         private string $connection,
@@ -26,36 +29,35 @@ class MigrationManager
      */
     public function migrate(bool $dryRun = false, bool $allowChanged = false): array
     {
-        $this->ensureMigrationsTable();
-
-        $records = $this->getAppliedRecords();
-        $files = $this->discoverMigrationFiles();
-        $checksumChanges = $this->collectAppliedChecksumChanges($records, $files);
-        $this->assertNoChangedAppliedMigrations($checksumChanges, $allowChanged);
-
-        $pending = [];
-        foreach ($files as $file) {
-            if (!isset($records[$file['filename']])) {
-                $pending[] = $file;
-            }
-        }
-
-        if ($dryRun) {
-            return [
-                'applied' => 0,
-                'pending' => count($pending),
-                'ran' => array_map(static fn(array $f): string => $f['filename'], $pending),
-                'batch' => $this->nextBatchNumber(),
-            ];
-        }
-
-        if ($pending === []) {
-            return ['applied' => 0, 'pending' => 0, 'ran' => [], 'batch' => $this->nextBatchNumber()];
-        }
-
         $this->acquireLock();
-
         try {
+            $this->ensureMigrationsTable();
+
+            $records = $this->getAppliedRecords();
+            $files = $this->discoverMigrationFiles();
+            $checksumChanges = $this->collectAppliedChecksumChanges($records, $files);
+            $this->assertNoChangedAppliedMigrations($checksumChanges, $allowChanged);
+
+            $pending = [];
+            foreach ($files as $file) {
+                if (!isset($records[$file['filename']])) {
+                    $pending[] = $file;
+                }
+            }
+
+            if ($dryRun) {
+                return [
+                    'applied' => 0,
+                    'pending' => count($pending),
+                    'ran' => array_map(static fn(array $f): string => $f['filename'], $pending),
+                    'batch' => $this->nextBatchNumber(),
+                ];
+            }
+
+            if ($pending === []) {
+                return ['applied' => 0, 'pending' => 0, 'ran' => [], 'batch' => $this->nextBatchNumber()];
+            }
+
             $batch = $this->nextBatchNumber();
             $ran = [];
 
@@ -88,25 +90,24 @@ class MigrationManager
             throw new RuntimeException('Rollback step must be greater than or equal to 1.');
         }
 
-        $this->ensureMigrationsTable();
-        $targets = $this->getRollbackTargets($step);
-
-        if ($targets === []) {
-            return ['rolled_back' => 0, 'batch' => null, 'files' => []];
-        }
-
-        if ($dryRun) {
-            return [
-                'rolled_back' => 0,
-                'batch' => (int) $targets[0]['batch'],
-                'files' => array_map(static fn(array $t): string => $t['filename'], $targets),
-            ];
-        }
-
-        $files = $this->discoverMigrationFilesIndexed();
         $this->acquireLock();
-
         try {
+            $this->ensureMigrationsTable();
+            $targets = $this->getRollbackTargets($step);
+
+            if ($targets === []) {
+                return ['rolled_back' => 0, 'batch' => null, 'files' => []];
+            }
+
+            if ($dryRun) {
+                return [
+                    'rolled_back' => 0,
+                    'batch' => (int) $targets[0]['batch'],
+                    'files' => array_map(static fn(array $t): string => $t['filename'], $targets),
+                ];
+            }
+
+            $files = $this->discoverMigrationFilesIndexed();
             $rolledBack = [];
             $batch = (int) $targets[0]['batch'];
 
@@ -429,6 +430,20 @@ class MigrationManager
     private function acquireLock(): void
     {
         if ($this->isSqliteConnection()) {
+            $database = $this->pdo->query('PRAGMA database_list')->fetch(PDO::FETCH_ASSOC);
+            $path = $database['file'] ?? '';
+            if ($path === '') {
+                return; // In-memory databases cannot be shared between processes.
+            }
+            $handle = fopen($path . '.coriander-migrations.lock', 'c');
+            if ($handle === false) {
+                throw new RuntimeException('Could not open SQLite migration lock.');
+            }
+            if (!flock($handle, LOCK_EX)) {
+                fclose($handle);
+                throw new RuntimeException('Could not acquire SQLite migration lock.');
+            }
+            $this->lockHandle = $handle;
             return;
         }
 
@@ -444,6 +459,11 @@ class MigrationManager
     private function releaseLock(): void
     {
         if ($this->isSqliteConnection()) {
+            if ($this->lockHandle !== null) {
+                flock($this->lockHandle, LOCK_UN);
+                fclose($this->lockHandle);
+                $this->lockHandle = null;
+            }
             return;
         }
 
@@ -462,9 +482,8 @@ class MigrationManager
             return $this->lockName;
         }
 
-        $projectRoot = defined('PROJECT_ROOT') ? (string) PROJECT_ROOT : '';
-        $dbName = defined('DB_NAME') ? (string) DB_NAME : '';
-        $seed = strtolower($this->connection) . '|' . $projectRoot . '|' . $dbName;
+        $dbName = (string) $this->pdo->query('SELECT DATABASE()')->fetchColumn();
+        $seed = $dbName;
 
         $this->lockName = self::LOCK_NAME_PREFIX . substr(hash('sha256', $seed), 0, 32);
         return $this->lockName;
