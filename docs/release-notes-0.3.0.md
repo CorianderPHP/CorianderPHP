@@ -16,6 +16,8 @@
 
 ## Breaking changes and upgrade
 
+**Environment defaults changed:** automatic `.env` creation and missing configuration now default to `APP_ENV=production` and `APP_DEBUG=0`. Local development requires explicit `APP_ENV=local` and `APP_DEBUG=1`. Existing `.env` files and server values are preserved; review older deployment files deliberately. See `config/config.php`, `.env-example` and [environment configuration](environment.md).
+
 `APP_DEBUG=1` now enables escaped exception details and argument-free traces only with `APP_ENV=local` or `development`. Production remains generic. Custom bootstraps may delegate their Throwable catch to `ErrorResponse::fromException()` for consistent 400/413/500 responses and logging.
 
 Response emission now suppresses content for informational/204/205/304 statuses as well as HEAD, and corrects prohibited framing headers. Existing ordinary responses keep their bodies and headers.
