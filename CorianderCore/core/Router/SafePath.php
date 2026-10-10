@@ -8,6 +8,21 @@ namespace CorianderCore\Core\Router;
  */
 final class SafePath
 {
+    public static function resolveFile(string $root, string $relative): string
+    {
+        $relative = self::normalizeRelativePath($relative);
+        $realRoot = realpath($root);
+        $file = $relative === null ? false : realpath($root . '/' . $relative);
+        if ($realRoot === false || $file === false || !is_file($file)) {
+            throw new \RuntimeException('Required application file is missing or invalid: ' . ($relative ?? '[invalid path]'));
+        }
+        $prefix = rtrim($realRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (!str_starts_with($file, $prefix)) {
+            throw new \RuntimeException('Application file escapes its directory: ' . $relative);
+        }
+        return $file;
+    }
+
     public static function normalizeRelativePath(string $path): ?string
     {
         if (str_contains($path, "\0")) {
