@@ -113,6 +113,17 @@ php coriander update --yes --backup-dir=backups/custom
 php coriander update --yes --auth-token=your-token
 ```
 
+### `routes:list`
+
+List discovered methods, URL patterns, relative handlers and inherited middleware filenames in root-to-child order. `HEAD (GET)` marks a GET fallback; an explicit HEAD handler gets its own row. The list is sorted by path/method and reflects current files, even when a production route cache exists. It does not execute handlers or middleware, inspect their classes, build the cache or send HTTP requests.
+
+```bash
+php coriander routes:list
+php coriander help routes
+```
+
+Empty route directories print `No routes found.`; discovery errors return exit code 1 and invalid arguments return 2.
+
 ### `make:migration`
 
 Create a timestamped migration file under `database/migrations`.

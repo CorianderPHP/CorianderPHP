@@ -27,3 +27,5 @@ $response = $router->handle($request);
 ```
 
 `Router` accepts an optional route directory and `RouteCache`. See [automatic caching](route-cache.md). Controllers, action attributes, manual registration and automatic view fallback were removed in 0.3.0.
+
+Inspect current method files with `php coriander routes:list`. It shows parameter paths, handlers, HEAD fallbacks and inherited middleware filenames without executing application code or changing the cache.

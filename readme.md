@@ -51,6 +51,7 @@ php coriander make:view admin/profile
 php coriander make:migration CreateUsersTable
 php coriander migrate
 php coriander cache clear
+php coriander routes:list
 php coriander benchmark:router home 1000
 php coriander help
 ```
