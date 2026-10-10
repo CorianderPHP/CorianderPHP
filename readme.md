@@ -43,6 +43,7 @@ These guides are kept in sync with releases; review them when upgrading.
    ```bash
    composer install
    ```
+   Configure your web server using the [deployment security guidance](docs/security.md#web-server-deployment).
 3. Install NodeJS dependencies or add packages:
    ```bash
    php coriander nodejs install             # install from package.json
