@@ -165,6 +165,7 @@ class MakeController
 
         // Replace placeholders with the controller name and kebab-case view name.
         $content = str_replace('{{controllerName}}', $controllerName, $content);
+        $content = str_replace('ControllerTemplatePlaceholder', $controllerName, $content);
         $content = str_replace('{{kebabControllerName}}', $kebabCaseName, $content);
 
         // Write the modified content to the destination file.

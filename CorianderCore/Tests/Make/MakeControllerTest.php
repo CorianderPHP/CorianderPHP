@@ -12,6 +12,26 @@ use CorianderCore\Core\Utils\DirectoryHandler;
  */
 class MakeControllerTest extends TestCase
 {
+    public function testGeneratedControllersDeclareDistinctLoadableClasses(): void
+    {
+        foreach ([false, true] as $api) {
+            foreach (['GeneratedReviewAlpha', 'GeneratedReviewBeta'] as $name) {
+                $args = $api ? [$name, '--api'] : [$name];
+                ob_start();
+                try {
+                    $this->assertSame(0, $this->makeController->execute($args));
+                } finally {
+                    ob_end_clean();
+                }
+                $namespace = $api ? 'ApiControllers' : 'Controllers';
+                $class = $namespace . '\\' . $name . 'Controller';
+                require self::$testPath . 'src/' . $namespace . '/' . $name . 'Controller.php';
+                $this->assertTrue(class_exists($class, false));
+                $this->assertInstanceOf($class, new $class());
+            }
+        }
+    }
+
     /**
      * @var MakeController Holds the instance of the MakeController class for testing.
      */

@@ -74,6 +74,9 @@ Use `sqlScript($sql, $params)` for custom SQL such as joins, aggregates, and rep
 
 ## CLI Quick Reference
 
+`make:controller` generates the requested class name. Older files declaring
+`ControllerTemplatePlaceholder` need their class declaration renamed to match the filename.
+
 All commands are invoked via `php coriander`:
 
 - `php coriander make:view Home` - create a view ([Views](docs/views.md)).
