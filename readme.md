@@ -41,6 +41,7 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 - [CLI](docs/cli.md), [database and migrations](docs/database.md)
 - [Application services/modules](docs/modules.md), [sitemap](docs/sitemap.md)
 - [Environment](docs/environment.md), [Node.js](docs/nodejs.md)
+- [Sessions](docs/sessions.md): public requests stay session-free; CSRF and application code start sessions when needed.
 
 ## Optional tooling
 

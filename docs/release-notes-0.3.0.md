@@ -37,3 +37,5 @@ The release-published workflow dispatches `framework-released` to `CorianderPHP/
 - Configuration: `APP_ENV=production` enables a 30-second refresh; `PUBLIC_URL_PREFIX` defaults empty for a public document root. Existing `API_MAX_BODY_BYTES`/`API_TIMEOUT_SECONDS` remain. CSRF prefix exceptions are explicit.
 - Guide sources: `docs/{routing,http,middleware,views,route-cache,cache,cli,sitemap,security,environment,modules,benchmarks,migration-0.3.0}.md` and `readme.md`.
 - Validation: `.github/workflows/php.yml`, `CorianderCore/Tests/HttpIntegrationTest.php`, `RouteCacheConcurrencyTest.php` and `Tests/benchmarks/file-router.php`. Saved reports distinguish cold discovery, cached startup, repeated dispatch, layouts/middleware and actual HTTP; they do not claim production request latency.
+
+**Session migration:** `public/index.php` configures cookies but starts sessions on demand. Call `SessionBootstrap::start()` before application/authentication code uses `$_SESSION`; CSRF helpers start sessions automatically. `startForRequest()` remains available. See `docs/sessions.md`, `docs/middleware.md` and `docs/migration-0.3.0.md`.

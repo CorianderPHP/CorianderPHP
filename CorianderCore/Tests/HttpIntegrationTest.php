@@ -6,6 +6,32 @@ use PHPUnit\Framework\TestCase;
 
 class HttpIntegrationTest extends TestCase
 {
+    public function testSessionsStartOnDemandAndPersistAfterClosing(): void
+    {
+        $root = __DIR__ . '/fixtures/http';
+        $server = new HttpServer($root, $root . '/router.php');
+        try {
+            foreach (['/' => 200, '/missing' => 404, '/failure' => 500] as $path => $status) {
+                $response = $server->request('GET', $path);
+                self::assertSame($status, $response['status']);
+                self::assertArrayNotHasKey('set-cookie', $response['headers']);
+            }
+            $first = $server->request('GET', '/session-counter');
+            $cookie = explode(';', $first['headers']['set-cookie'][0])[0];
+            self::assertSame(['visits' => 1], json_decode($first['body'], true));
+            self::assertStringContainsString('HttpOnly', $first['headers']['set-cookie'][0]);
+            self::assertStringContainsString('SameSite=Lax', $first['headers']['set-cookie'][0]);
+            self::assertArrayNotHasKey('set-cookie', $server->request('GET', '/', headers: ['Cookie' => $cookie])['headers']);
+            $second = $server->request('GET', '/session-counter', headers: ['Cookie' => $cookie]);
+            self::assertSame(['visits' => 2], json_decode($second['body'], true));
+            self::assertSame(200, $server->request('GET', '/session-auth', headers: ['Cookie' => $cookie])['status']);
+            self::assertSame(403, $server->request('GET', '/session-auth')['status']);
+            $other = $server->request('GET', '/session-counter');
+            self::assertSame(['visits' => 1], json_decode($other['body'], true));
+            self::assertNotSame($cookie, explode(';', $other['headers']['set-cookie'][0])[0]);
+        } finally { $server->stop(); }
+    }
+
     public function testBodylessStatusesAndFramingOverHttp(): void
     {
         $root = __DIR__ . '/fixtures/http';
@@ -38,11 +64,13 @@ class HttpIntegrationTest extends TestCase
             self::assertSame(200, $home['status']);
             self::assertStringContainsString('<title>Welcome to CorianderPHP</title>', $home['body']);
             self::assertSame(['nosniff'], $home['headers']['x-content-type-options']);
+            self::assertArrayNotHasKey('set-cookie', $home['headers']);
             self::assertSame(200, $server->request('GET', '/assets/css/output.css')['status']);
             foreach (['/missing' => 404, '/src/Routes/index.get.php' => 404, '/sitemap.xml' => 200] as $path => $status) {
                 $response = $server->request('HEAD', $path);
                 self::assertSame($status, $response['status']);
                 self::assertSame('', $response['body']);
+                self::assertArrayNotHasKey('set-cookie', $response['headers']);
             }
         } finally { $server->stop(); }
     }
