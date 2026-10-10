@@ -1,5 +1,7 @@
 # Routing Module Guide
 
+The 0.3.0 method-file dispatcher is being integrated on the `0.3.0` branch. See [the replacement contract](0.3.0-design.md) for `src/Routes/users/[id].get.php`, nested parameters, method restrictions and inherited middleware. The starter switches to this dispatcher after request/view integration is complete; the guide below describes the previous API during this transition.
+
 CorianderPHP's routing system maps incoming HTTP requests to registered callbacks,
 controllers, or views. Only explicitly registered routes are exposed by default.
 This prevents controller aliases and view fallback from bypassing route middleware.
