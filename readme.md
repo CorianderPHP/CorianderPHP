@@ -34,6 +34,7 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 ## Guides
 
+- [Upgrade to 0.3.0](docs/migration-0.3.0.md), [release notes](docs/release-notes-0.3.0.md)
 - [Routing](docs/routing.md), [HTTP requests and responses](docs/http.md)
 - [Middleware](docs/middleware.md), [views](docs/views.md), [security](docs/security.md)
 - [Automatic caching](docs/route-cache.md), [benchmarks](docs/benchmarks.md)
