@@ -52,7 +52,7 @@ class CsrfMiddleware implements MiddlewareInterface
         }
 
         $this->protectedMethods = array_values(array_unique($this->protectedMethods));
-        $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? ['api']);
+        $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? []);
     }
 
     /**

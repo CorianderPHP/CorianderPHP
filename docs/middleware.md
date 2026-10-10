@@ -1,72 +1,19 @@
-# Middleware Guide
+# Middleware in 0.3.0
 
-Middleware handles cross-cutting request behavior such as authentication, authorization, request checks, redirects, and response headers.
-
-Project middleware should live under `src/Middleware`. Do not put custom middleware in `CorianderCore/core/Security`; that directory is framework-owned and can be changed by framework updates.
-
-## Directory
-
-Recommended structure:
-
-```txt
-src/
-  Middleware/
-    AuthMiddleware.php
-    AdminMiddleware.php
-```
-
-The framework autoloader maps `Middleware\` to `src/Middleware/`.
-
-## Example
-
-Create `src/Middleware/AuthMiddleware.php`:
+Place application middleware classes in `src/Middleware`. Each `src/Routes/**/_middleware.php` returns an ordered array of PSR-15 `MiddlewareInterface` instances:
 
 ```php
 <?php
-declare(strict_types=1);
-
-namespace Middleware;
-
-use Nyholm\Psr7\Response;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-
-final class AuthMiddleware implements MiddlewareInterface
-{
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        if (empty($_SESSION['user_id'])) {
-            return new Response(302, ['Location' => '/login']);
-        }
-
-        return $handler->handle($request);
-    }
-}
+use App\Middleware\AuthMiddleware;
+return [new AuthMiddleware()];
 ```
 
-Register it in `public/routes.php` or a file from `src/Routes`:
+A request for `src/Routes/admin/users/[id].get.php` runs middleware from the routes root, `admin`, then `admin/users`, in that order. Middleware sees the matched parameters through `$request->getAttribute('id')`. It may return a response immediately to deny access or redirect, or call `$handler->handle($request)` and modify its response.
 
-```php
-use Middleware\AuthMiddleware;
+Parent middleware always applies. A child file returning `[]` cannot disable its parent's authentication. Response middleware unwinds in reverse order. Root middleware also wraps 404 and invalid-path responses; directory middleware wraps a matched path's 405 response.
 
-$router->group('admin', [new AuthMiddleware()], function ($router): void {
-    $router->get('dashboard', fn () => 'Dashboard');
-});
-```
+Discovery reads filenames without executing handlers or middleware. Middleware files load on each request, including newly added files when a production route map is cached. Missing middleware recorded in a cached map fails closed. Return middleware objects; printed output and malformed declarations are errors.
 
-## Global Middleware
+The starter will put security headers, request limits and CSRF protection in the root `_middleware.php`. CSRF protection has no implicit `/api` exemption. JSON output does not make a cookie-authenticated endpoint stateless. Explicit prefix exceptions are available for applications that use separate stateless authentication.
 
-Global framework middleware is registered in `public/index.php`, for example security headers, API request limits, and CSRF protection.
-
-Project-specific middleware should usually be registered on route groups or individual routes. This keeps small projects simple and avoids making every request pay for middleware it does not need.
-
-## Best Practices
-
-- Put project middleware in `src/Middleware`.
-- Keep framework middleware in `CorianderCore/core`.
-- Use PSR-15 `MiddlewareInterface`.
-- Keep middleware focused on one concern.
-- Prefer route-group middleware for feature areas like admin, account, shop, or dashboard.
-- Avoid editing `CorianderCore/core/Security` for project-specific behavior.
+These conventions replace manual route-group registration in 0.3.0. The starter and `App\` autoload mapping are migrated in subsequent roadmap tasks.

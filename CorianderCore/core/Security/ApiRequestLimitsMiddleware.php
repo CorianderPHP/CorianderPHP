@@ -110,6 +110,9 @@ class ApiRequestLimitsMiddleware implements MiddlewareInterface
 
     private function isApiRequest(ServerRequestInterface $request): bool
     {
+        if ($this->apiPrefixes === []) {
+            return true;
+        }
         $path = trim($request->getUri()->getPath(), '/');
         if ($path === '') {
             return false;
