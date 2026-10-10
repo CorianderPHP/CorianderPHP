@@ -99,6 +99,12 @@ Run all commands from the project root.
 - Run `install` after pulling changes to ensure packages are up to date.
 - For troubleshooting, run the underlying npm command directly inside the `nodejs` directory.
 
+## Dependency security
+
+Use the committed `nodejs/package-lock.json` for reproducible installs. From `nodejs`, run `npm ci` after updating the lockfile and `npm audit` to check advisories. CI audits all asset dependencies, including development dependencies, and builds both development and production assets on Linux and Windows.
+
+The 0.3.0 lockfile includes `source-map-js` 1.2.2, fixing CVE-2026-93749 in the transitive Tailwind toolchain dependency. Existing projects should copy the updated lockfile if their `package.json` matches the starter, or run `npm update source-map-js` in their own `nodejs` directory, then rebuild assets. The PHP runtime does not require Node.js.
+
 ## Troubleshooting Windows npm Resolution
 
 Coriander resolves npm automatically. If a custom or portable Node.js installation
