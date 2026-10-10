@@ -47,6 +47,12 @@ The file is automatically loaded from `config/config.php` when present. Constant
 
 ## Migrations
 
+Migration and rollback commands acquire a database lock before reading history,
+so concurrent runners recheck the latest state. MySQL uses an advisory lock scoped
+to the current database; SQLite uses a persistent `.coriander-migrations.lock`
+file beside the database. Keep that file in place and allow the PHP process to
+write to the database directory. In-memory SQLite databases are process-local.
+
 CorianderPHP supports timestamped migration files with batch tracking.
 
 Migration history is inserted/deleted within the same transaction as `up()` or
