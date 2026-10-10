@@ -13,17 +13,24 @@ use Psr\Http\Server\MiddlewareInterface;
 
 class FileRouteDispatcher implements RequestHandlerInterface
 {
-    public function __construct(private string $directory = PROJECT_ROOT . '/src/Routes') {}
+    private RouteCache $cache;
+
+    public function __construct(private string $directory = PROJECT_ROOT . '/src/Routes', ?RouteCache $cache = null)
+    {
+        $this->cache = $cache ?? new RouteCache($directory);
+    }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $map = $this->cache->get();
+        $root = ['directories' => [''], 'middleware' => $map['middleware']];
         $path = RouteMap::requestPath($request->getUri()->getPath());
         if ($path === null) {
-            return $this->respond($request, ['directories' => [''], 'middleware' => []], static fn() => new Response(400, [], 'Invalid request path'));
+            return $this->respond($request, $root, static fn() => new Response(400, [], 'Invalid request path'));
         }
-        $matched = RouteMap::match((new RouteMap())->discover($this->directory), $path);
+        $matched = RouteMap::match($map, $path);
         if ($matched === null) {
-            return $this->respond($request, ['directories' => [''], 'middleware' => []], static fn() => new Response(404, [], '404 Not Found'));
+            return $this->respond($request, $root, static fn() => new Response(404, [], '404 Not Found'));
         }
         [$route, $attributes] = $matched;
         $method = strtoupper($request->getMethod());

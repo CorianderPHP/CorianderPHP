@@ -4,3 +4,6 @@ composer.phar
 /vendor/
 /backups/coriander/
 /cache/.updater-rate-limit.json
+/cache/routes.php
+/cache/routes.php.lock
+/cache/routes.php.*.tmp
