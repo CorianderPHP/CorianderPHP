@@ -19,17 +19,12 @@ function corianderCreateNotFoundHandler(): callable
 {
     return static function (): Response {
         $notFoundView = 'notfound';
-
-        $metaDataFile = PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/metadata.php';
-
-        if (file_exists($metaDataFile)) {
-            include $metaDataFile;
-        }
+        $__corianderRequestedView = $notFoundView;
 
         ob_start();
-        require_once PROJECT_ROOT . '/public/public_views/header.php';
-        require_once PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
-        require_once PROJECT_ROOT . '/public/public_views/footer.php';
+        require PROJECT_ROOT . '/public/public_views/header.php';
+        require PROJECT_ROOT . '/public/public_views/' . $notFoundView . '/index.php';
+        require PROJECT_ROOT . '/public/public_views/footer.php';
 
         return new Response(404, [], (string) ob_get_clean());
     };

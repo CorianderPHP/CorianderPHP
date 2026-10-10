@@ -54,9 +54,9 @@ class ViewRenderer
 
         $__corianderRequestedView = $normalizedPath;
 
-        require_once $viewsRoot . '/header.php';
-        require_once $fullViewPath;
-        require_once $viewsRoot . '/footer.php';
+        require $viewsRoot . '/header.php';
+        require $fullViewPath;
+        require $viewsRoot . '/footer.php';
 
         return true;
     }
