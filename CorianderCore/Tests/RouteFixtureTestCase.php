@@ -27,6 +27,7 @@ abstract class RouteFixtureTestCase extends TestCase
             mkdir(dirname($file), 0775, true);
         }
         file_put_contents($file, '<?php ' . $code);
+        if (function_exists('opcache_invalidate')) { opcache_invalidate($file, true); }
     }
 
     protected function response(string $path, string $body = 'fixture', int $status = 200): void

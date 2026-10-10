@@ -11,7 +11,12 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        php: ['8.2', '8.3', '8.4', '8.5']
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
@@ -19,28 +24,43 @@ jobs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ matrix.php }}
+        extensions: pdo_sqlite, sqlite3, simplexml, dom, mbstring, gd, zip, opcache
+        coverage: none
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
           ${{ runner.os }}-php-
 
     - name: Install Composer dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+      run: composer install --prefer-dist --no-progress --no-interaction
 
     - name: Dependency audit
       run: composer audit --no-interaction
 
     - name: Static analysis (syntax)
+      shell: bash
       run: find . -path ./vendor -prune -o -name "*.php" -print0 | xargs -0 -n1 php -d display_errors=1 -l
 
     - name: Run tests with PHPUnit
-      run: composer test
+      run: php vendor/phpunit/phpunit/phpunit --testdox
+
+    - name: Record verified routing benchmarks
+      run: php -d opcache.enable_cli=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results.json
+
+    - name: Record OPcache CLI benchmarks
+      run: php -d opcache.enable_cli=1 -d opcache.file_update_protection=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmarks-${{ runner.os }}-php-${{ matrix.php }}
+        path: benchmark-results*.json

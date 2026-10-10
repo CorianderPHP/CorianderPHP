@@ -17,6 +17,12 @@ final class OutputBuffer
 
         try {
             $result = $callback();
+            while (ob_get_level() > $bufferLevel + 1) {
+                ob_end_flush();
+            }
+            if (ob_get_level() !== $bufferLevel + 1) {
+                throw new \RuntimeException('Application code closed the framework output buffer');
+            }
             $content = (string) ob_get_clean();
 
             return [$result, $content];

@@ -167,7 +167,7 @@ class ImageHandler
 
         // Convert to WebP with specified quality
         $conversionResult = imagewebp($image, $webpPath, $quality);
-        imagedestroy($image);
+        unset($image);
 
         if ($conversionResult === false) {
             self::getLogger()->error('Failed to convert image to WebP: ' . $fullImagePath);

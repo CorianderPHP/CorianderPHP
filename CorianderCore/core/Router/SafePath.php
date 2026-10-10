@@ -8,6 +8,30 @@ namespace CorianderCore\Core\Router;
  */
 final class SafePath
 {
+    /** Validate existing ancestors before a generator creates directories. */
+    public static function destination(string $root, string $relative): string
+    {
+        $relative = self::normalizeRelativePath($relative);
+        if ($relative === null) {
+            throw new \RuntimeException('Invalid generated path');
+        }
+        if (!is_dir($root) && !mkdir($root, 0755, true)) {
+            throw new \RuntimeException('Cannot create generator root');
+        }
+        $realRoot = realpath($root);
+        $destination = $root . '/' . $relative;
+        $ancestor = dirname($destination);
+        while (!file_exists($ancestor) && !is_link($ancestor)) {
+            $ancestor = dirname($ancestor);
+        }
+        $realAncestor = realpath($ancestor);
+        if ($realRoot === false || $realAncestor === false || ($realAncestor !== $realRoot
+            && !str_starts_with($realAncestor, $realRoot . DIRECTORY_SEPARATOR))) {
+            throw new \RuntimeException('Generated path escapes its root');
+        }
+        return $destination;
+    }
+
     public static function resolveFile(string $root, string $relative): string
     {
         $relative = self::normalizeRelativePath($relative);
