@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class ResponseEmitter
 {
-    public static function emit(ResponseInterface $response): void
+    public static function emit(ResponseInterface $response, ?string $requestMethod = null): void
     {
         http_response_code($response->getStatusCode());
         foreach ($response->getHeaders() as $name => $values) {
@@ -16,6 +16,9 @@ final class ResponseEmitter
             }
         }
 
-        echo $response->getBody();
+        $method = strtoupper($requestMethod ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
+        if ($method !== 'HEAD') {
+            echo $response->getBody();
+        }
     }
 }

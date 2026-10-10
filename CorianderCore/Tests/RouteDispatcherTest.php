@@ -30,7 +30,7 @@ class RouteDispatcherTest extends TestCase
         $router->post('home', fn() => new Response(200, [], 'wrong handler'));
         $response = $router->dispatch(new ServerRequest('POST', '/'));
         $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame('GET', $response->getHeaderLine('Allow'));
+        $this->assertSame('GET, HEAD', $response->getHeaderLine('Allow'));
     }
 
     public function testHomeAliasStillHandlesRootWhenNoRootIsRegistered(): void
@@ -75,7 +75,7 @@ class RouteDispatcherTest extends TestCase
         $response = $router->dispatch(new ServerRequest('POST', '/resource'));
 
         $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame('GET', $response->getHeaderLine('Allow'));
+        $this->assertSame('GET, HEAD', $response->getHeaderLine('Allow'));
         $this->assertSame('Method Not Allowed', (string) $response->getBody());
     }
 

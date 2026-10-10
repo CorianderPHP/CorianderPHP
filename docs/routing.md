@@ -132,6 +132,18 @@ $router->get('/profile', fn (ServerRequest $r) =>
 
 ### Response Handling
 
+GET routes also accept HEAD. An explicitly registered HEAD route wins over the
+GET fallback in either registration order; use `$router->add('HEAD', $path, $handler)`.
+The original HEAD method, route parameters, and middleware are preserved.
+405 responses advertise HEAD whenever GET is supported.
+
+Dispatch preserves the response status, headers, and body. The emitter suppresses
+the body for all HEAD responses, including redirects and errors. Custom front
+controllers should call `ResponseEmitter::emit($response, $request->getMethod())`;
+omitting the method falls back to `$_SERVER['REQUEST_METHOD']` for compatibility.
+Update older app-owned front controllers and suppress any manually echoed HEAD
+error body as well.
+
 - Route callbacks and controller actions can return a `ResponseInterface`; status code, headers, and body are preserved.
 - API controller actions may return arrays, which are automatically encoded as JSON responses.
 - If an API action returns text output that is not valid JSON, it is wrapped as `{"data":"..."}` and returned as JSON.

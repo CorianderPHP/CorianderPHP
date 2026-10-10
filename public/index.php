@@ -68,7 +68,8 @@ try {
         require $routesFile;
     }
 
-    ResponseEmitter::emit($router->dispatch(RequestFactory::fromGlobals()));
+    $request = RequestFactory::fromGlobals();
+    ResponseEmitter::emit($router->dispatch($request), $request->getMethod());
 } catch (Throwable $exception) {
     try {
         (new Logger())->error('Unhandled application exception.', ['exception' => $exception]);
@@ -81,7 +82,9 @@ try {
         header('Content-Type: text/plain; charset=utf-8');
     }
 
-    echo 'Internal Server Error';
+    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+        echo 'Internal Server Error';
+    }
 }
 
 

@@ -110,6 +110,7 @@ All commands are invoked via `php coriander`:
 ## Framework Update Notes
 
 Explicit routes for `/` now take precedence over the legacy `home` fallback.
+GET routes support HEAD fallback; explicit HEAD handlers take precedence, and HEAD responses emit headers without a body.
 View rendering now includes templates and metadata on every call; see [Views](docs/views.md) for app-owned template compatibility.
 
 - Framework updates are fetched from GitHub releases (or latest tag fallback), with retry handling for transient API/network failures.
