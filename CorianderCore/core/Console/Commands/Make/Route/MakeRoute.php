@@ -33,17 +33,12 @@ class MakeRoute
             return CommandExitCode::FAILURE;
         }
         try {
+            $file = SafePath::destination(rtrim($this->basePath, '/\\'), $name . '.php');
             if (!is_dir(dirname($file)) && !mkdir(dirname($file), 0755, true)) {
                 throw new \RuntimeException('Cannot create route directory');
             }
         } catch (\RuntimeException $e) {
             ConsoleOutput::print($e->getMessage());
-            return CommandExitCode::FAILURE;
-        }
-        $root = realpath($this->basePath);
-        $parent = realpath(dirname($file));
-        if ($root === false || $parent === false || ($parent !== $root && !str_starts_with($parent, $root . DIRECTORY_SEPARATOR))) {
-            ConsoleOutput::print('Route directory escapes its root.');
             return CommandExitCode::FAILURE;
         }
         $template = file_get_contents(PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Route/templates/route.php');

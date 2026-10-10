@@ -26,14 +26,13 @@ class MakeView
             ConsoleOutput::print("Error: View '{$name}' already exists.");
             return CommandExitCode::FAILURE;
         }
-        if (!is_dir(dirname($file)) && !mkdir(dirname($file), 0755, true)) {
-            ConsoleOutput::print('Error: Cannot create view directory.');
-            return CommandExitCode::FAILURE;
-        }
-        $root = realpath($this->viewPath);
-        $parent = realpath(dirname($file));
-        if ($root === false || $parent === false || ($parent !== $root && !str_starts_with($parent, $root . DIRECTORY_SEPARATOR))) {
-            ConsoleOutput::print('Error: View directory escapes its root.');
+        try {
+            $file = SafePath::destination(rtrim($this->viewPath, '/\\'), $name . '.php');
+            if (!is_dir(dirname($file)) && !mkdir(dirname($file), 0755, true)) {
+                throw new \RuntimeException('Cannot create view directory');
+            }
+        } catch (\RuntimeException $e) {
+            ConsoleOutput::print('Error: ' . $e->getMessage());
             return CommandExitCode::FAILURE;
         }
         $template = file_get_contents(PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/View/templates/view.php');

@@ -73,4 +73,16 @@ class ViewLayoutsTest extends RouteFixtureTestCase
             self::assertSame($level, ob_get_level());
         }
     }
+
+    public function testSymlinkCannotIncludeTemplateOutsideViewRoot(): void
+    {
+        mkdir($this->directory . '/Views');
+        $this->put('outside.php', 'echo "secret";');
+        $link = $this->directory . '/Views/escape.php';
+        if (!@symlink($this->directory . '/outside.php', $link)) {
+            self::markTestSkipped('Symlink creation requires host privileges');
+        }
+        $this->expectExceptionMessage('escapes its directory');
+        (new ViewRenderer($this->directory . '/Views'))->response('escape');
+    }
 }

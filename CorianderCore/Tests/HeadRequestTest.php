@@ -14,8 +14,19 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class HeadRequestTest extends TestCase
+class HeadRequestTest extends RouteFixtureTestCase
 {
+    public function testGetFallbackPreservesStatusHeadersAndOriginalMethod(): void
+    {
+        foreach ([200, 302, 404, 500] as $status) {
+            $this->put('index.get.php', 'return static fn($r) => new \\Nyholm\\Psr7\\Response(' . $status . ', ["X-Method" => $r->getMethod(), "Location" => "/next"], "Hello");');
+            $response = (new Router($this->directory))->handle(new ServerRequest('HEAD', '/'));
+            self::assertSame($status, $response->getStatusCode());
+            self::assertSame('HEAD', $response->getHeaderLine('X-Method'));
+            self::assertSame('/next', $response->getHeaderLine('Location'));
+            self::assertSame('Hello', (string) $response->getBody());
+        }
+    }
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testEmitterSuppressesEveryHeadBodyAndPreservesStatus(): void
     {
