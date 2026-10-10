@@ -55,17 +55,28 @@ class RouteDispatcher
 
         $method = strtoupper($request->getMethod());
         $allowedMethods = [];
+        $matchedRoute = null;
 
         foreach ($this->registry->getRoutes() as [$routeMethod, $pattern, $params, $callback, $middleware]) {
             if (!preg_match($pattern, $path, $matches)) {
                 continue;
             }
 
-            if ($routeMethod !== $method) {
-                $allowedMethods[] = $routeMethod;
-                continue;
+            $allowedMethods[] = $routeMethod;
+            if ($routeMethod === 'GET') {
+                $allowedMethods[] = 'HEAD';
             }
+            if ($routeMethod === $method) {
+                $matchedRoute = [$params, $callback, $middleware, $matches];
+                break;
+            }
+            if ($method === 'HEAD' && $routeMethod === 'GET' && $matchedRoute === null) {
+                $matchedRoute = [$params, $callback, $middleware, $matches];
+            }
+        }
 
+        if ($matchedRoute !== null) {
+            [$params, $callback, $middleware, $matches] = $matchedRoute;
             array_shift($matches);
             $requestWithAttributes = $request;
             foreach ($params as $i => $name) {

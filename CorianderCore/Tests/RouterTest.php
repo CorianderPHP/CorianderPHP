@@ -429,7 +429,7 @@ class RouterTest extends TestCase
 
         $this->assertFalse($executed);
         $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame('GET', $response->getHeaderLine('Allow'));
+        $this->assertSame('GET, HEAD', $response->getHeaderLine('Allow'));
     }    /**
      * Test that an explicit POST action in the URI has priority over the store method.
      */
