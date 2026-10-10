@@ -46,7 +46,7 @@ class ImageHandlerTest extends TestCase
         }
 
         // Set the path to the temporary test directory
-        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp";
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/Tests/_tmp";
     }
 
 
@@ -60,7 +60,7 @@ class ImageHandlerTest extends TestCase
         }
 
         self::$testImageDir = self::$testPath . '/assets/';
-        self::$testImagePath = '/CorianderCore/tests/_tmp/assets/test_image.png';
+        self::$testImagePath = '/CorianderCore/Tests/_tmp/assets/test_image.png';
         self::$webpDir = 'webp/';
         self::$testImageFullPath = self::$testImageDir . 'test_image.png';
         self::$testWebpFullPath = self::$testImageDir . self::$webpDir . 'test_image_80.webp';
@@ -151,9 +151,9 @@ class ImageHandlerTest extends TestCase
         ]);
 
         $this->assertStringContainsString('<picture class="picture-class">', $html, 'Picture tag was not rendered correctly.');
-        $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/webp/test_image_80.webp" type="image/webp"', $html, 'WebP source tag was not rendered correctly.');
-        $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/test_image.png" type="image/png"', $html, 'Original source tag was not rendered correctly.');
-        $this->assertStringContainsString('<img alt="Test Image" width="100" height="100" class="img-class" src="/CorianderCore/tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
+        $this->assertStringContainsString('<source srcset="/CorianderCore/Tests/_tmp/assets/webp/test_image_80.webp" type="image/webp"', $html, 'WebP source tag was not rendered correctly.');
+        $this->assertStringContainsString('<source srcset="/CorianderCore/Tests/_tmp/assets/test_image.png" type="image/png"', $html, 'Original source tag was not rendered correctly.');
+        $this->assertStringContainsString('<img alt="Test Image" width="100" height="100" class="img-class" src="/CorianderCore/Tests/_tmp/assets/test_image.png"', $html, 'Image tag was not rendered correctly.');
     }
 
     public function testRenderSupportsOptionalImageAttributes(): void
@@ -195,7 +195,7 @@ class ImageHandlerTest extends TestCase
     public function testRenderCanSkipWebpConversion(): void
     {
         $sourcePath = self::$testImageDir . 'no_convert.png';
-        $relativePath = '/CorianderCore/tests/_tmp/assets/no_convert.png';
+        $relativePath = '/CorianderCore/Tests/_tmp/assets/no_convert.png';
         $webpPath = self::$testImageDir . self::$webpDir . 'no_convert_80.webp';
 
         $this->createPngImage($sourcePath);
@@ -208,7 +208,7 @@ class ImageHandlerTest extends TestCase
 
         $this->assertFileDoesNotExist($webpPath);
         $this->assertStringNotContainsString('webp/no_convert_80.webp', $html);
-        $this->assertStringContainsString('src="/CorianderCore/tests/_tmp/assets/no_convert.png"', $html);
+        $this->assertStringContainsString('src="/CorianderCore/Tests/_tmp/assets/no_convert.png"', $html);
         $this->assertStringNotContainsString('convert=', $html);
     }
 
@@ -219,28 +219,28 @@ class ImageHandlerTest extends TestCase
         }
 
         $sourcePath = self::$testImageDir . 'already.webp';
-        $relativePath = '/CorianderCore/tests/_tmp/assets/already.webp';
+        $relativePath = '/CorianderCore/Tests/_tmp/assets/already.webp';
         $this->createWebpImage($sourcePath);
 
         $html = ImageHandler::render($relativePath, ['alt' => 'Already WebP']);
 
-        $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/already.webp" type="image/webp"', $html);
-        $this->assertStringContainsString('src="/CorianderCore/tests/_tmp/assets/already.webp"', $html);
+        $this->assertStringContainsString('<source srcset="/CorianderCore/Tests/_tmp/assets/already.webp" type="image/webp"', $html);
+        $this->assertStringContainsString('src="/CorianderCore/Tests/_tmp/assets/already.webp"', $html);
         $this->assertStringNotContainsString('/webp/already_80.webp', $html);
     }
 
     public function testRenderSupportsSvgWithoutConversion(): void
     {
         $sourcePath = self::$testImageDir . 'icon.svg';
-        $relativePath = '/CorianderCore/tests/_tmp/assets/icon.svg';
+        $relativePath = '/CorianderCore/Tests/_tmp/assets/icon.svg';
         file_put_contents($sourcePath, '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><rect width="20" height="10" /></svg>');
 
         $html = ImageHandler::render($relativePath, ['alt' => 'SVG Icon']);
 
         $this->assertStringContainsString('<picture class="">', $html);
         $this->assertStringContainsString('alt="SVG Icon"', $html);
-        $this->assertStringContainsString('src="/CorianderCore/tests/_tmp/assets/icon.svg"', $html);
-        $this->assertStringNotContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/icon.svg"', $html);
+        $this->assertStringContainsString('src="/CorianderCore/Tests/_tmp/assets/icon.svg"', $html);
+        $this->assertStringNotContainsString('<source srcset="/CorianderCore/Tests/_tmp/assets/icon.svg"', $html);
         $this->assertStringNotContainsString('/webp/icon_80.webp', $html);
     }
 
@@ -251,19 +251,19 @@ class ImageHandlerTest extends TestCase
         }
 
         $sourcePath = self::$testImageDir . 'photo.jpg';
-        $relativePath = '/CorianderCore/tests/_tmp/assets/photo.jpg';
+        $relativePath = '/CorianderCore/Tests/_tmp/assets/photo.jpg';
         $this->createJpegImage($sourcePath);
 
         $html = ImageHandler::render($relativePath, ['alt' => 'Photo']);
 
-        $this->assertStringContainsString('<source srcset="/CorianderCore/tests/_tmp/assets/photo.jpg" type="image/jpeg"', $html);
+        $this->assertStringContainsString('<source srcset="/CorianderCore/Tests/_tmp/assets/photo.jpg" type="image/jpeg"', $html);
         $this->assertStringNotContainsString('type="image/jpg"', $html);
     }
 
     public function testConvertToWebpRegeneratesStaleGeneratedFile(): void
     {
         $sourcePath = self::$testImageDir . 'stale.png';
-        $relativePath = '/CorianderCore/tests/_tmp/assets/stale.png';
+        $relativePath = '/CorianderCore/Tests/_tmp/assets/stale.png';
         $webpPath = self::$testImageDir . self::$webpDir . 'stale_80.webp';
 
         $this->createPngImage($sourcePath, 255, 0, 0);

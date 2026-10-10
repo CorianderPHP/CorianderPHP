@@ -33,7 +33,7 @@ class MakeSQLiteTest extends TestCase
         }
 
         // Set the path to the temporary test directory
-        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp";
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/Tests/_tmp";
     }
 
     /**

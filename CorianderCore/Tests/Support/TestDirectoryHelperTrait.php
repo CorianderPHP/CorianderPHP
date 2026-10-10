@@ -7,7 +7,7 @@ trait TestDirectoryHelperTrait
 {
     protected function createTemporaryDirectory(string $prefix): string
     {
-        $directory = PROJECT_ROOT . '/CorianderCore/tests/' . $prefix . '_' . bin2hex(random_bytes(4));
+        $directory = PROJECT_ROOT . '/CorianderCore/Tests/' . $prefix . '_' . bin2hex(random_bytes(4));
         if (!is_dir($directory)) {
             mkdir($directory, 0777, true);
         }

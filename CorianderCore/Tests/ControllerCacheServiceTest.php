@@ -16,7 +16,7 @@ class ControllerCacheServiceTest extends TestCase
         if (!defined('PROJECT_ROOT')) {
             define('PROJECT_ROOT', dirname(__DIR__, 2));
         }
-        self::$testPath = PROJECT_ROOT . '/CorianderCore/tests/_tmp';
+        self::$testPath = PROJECT_ROOT . '/CorianderCore/Tests/_tmp';
         if (!is_dir(self::$testPath)) {
             mkdir(self::$testPath, 0777, true);
         }
