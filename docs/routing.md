@@ -44,6 +44,11 @@ $router->setNotFound(fn() => new \Nyholm\Psr7\Response(404, [], 'Not Found'));
 The router also provides `post()`, `put()`, `patch()`, and `delete()` shortcuts.
 Use `add($method, ...)` only when the method is dynamic or uncommon.
 
+Register the homepage with `$router->get('/', $callback)`. An explicit root
+route takes precedence over the legacy `home` fallback, regardless of registration
+order. Its method restrictions still apply. When no root route is registered,
+requests to `/` continue to resolve through `home` for compatibility.
+
 ## Larger Project Route Files
 
 Use `src/Routes/` when `public/routes.php` becomes too large or when routes naturally split by feature area, such as admin, shop, account, or API-like web endpoints.

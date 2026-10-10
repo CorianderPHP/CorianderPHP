@@ -11,6 +11,35 @@ use PHPUnit\Framework\TestCase;
 
 class RouteDispatcherTest extends TestCase
 {
+    public function testExplicitRootTakesPrecedenceOverHomeInEitherOrder(): void
+    {
+        foreach ([['home', '/'], ['/', 'home']] as $paths) {
+            $router = new Router();
+            foreach ($paths as $path) {
+                $router->get($path, fn() => new Response(200, [], $path));
+            }
+            $this->assertSame('/', (string) $router->dispatch(new ServerRequest('GET', '/'))->getBody());
+            $this->assertSame('home', (string) $router->dispatch(new ServerRequest('GET', '/home'))->getBody());
+        }
+    }
+
+    public function testRootMethodRestrictionDoesNotFallBackToHome(): void
+    {
+        $router = new Router();
+        $router->get('/', fn() => new Response(200, [], 'root'));
+        $router->post('home', fn() => new Response(200, [], 'wrong handler'));
+        $response = $router->dispatch(new ServerRequest('POST', '/'));
+        $this->assertSame(405, $response->getStatusCode());
+        $this->assertSame('GET', $response->getHeaderLine('Allow'));
+    }
+
+    public function testHomeAliasStillHandlesRootWhenNoRootIsRegistered(): void
+    {
+        $router = new Router();
+        $router->get('home', fn() => new Response(200, [], 'legacy homepage'));
+        $this->assertSame('legacy homepage', (string) $router->dispatch(new ServerRequest('GET', '/'))->getBody());
+    }
+
     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testCustomRouteStringReturnBecomesResponseBody(): void
     {

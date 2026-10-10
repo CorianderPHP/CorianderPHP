@@ -41,7 +41,16 @@ class RouteDispatcher
     {
         $path = trim($request->getUri()->getPath(), '/');
         if ($path === '') {
-            $path = 'home';
+            $hasRootRoute = false;
+            foreach ($this->registry->getRoutes() as [, $pattern]) {
+                if (preg_match($pattern, '') === 1) {
+                    $hasRootRoute = true;
+                    break;
+                }
+            }
+            if (!$hasRootRoute) {
+                $path = 'home';
+            }
         }
 
         $method = strtoupper($request->getMethod());
