@@ -14,6 +14,6 @@ Parent middleware always applies. A child file returning `[]` cannot disable its
 
 Discovery reads filenames without executing handlers or middleware. Middleware files load on each request, including newly added files when a production route map is cached. Missing middleware recorded in a cached map fails closed. Return middleware objects; printed output and malformed declarations are errors.
 
-The starter will put security headers, request limits and CSRF protection in the root `_middleware.php`. CSRF protection has no implicit `/api` exemption. JSON output does not make a cookie-authenticated endpoint stateless. Explicit prefix exceptions are available for applications that use separate stateless authentication.
+The starter puts security headers, request limits and CSRF protection in the root `_middleware.php`. CSRF protection has no implicit `/api` exemption. JSON output does not make a cookie-authenticated endpoint stateless. Explicit prefix exceptions are available for applications that use separate stateless authentication.
 
-These conventions replace manual route-group registration in 0.3.0. The starter and `App\` autoload mapping are migrated in subsequent roadmap tasks.
+These conventions replace manual route-group registration in 0.3.0. Application middleware uses the App namespace under src.

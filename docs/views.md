@@ -31,4 +31,4 @@ Header, page and footer receive the same recursively HTML-escaped string data. U
 
 Put assets in `public/assets`, and use `PublicUrl::versionedAsset()` or `ImageHandler::render()` for existing asset helpers. Set `PUBLIC_URL_PREFIX=/public` only when the web server serves the repository root.
 
-The 0.3.0 starter migration removes `public/public_views`, metadata templates and automatic view fallback. Move title/description metadata into data passed by your route. Optional generators are updated in the following roadmap task.
+The 0.3.0 starter migration removes `public/public_views`, metadata templates and automatic view fallback. Move title/description metadata into data passed by your route. Optional `make:view` creates a template directly in src/Views.

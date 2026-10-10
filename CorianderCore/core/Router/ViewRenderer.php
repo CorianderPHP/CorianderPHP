@@ -57,53 +57,6 @@ class ViewRenderer
     }
 
     /**
-     * Render a public view page.
-     *
-     * Looks for an index.php in the specified view directory and includes
-     * header and footer templates if found.
-     *
-     * @param string $viewPath Path relative to public/public_views.
-     * @param array  $data     Variables extracted into the view scope.
-     * @return bool True if the view was rendered, otherwise false.
-     */
-    public function render(string $viewPath, array $data = []): bool
-    {
-        $normalizedPath = SafePath::normalizeRelativePath($viewPath);
-        if ($normalizedPath === null) {
-            return false;
-        }
-
-        $escapedData = $this->escapeData($data);
-        extract($escapedData, EXTR_OVERWRITE);
-
-        $viewsRoot = PROJECT_ROOT . '/public/public_views';
-        $fullViewPath = $viewsRoot . '/' . $normalizedPath . '/index.php';
-
-        if (!file_exists($fullViewPath)) {
-            return false;
-        }
-
-        $realViewsRoot = realpath($viewsRoot);
-        $realViewPath = realpath($fullViewPath);
-        if ($realViewsRoot === false || $realViewPath === false) {
-            return false;
-        }
-
-        $prefix = rtrim($realViewsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        if (!str_starts_with($realViewPath, $prefix)) {
-            return false;
-        }
-
-        $__corianderRequestedView = $normalizedPath;
-
-        require $viewsRoot . '/header.php';
-        require $fullViewPath;
-        require $viewsRoot . '/footer.php';
-
-        return true;
-    }
-
-    /**
      * Escape data recursively for safe HTML output.
      *
      * @param array $data Data to escape.

@@ -71,7 +71,7 @@ class MakeRouteTest extends TestCase
     {
         $this->expectOutputRegex('/Success/');
         self::assertSame(0, $this->makeRoute->execute(['users/[id].post']));
-        $router = new \CorianderCore\Core\Router\FileRouteDispatcher(self::$testPath . 'src/Routes');
+        $router = new \CorianderCore\Core\Router\Router(self::$testPath . 'src/Routes');
         $response = $router->handle(new \Nyholm\Psr7\ServerRequest('POST', '/users/42'));
         self::assertSame('Hello', (string) $response->getBody());
         self::assertSame(200, $response->getStatusCode());

@@ -52,10 +52,9 @@ class CommandHandler
             'examples' => ['php coriander version'],
         ],
         'make' => [
-            'description' => 'Generate project files such as views, controllers, routes, databases, sitemaps, and migrations.',
+            'description' => 'Generate project files such as views, routes, databases, sitemaps, and migrations.',
             'usage' => [
                 'php coriander make:view <name>',
-                'php coriander make:controller <name> [api]',
                 'php coriander make:route <path>[.<method>]',
                 'php coriander make:migration <name>',
                 'php coriander make:database',
@@ -63,8 +62,6 @@ class CommandHandler
             ],
             'examples' => [
                 'php coriander make:view Home',
-                'php coriander make:controller Dashboard',
-                'php coriander make:controller Users api',
                 'php coriander make:route "users/[id].post"',
                 'php coriander make:migration CreateUsersTable',
             ],
@@ -95,12 +92,11 @@ class CommandHandler
             ],
         ],
         'cache' => [
-            'description' => 'Build or clear framework caches.',
+            'description' => 'Clear the automatically rebuilt route cache.',
             'usage' => [
-                'php coriander cache controllers',
                 'php coriander cache clear',
             ],
-            'examples' => ['php coriander cache controllers', 'php coriander cache clear'],
+            'examples' => ['php coriander cache clear'],
         ],
         'benchmark' => [
             'description' => 'Run framework benchmark helpers.',
@@ -229,7 +225,7 @@ class CommandHandler
 
         ConsoleOutput::print('');
         ConsoleOutput::print('Common examples:');
-        ConsoleOutput::print('  php coriander make:controller Dashboard');
+        ConsoleOutput::print('  php coriander make:route "users/[id].get"');
         ConsoleOutput::print('  php coriander make:route admin/users');
         ConsoleOutput::print('  php coriander migrate:status');
         ConsoleOutput::print('  php coriander nodejs run build-prod');

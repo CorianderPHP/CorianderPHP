@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace CorianderCore\Tests;
 
-use CorianderCore\Core\Router\FileRouteDispatcher;
+use CorianderCore\Core\Router\Router;
 use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,7 +36,7 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
         foreach (['get', 'post'] as $method) {
             $this->put('admin/[id]/index.' . $method . '.php', 'return static fn($r) => new \\Nyholm\\Psr7\\Response(200, [], $r->getAttribute("trace") . ":" . $r->getAttribute("id"));');
         }
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         foreach (['GET', 'POST', 'HEAD'] as $method) {
             $response = $router->handle(new ServerRequest($method, '/admin/42'));
             self::assertSame('rootadminuser:42', (string) $response->getBody());
@@ -49,7 +49,7 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
         $this->middleware('admin', 'auth', true);
         $this->put('admin/users/_middleware.php', 'return [];');
         $this->put('admin/users/index.get.php', 'throw new \\RuntimeException("must not load");');
-        $response = (new FileRouteDispatcher($this->directory))->handle(new ServerRequest('GET', '/admin/users'));
+        $response = (new Router($this->directory))->handle(new ServerRequest('GET', '/admin/users'));
         self::assertSame(403, $response->getStatusCode());
         self::assertSame('auth', (string) $response->getBody());
     }
@@ -58,7 +58,7 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
     {
         $this->middleware('', 'root');
         $this->response('admin/index.get.php');
-        $router = new FileRouteDispatcher($this->directory);
+        $router = new Router($this->directory);
         self::assertSame('applied', $router->handle(new ServerRequest('GET', '/missing'))->getHeaderLine('X-root'));
         $this->middleware('admin', 'auth', true);
         self::assertSame(403, $router->handle(new ServerRequest('POST', '/admin'))->getStatusCode());
@@ -69,6 +69,6 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
         $this->response('index.get.php');
         $this->put('_middleware.php', 'return ["auth"];');
         $this->expectExceptionMessage('Expected PSR-15');
-        (new FileRouteDispatcher($this->directory))->handle(new ServerRequest('GET', '/'));
+        (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
     }
 }
