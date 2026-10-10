@@ -1,6 +1,23 @@
 # Routing Module Guide
 
-CorianderPHP's routing system maps incoming HTTP requests to callbacks, controllers, or views. By default, controller names and the built-in router handle most paths automatically.
+CorianderPHP's routing system maps incoming HTTP requests to registered callbacks,
+controllers, or views. Only explicitly registered routes are exposed by default.
+This prevents controller aliases and view fallback from bypassing route middleware.
+
+Register controller actions explicitly in `public/routes.php` or `src/Routes`:
+
+```php
+$router->get('account', fn() => (new \Controllers\AccountController())->index(), [$auth]);
+$router->post('account', fn() => (new \Controllers\AccountController())->store(), [$auth]);
+```
+
+Compatibility: existing applications relying on automatic controllers or views
+must register their routes, including the homepage, or explicitly construct
+`new Router(automaticRouting: true)` in their front controller. This enables
+legacy web/API controller and view discovery. In that mode, route middleware
+does not protect aliases: apply authorization globally or inside every action.
+The updated starter `public/routes.php` registers the homepage explicitly.
+The updater does not manage this application-owned file; update it manually.
 
 Custom route definitions start in `public/routes.php`. For small projects such as SPAs, marketing websites, brochure websites, and simple landing pages, keeping routes in this single file is usually the clearest option.
 
@@ -135,5 +152,5 @@ $router->post('/user', function(ServerRequest $request) {
 - Keep `public/routes.php` for small custom route lists and for including route files from `src/Routes/`.
 - Leverage PSR-15 middleware for cross-cutting concerns such as authentication or CSRF protection on mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`).
 - Use URL parameters instead of query strings for cleaner, cache-friendly routes.
-- Avoid defining routes unless necessary; controllers are mapped automatically.
+- Register every public controller action explicitly; use global authorization if opting into automatic routing.
 

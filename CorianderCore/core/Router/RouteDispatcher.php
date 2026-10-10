@@ -24,7 +24,8 @@ class RouteDispatcher
         private WebControllerHandler $webHandler,
         private ApiControllerHandler $apiHandler,
         private ViewRenderer $viewRenderer,
-        private NotFoundHandler $notFoundHandler
+        private NotFoundHandler $notFoundHandler,
+        private bool $automaticRouting = false
     ) {}
 
     /**
@@ -89,6 +90,10 @@ class RouteDispatcher
             $allowedMethods = array_values(array_unique($allowedMethods));
             sort($allowedMethods);
             return new Response(405, ['Allow' => implode(', ', $allowedMethods)], 'Method Not Allowed');
+        }
+
+        if (!$this->automaticRouting) {
+            return $this->notFoundHandler->handle($this->registry);
         }
 
         if (str_starts_with($path, 'api/')) {

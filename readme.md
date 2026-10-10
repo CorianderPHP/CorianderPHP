@@ -115,6 +115,10 @@ All commands are invoked via `php coriander`:
 
 ## CSRF Protection
 
+Routes must be registered explicitly by default. Legacy automatic controller/view
+discovery requires `new Router(automaticRouting: true)` and authorization covering
+all aliases. See [Routing](docs/routing.md) for migration instructions.
+
 Automatic web-controller actions enforce HTTP methods. Declare custom mutating
 actions with `#[HttpMethods('POST')]`; see [Controllers](docs/controllers.md#automatic-action-methods)
 for defaults and upgrade guidance.

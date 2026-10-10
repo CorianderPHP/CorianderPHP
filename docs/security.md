@@ -20,6 +20,11 @@ execution only through the front controller.
 
 ## Routing and View Path Safety
 
+- The default router exposes registered routes only. Automatic web/API controllers
+  and views require explicit opt-in through `new Router(automaticRouting: true)`.
+- When opting in, enforce authorization globally or within controller actions;
+  protecting one explicit route does not protect automatically discovered aliases.
+
 - View rendering accepts only normalized relative paths under `public/public_views`.
 - Rejected inputs include:
   - dot segments (`.` and `..`)

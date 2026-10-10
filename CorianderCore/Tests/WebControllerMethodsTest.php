@@ -15,7 +15,7 @@ class WebControllerMethodsTest extends TestCase
     public function testSafeRequestsCannotInvokeWriteActions(): void
     {
         HttpMethodsTestController::$calls = [];
-        $router = new Router();
+        $router = new Router(automaticRouting: true);
         $router->addMiddleware(new CsrfMiddleware());
         foreach (['store' => 'POST', 'update' => 'POST, PUT, PATCH', 'delete' => 'POST, DELETE', 'destroy' => 'POST, DELETE', 'reset' => 'POST'] as $action => $allow) {
             foreach (['GET', 'HEAD'] as $method) {

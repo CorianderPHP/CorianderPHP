@@ -42,7 +42,7 @@ class Router
      */
     private array $groupStack = [];
 
-    public function __construct()
+    public function __construct(bool $automaticRouting = false)
     {
         $this->registry = new RouteRegistry();
         $this->dispatcher = new RouteDispatcher(
@@ -50,7 +50,8 @@ class Router
             new WebControllerHandler(),
             new ApiControllerHandler(),
             new ViewRenderer(),
-            new NotFoundHandler()
+            new NotFoundHandler(),
+            $automaticRouting
         );
 
         $this->finalHandler = new class($this->dispatcher) implements RequestHandlerInterface {
