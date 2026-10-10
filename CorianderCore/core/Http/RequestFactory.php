@@ -12,9 +12,16 @@ use Psr\Http\Message\UploadedFileInterface;
 final class RequestFactory
 {
     /**
+     * Build a PSR request, bounding the raw body before application parsing.
+     *
      * @param array<string,mixed>|null $serverParams
      * @param array<string,mixed>|null $postParams
      * @param array<string,string>|null $headers
+     * @param array<string,string>|null $cookieParams
+     * @param array<string,mixed>|null $files PHP upload arrays or nested PSR uploaded files.
+     * @param int|null $maxBodyBytes Positive byte limit; defaults to API_MAX_BODY_BYTES or 1 MiB.
+     * @throws PayloadTooLargeException When declared or actual body size exceeds the limit.
+     * @throws BadRequestException For malformed JSON or invalid uploads.
      */
     public static function fromGlobals(?array $serverParams = null, ?array $postParams = null, ?array $headers = null, string|StreamInterface|null $rawBody = null, ?array $cookieParams = null, ?array $files = null, ?int $maxBodyBytes = null): ServerRequest
     {
@@ -104,6 +111,10 @@ final class RequestFactory
         return $postParams !== [] ? $request->withParsedBody($postParams) : $request;
     }
 
+    /**
+     * @param array<string|int,mixed> $files
+     * @return array<string|int,UploadedFileInterface|array>
+     */
     private static function normalizeFiles(array $files): array
     {
         $normalized = [];

@@ -1,24 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/*
- * CommandHandler orchestrates CLI command execution by mapping command names
- * to handler classes and delegating argument processing to each command.
- */
-
 namespace CorianderCore\Core\Console;
 
 /**
- * Routes console commands to their corresponding handler classes and manages execution.
- *
- * Maintains the registry of available commands, dispatches subcommands, and
- * provides help output when requested or when an unknown command is encountered.
+ * Dispatches CLI commands, preserves exit codes and provides focused help.
  */
 class CommandHandler
 {
     /**
-     * Available commands and their corresponding handler classes.
-     *
      * @var array<string, class-string>
      */
     protected array $commands = [
@@ -121,12 +111,8 @@ class CommandHandler
     ];
 
     /**
-     * Handles the execution of the given command.
-     *
-     * @param string $command The command name to execute
-     * @param array $args The arguments passed to the command
+     * @param list<string> $args
      * @throws \Exception If the command does not exist or the command class lacks an 'execute' method.
-     * @return int Process exit code.
      */
     public function handle(string $command, array $args): int
     {
@@ -189,11 +175,6 @@ class CommandHandler
         return $this->normalizeExitCode($result);
     }
 
-    /**
-     * Lists all available commands, including 'help'.
-     *
-     * @return void
-     */
     protected function listCommands(): void
     {
         ConsoleOutput::print('CorianderPHP CLI');

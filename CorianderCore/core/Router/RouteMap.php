@@ -6,6 +6,10 @@ namespace CorianderCore\Core\Router;
 /** Discovers filenames only; PHP handler code is never executed here. */
 class RouteMap
 {
+    /**
+     * @return array{static:array<string,array>,dynamic:list<array>,middleware:list<string>}
+     * @throws \RuntimeException For invalid, duplicate or ambiguous method-file paths.
+     */
     public function discover(string $directory): array
     {
         $groups = [];
@@ -89,6 +93,7 @@ class RouteMap
         return $map;
     }
 
+    /** Decode each segment once; return null for malformed or unsafe request paths. */
     public static function requestPath(string $path): ?string
     {
         if (str_contains($path, '//') || preg_match('/%(?![0-9a-f]{2})/i', $path)) {
@@ -104,6 +109,10 @@ class RouteMap
         return implode('/', $segments);
     }
 
+    /**
+     * @param array{static:array<string,array>,dynamic:list<array>,middleware:list<string>} $map
+     * @return array{0:array,1:array<string,string>}|null Matched route and decoded parameters.
+     */
     public static function match(array $map, string $path): ?array
     {
         if (isset($map['static'][$path])) {

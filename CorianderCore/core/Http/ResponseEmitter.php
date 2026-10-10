@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class ResponseEmitter
 {
+    /** Emit headers and permitted content; HEAD and bodyless statuses never read the body. */
     public static function emit(ResponseInterface $response, ?string $requestMethod = null): void
     {
         $status = $response->getStatusCode();

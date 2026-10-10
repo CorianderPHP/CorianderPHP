@@ -1,16 +1,10 @@
 <?php
 
 /**
- * CorianderPHP Autoloader
- *
- * Provides PSR-4 compliant class loading using a simple namespace-to-directory map.
- *
- * App\\ maps to src/; framework namespaces remain below. Supported prefixes:
+ * Namespace map for application, framework, module and test classes:
  * - `CorianderCore\\Core\\`    -> `/CorianderCore/core/`
  * - `CorianderCore\\Modules\\` -> `/CorianderCore/modules/`
  * - `CorianderCore\\Tests\\`   -> `/CorianderCore/Tests/`
- *
- * @param string $class Fully-qualified class name
  */
 spl_autoload_register(function (string $class): void {
     if (!defined('PROJECT_ROOT')) {

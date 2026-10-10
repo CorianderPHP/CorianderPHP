@@ -10,14 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Middleware validating CSRF tokens on mutating requests.
- *
- * Workflow:
- * 1. For methods outside the protected set the middleware is bypassed.
- * 2. Explicitly configured stateless prefixes can bypass validation.
- * 3. On protected methods, the token from parsed body (or recoverable raw body)
- *    is validated via {@see Csrf::validate()}.
- * 4. When validation fails a 403 response is returned.
+ * Validates mutating requests, including JSON; stateless prefix exemptions are explicit.
  */
 class CsrfMiddleware implements MiddlewareInterface
 {
@@ -55,9 +48,6 @@ class CsrfMiddleware implements MiddlewareInterface
         $this->apiPrefixes = $this->normalizeApiPrefixes($apiPrefixes ?? []);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (!$this->requiresValidation($request->getMethod())) {

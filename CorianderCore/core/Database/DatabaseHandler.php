@@ -16,32 +16,16 @@ use Psr\Log\LoggerInterface;
  */
 class DatabaseHandler
 {
-    /**
-     * @var LoggerInterface Logger used for reporting connection issues.
-     */
     private LoggerInterface $logger;
 
-    /**
-     * @var PDO|null The PDO instance used for database connection, or null if unsupported.
-     */
     private ?PDO $pdo = null;
 
-    /**
-     * @var bool Auto-close flag to determine if the connection should close automatically.
-     */
     private static bool $defaultAutoCloseConnection = true;
 
-    /**
-     * @var bool Whether this handler should close its PDO connection on close().
-     */
     private bool $autoCloseConnection;
 
     /**
-     * Construct a new DatabaseHandler instance.
-     * Establishes a connection to the MySQL or SQLite database based on the 'DB_TYPE' constant.
-     * If an unsupported database type is specified, it logs a warning and skips connection.
-     *
-     * @param LoggerInterface|null $logger Logger instance for reporting issues; defaults to core Logger when null.
+     * Connect eagerly using DB_TYPE configuration; log failures and leave PDO null.
      */
     public function __construct(?LoggerInterface $logger = null, ?bool $autoCloseConnection = null)
     {
@@ -98,44 +82,25 @@ class DatabaseHandler
         return $dsn . ';dbname=' . $database . ';charset=' . $normalizedCharset;
     }
 
-    /**
-     * Returns the PDO instance associated with the current database connection.
-     *
-     * @return PDO|null The PDO instance for interacting with the database, or null if no connection is available.
-     */
+    /** Return null when configuration is absent/unsupported or connection failed. */
     public function getPDO(): ?PDO
     {
         return $this->pdo;
     }
 
-    /**
-     * Set whether the connection should automatically close after each query.
-     *
-     * @param bool $autoClose Whether to automatically close the connection after each query.
-     * @return void
-     */
+    /** Change the close() policy for subsequently constructed handlers only. */
     public static function setAutoCloseConnection(bool $autoClose): void
     {
         self::$defaultAutoCloseConnection = $autoClose;
     }
 
-    /**
-     * Set whether this handler instance should close its connection.
-     *
-     * @param bool $autoClose Whether this instance should close its PDO connection.
-     * @return void
-     */
+    /** Change this instance's close() policy. */
     public function setAutoClose(bool $autoClose): void
     {
         $this->autoCloseConnection = $autoClose;
     }
 
-    /**
-     * Closes the database connection.
-     * If auto-close is disabled, it simply returns without closing the connection.
-     *
-     * @return void
-     */
+    /** Release this handler's PDO reference if its auto-close policy allows it. */
     public function close(): void
     {
         if (!$this->autoCloseConnection) {

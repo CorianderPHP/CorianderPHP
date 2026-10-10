@@ -56,6 +56,10 @@ class Router implements RequestHandlerInterface
         });
     }
 
+    /**
+     * @param array{directories:list<string>,middleware:list<string>,file?:string} $target
+     * @param callable(ServerRequestInterface):ResponseInterface $callback
+     */
     private function respond(ServerRequestInterface $request, array $target, callable $callback): ResponseInterface
     {
         [$response, $output] = OutputBuffer::capture(function () use ($request, $target, $callback) {
@@ -63,6 +67,7 @@ class Router implements RequestHandlerInterface
             foreach ($target['directories'] as $ancestor) {
                 $relative = ltrim($ancestor . '/_middleware.php', '/');
                 clearstatcache(true, $this->directory . '/' . $relative);
+                // A missing cached middleware file must fail closed, not bypass authentication.
                 if (!file_exists($this->directory . '/' . $relative) && !in_array($relative, $target['middleware'], true)) {
                     continue;
                 }

@@ -30,7 +30,7 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 `src/Routes/admin/_middleware.php` returns an array of PSR-15 middleware. Parents always apply, so child directories inherit authentication. Application classes use `App\` under `src`.
 
-`Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; without both, only the view renders. Pass `layout: false` for fragments.
+`Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; when neither exists, only the view renders. Pass `layout: false` for fragments.
 
 ## Guides
 
@@ -64,10 +64,12 @@ Generated views contain minimal content. Add forms and `Csrf::input()` when need
 
 Local development uses `APP_ENV=local` and `APP_DEBUG=1` for useful exception pages. Production always uses generic errors; see [environment configuration](docs/environment.md).
 
-Request bodies are limited by `API_MAX_BODY_BYTES` before parsing; oversized requests return 413. See the [stabilization roadmap](docs/0.3.0-stabilization.md) for the remaining 0.3.0 work.
+Request bodies are limited by `API_MAX_BODY_BYTES` before application parsing; oversized requests return 413. See the [completed stabilization roadmap](docs/0.3.0-stabilization.md) for the fixes, individual issues and PRs. The [benchmark guide](docs/benchmarks.md) records the complete FPM request comparison for lazy sessions.
 
 ```bash
 vendor/bin/phpunit --testdox
 ```
 
 Runtime dependencies remain Nyholm PSR-7 and PSR HTTP/logging interfaces. PHPUnit is a development dependency. Database, session, migration, logging and asset helpers remain available; keep business logic in ordinary application services.
+
+For framework development, follow [the contributor guide](docs/contributing.md): native types first, useful PHPDoc contracts and comments explaining constraints.
