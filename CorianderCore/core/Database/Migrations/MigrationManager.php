@@ -61,11 +61,10 @@ class MigrationManager
 
             foreach ($pending as $file) {
                 $migration = $this->loadMigration($file['path']);
-                $this->runInTransaction(function () use ($migration): void {
+                $this->runInTransaction(function () use ($migration, $file, $batch): void {
                     $migration->up($this->pdo);
+                    $this->recordMigration($file['filename'], $batch, $this->calculateChecksum($file['path']));
                 });
-
-                $this->recordMigration($file['filename'], $batch, $this->calculateChecksum($file['path']));
                 $ran[] = $file['filename'];
             }
 
@@ -122,11 +121,10 @@ class MigrationManager
                     throw new RuntimeException("Cannot rollback migration '{$filename}': down() method is missing.");
                 }
 
-                $this->runInTransaction(function () use ($migration): void {
+                $this->runInTransaction(function () use ($migration, $filename): void {
                     $migration->down($this->pdo);
+                    $this->deleteMigrationRecord($filename);
                 });
-
-                $this->deleteMigrationRecord($filename);
                 $rolledBack[] = $filename;
             }
 

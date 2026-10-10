@@ -149,6 +149,48 @@ class MigrationManagerTest extends TestCase
         );
     }
 
+    public function testHistoryInsertFailureRollsBackMigrationChanges(): void
+    {
+        $this->pdo->exec('CREATE TABLE events (id INTEGER)');
+        $this->writeMigration('20260101000000_insert_event.php', 'INSERT INTO events VALUES (1)', 'DELETE FROM events');
+        $this->manager->status();
+        $this->pdo->exec("CREATE TRIGGER reject_record BEFORE INSERT ON migrations BEGIN SELECT RAISE(ABORT, 'history insert failed'); END");
+
+        try {
+            $this->manager->migrate();
+            $this->fail('Expected migration history failure.');
+        } catch (\PDOException $exception) {
+            $this->assertStringContainsString('history insert failed', $exception->getMessage());
+        }
+        $this->assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM events')->fetchColumn());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn());
+
+        $this->pdo->exec('DROP TRIGGER reject_record');
+        $this->assertSame(1, $this->manager->migrate()['applied']);
+        $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM events')->fetchColumn());
+    }
+
+    public function testHistoryDeleteFailureRollsBackDownChanges(): void
+    {
+        $this->pdo->exec('CREATE TABLE events (id INTEGER)');
+        $this->writeMigration('20260101000000_insert_event.php', 'INSERT INTO events VALUES (1)', 'DELETE FROM events');
+        $this->manager->migrate();
+        $this->pdo->exec("CREATE TRIGGER reject_delete BEFORE DELETE ON migrations BEGIN SELECT RAISE(ABORT, 'history delete failed'); END");
+
+        try {
+            $this->manager->rollback();
+            $this->fail('Expected rollback history failure.');
+        } catch (\PDOException $exception) {
+            $this->assertStringContainsString('history delete failed', $exception->getMessage());
+        }
+        $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM events')->fetchColumn());
+        $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn());
+
+        $this->pdo->exec('DROP TRIGGER reject_delete');
+        $this->assertSame(1, $this->manager->rollback()['rolled_back']);
+        $this->assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM events')->fetchColumn());
+    }
+
     private function buildMigrationFileContent(string $upSql, string $downSql, string $extra = ''): string
     {
         return "<?php\ndeclare(strict_types=1);\n\nreturn new class {\n    public function up(\\PDO \$pdo): void\n    {\n        \$pdo->exec('" . addslashes($upSql) . "');\n    }\n\n    public function down(\\PDO \$pdo): void\n    {\n        \$pdo->exec('" . addslashes($downSql) . "');\n    }\n};\n" . ($extra !== '' ? $extra . "\n" : '');
