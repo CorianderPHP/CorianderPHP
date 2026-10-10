@@ -17,6 +17,7 @@ final class ErrorResponse
         if ($exception instanceof BadRequestException) {
             return Responses::html('Bad Request', 400);
         }
+        // Logging failure must not prevent the HTTP error response.
         try {
             (new Logger())->error('Unhandled application exception: {exception}', ['exception' => $exception]);
         } catch (\Throwable) {}

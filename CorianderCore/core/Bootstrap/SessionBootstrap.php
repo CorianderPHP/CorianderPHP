@@ -15,6 +15,7 @@ final class SessionBootstrap
         'samesite' => 'Lax',
     ];
 
+    /** Configure subsequent session cookies without opening a session. */
     public static function configure(bool $secure): void
     {
         self::$cookieParams = [
@@ -26,6 +27,8 @@ final class SessionBootstrap
     }
 
     /**
+     * Optional eager startup for custom bootstraps; the starter uses start() on demand.
+     *
      * @param array<string,mixed> $serverParams
      * @param string[] $statelessPrefixes
      */
@@ -38,6 +41,7 @@ final class SessionBootstrap
         self::start();
     }
 
+    /** Start or resume a native session unless one is already active. */
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {

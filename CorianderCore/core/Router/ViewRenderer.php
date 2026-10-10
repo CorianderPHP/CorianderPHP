@@ -4,18 +4,19 @@ declare(strict_types=1);
 namespace CorianderCore\Core\Router;
 
 /**
- * ViewRenderer
- *
- * Handles locating and rendering application views with sanitized data.
- * Workflow:
- * 1. Escape string data for safe HTML output.
- * 2. Extract the sanitized variables into the view scope.
- * 3. Include shared header and footer around the view.
+ * Renders views with escaped string data and independently inherited layouts.
  */
 class ViewRenderer
 {
     public function __construct(private string $directory = PROJECT_ROOT . '/src/Views') {}
 
+    /**
+     * Use the nearest existing header and footer independently; omit absent parts.
+     *
+     * @param array<string,mixed> $data Variables exposed to all rendered files; strings are HTML-escaped recursively.
+     * @throws \InvalidArgumentException For reserved or invalid view names.
+     * @throws \RuntimeException For missing views or files outside the view root.
+     */
     public function response(string $view, array $data = [], int $status = 200, bool $layout = true): \Psr\Http\Message\ResponseInterface
     {
         $name = SafePath::normalizeRelativePath($view);
@@ -45,6 +46,7 @@ class ViewRenderer
             $files = array_filter([$header, $file, $footer], static fn(?string $path): bool => $path !== null);
         }
         $render = static function (array $__files, array $__data): void {
+            // Application data must not replace the renderer's file list.
             extract($__data, EXTR_SKIP);
             foreach ($__files as $__file) {
                 require $__file;
@@ -55,10 +57,8 @@ class ViewRenderer
     }
 
     /**
-     * Escape data recursively for safe HTML output.
-     *
-     * @param array $data Data to escape.
-     * @return array Escaped data.
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
      */
     private function escapeData(array $data): array
     {

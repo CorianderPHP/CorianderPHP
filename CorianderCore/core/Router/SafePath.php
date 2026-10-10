@@ -32,6 +32,7 @@ final class SafePath
         return $destination;
     }
 
+    /** @throws \RuntimeException For missing files or paths escaping the root, including symlinks. */
     public static function resolveFile(string $root, string $relative): string
     {
         $relative = self::normalizeRelativePath($relative);
@@ -47,6 +48,7 @@ final class SafePath
         return $file;
     }
 
+    /** Normalize application paths; return null for absolute, empty or traversing paths. */
     public static function normalizeRelativePath(string $path): ?string
     {
         if (str_contains($path, "\0")) {

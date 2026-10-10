@@ -8,6 +8,7 @@ final class OutputBuffer
     /**
      * Capture output emitted while running user code.
      *
+     * @param callable():mixed $callback
      * @return array{0:mixed,1:string}
      */
     public static function capture(callable $callback): array

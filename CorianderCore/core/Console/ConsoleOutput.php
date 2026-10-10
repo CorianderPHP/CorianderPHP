@@ -1,16 +1,10 @@
 <?php
 declare(strict_types=1);
 
-/*
- * ConsoleOutput provides formatted CLI printing using Minecraft-like
- * color codes to enhance readability of command-line interactions.
- */
-
 namespace CorianderCore\Core\Console;
 
 /**
- * The ConsoleOutput class handles console output with custom color
- * codes and styles similar to Minecraft chat formatting.
+ * Prints CLI messages with ampersand style codes and optional terminal colors.
  */
 class ConsoleOutput
 {
@@ -42,8 +36,6 @@ class ConsoleOutput
      *  - &u: Underline
      *  - &r: Reset formatting
      * 
-     * @param string $message The message with color/style codes.
-     * @return void
      */
     public static function print(string $message): void
     {
@@ -55,14 +47,12 @@ class ConsoleOutput
             return;
         }
 
-        // Replace color codes with corresponding ANSI codes
         $formattedMessage = str_replace([
             '&4', '&2', '&3', '&e', '&7', '&8', '&l', '&u', '&r'
         ], [
             self::COLOR_RED, self::COLOR_GREEN, self::COLOR_CYAN, self::COLOR_YELLOW, self::COLOR_GRAY, self::COLOR_DARK_GRAY, self::STYLE_BOLD, self::STYLE_UNDERLINE, self::STYLE_RESET
         ], $message);
 
-        // Output the formatted message to the console
         echo $formattedMessage . self::STYLE_RESET . PHP_EOL;
     }
 
@@ -98,11 +88,6 @@ class ConsoleOutput
         return false;
     }
 
-    /**
-     * Prints a horizontal rule (line of dashes).
-     *
-     * @return void
-     */
     public static function hr(): void
     {
         self::print("&8-----------------------------------------");

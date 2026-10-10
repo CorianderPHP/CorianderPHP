@@ -14,6 +14,7 @@ final class Responses
         return new Response($status, ['Content-Type' => 'text/html; charset=utf-8'], $html);
     }
 
+    /** @throws \JsonException When the payload cannot be encoded. */
     public static function json(mixed $data, int $status = 200): ResponseInterface
     {
         return new Response($status, ['Content-Type' => 'application/json; charset=utf-8'],
@@ -28,6 +29,7 @@ final class Responses
         return new Response($status, ['Location' => $location]);
     }
 
+    /** @param array<string,mixed> $data View variables; string values are HTML-escaped recursively. */
     public static function view(string $view, array $data = [], int $status = 200, bool $layout = true): ResponseInterface
     {
         return (new ViewRenderer())->response($view, $data, $status, $layout);

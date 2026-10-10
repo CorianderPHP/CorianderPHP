@@ -26,6 +26,7 @@ final class RouteCache
         }
     }
 
+    /** @return array{static:array<string,array>,dynamic:list<array>,middleware:list<string>} */
     public function get(): array
     {
         if (!$this->production) {
