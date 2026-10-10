@@ -2,6 +2,10 @@
 
 Controllers handle HTTP requests and live under `src/Controllers` (or `src/ApiControllers` for API endpoints).
 
+Register controller actions explicitly using the [routing guide](routing.md).
+Automatic controller and view discovery requires `new Router(automaticRouting: true)`;
+route-level authorization alone does not protect aliases in that mode.
+
 ## Creating a Controller
 
 Generate a controller with the CLI:

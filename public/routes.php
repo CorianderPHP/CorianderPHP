@@ -1,6 +1,7 @@
 <?php
 
 use Nyholm\Psr7\ServerRequest;
+use CorianderCore\Core\Router\ViewRenderer;
 
 /** @var \CorianderCore\Core\Router\Router $router */
 /** @var callable $notFound */
@@ -21,6 +22,8 @@ use Nyholm\Psr7\ServerRequest;
 // });
 
 // Route for handling sitemap.xml requests
+$router->get('home', static fn() => (new ViewRenderer())->render('home'));
+
 $router->get('sitemap.xml', function (ServerRequest $request) use ($notFound) {
     $sitemapPath = PROJECT_ROOT . '/public/sitemap.php';
     if (!file_exists($sitemapPath)) {
