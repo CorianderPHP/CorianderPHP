@@ -58,6 +58,8 @@ php coriander help
 
 Creating route and view files manually works the same way. `php coriander update` updates framework-managed files while preserving application code. Breaking upgrades require application changes; review the migration guide before updating an existing project.
 
+`make:route` checks the same definitions as discovery and rejects repeated parameters and conflicting routes before writing files.
+
 Generated views contain minimal content. Add forms and `Csrf::input()` when needed; ordinary views do not open a session. Construct application services directly and pass shared dependencies through their constructors.
 
 ## Validation

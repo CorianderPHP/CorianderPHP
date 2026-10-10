@@ -29,6 +29,8 @@ Move each controller action to its method file. Extract shared logic into ordina
 
 `index.get.php` maps to a directory root. Multiple parameters are separate directories, for example `teams/[team]/users/[id].post.php`. All supported suffixes are listed in the [routing guide](routing.md). Static paths take precedence before selecting a method, so a method mismatch never becomes a dynamic route. GET supplies HEAD fallback; explicit HEAD wins. OPTIONS requires its own file. 404 and 405 are distinct.
 
+`make:route` now checks discovery's definition rules before writing. Use unique parameter names within each path and consistent names across methods for the same pattern. A path and its `index` alias cannot define the same method twice. Existing invalid definitions must be corrected before generating more routes.
+
 Remove `public/routes.php`, controller namespaces, HTTP method attributes, `automaticRouting` flags and registration calls once their behavior is migrated. Views no longer supply fallback routes. For a homepage alias, create `home.get.php` returning the handler from `index.get.php` explicitly.
 
 ## 3. Move middleware to route directories

@@ -14,6 +14,8 @@ Access parameters through `$request->getAttribute('id')`. Read query values thro
 
 Static segments take precedence before method selection. With `users/new.get.php` and `users/[id].post.php`, `POST /users/new` returns 405 rather than invoking the dynamic handler. Duplicate routes, repeated parameter names and structurally identical routes with different parameter names are definition errors. Across dynamic patterns, static segments nearer the root take precedence.
 
+`php coriander make:route` uses these same definition rules before creating directories or writing a handler. It rejects conflicts against current files even in production, without executing handlers or middleware or updating the route cache. `users.get.php` and `users/index.post.php` can share a path with different methods; two GET definitions for that path cannot.
+
 GET supplies a HEAD fallback. An explicit `.head.php` wins. The emitter suppresses bodies for every HEAD response, including errors and redirects. Missing paths return 404; unsupported methods return 405 with `Allow`. OPTIONS is explicit rather than automatically generated. Paths are case-sensitive; trailing slashes are accepted. URL segments decode once. Dot segments, encoded separators, backslashes, NUL and double slashes are rejected.
 
 Dot/underscore-prefixed route files or directories are private. `_middleware.php` applies ordered PSR-15 middleware from root to leaf; see [middleware](middleware.md). Views never create routes. Discovery does not execute handlers. Only the selected handler loads after middleware permits the request.

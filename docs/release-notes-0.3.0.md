@@ -13,6 +13,7 @@
 - CI covers Linux and Windows on PHP 8.2–8.5, with real HTTP checks, concurrent cache builds and verified OPcache off/on benchmark artifacts. GD cleanup no longer triggers PHP 8.5 deprecations.
 - A separate nginx/PHP-FPM benchmark verifies complete production requests with OPcache and concurrent clients. Saved eager/lazy session reports show removal of unnecessary public-request lock contention; see [the measurement and limitations](benchmarks.md).
 - The optional Node.js asset toolchain locks `source-map-js` to patched version 1.2.2 for CVE-2026-93749. Node.js CI checks clean installs, audits and asset builds on Linux and Windows. Existing projects using this toolchain should update `nodejs/package-lock.json` and run `npm ci` from `nodejs`; PHP-only projects need no Node.js changes.
+- `make:route` shares discovery's definition validation and rejects repeated parameters, conflicting parameter names and duplicate `index` aliases before creating directories or writing files. It inspects current filenames without executing application code or updating production caches; valid route behavior is unchanged.
 
 ## Breaking changes and upgrade
 
@@ -35,6 +36,8 @@ There is no implicit `/api` CSRF exemption. Cookie-authenticated mutations need 
 PHP 8.2 remains the minimum, with no added runtime dependencies. Database, migrations, logging, sessions and asset helpers remain available. Existing apps must migrate routes, middleware, templates, namespaces and bootstrap together. The updater preserves application-owned files and does not perform this migration automatically. See [the 0.3.0 migration guide](https://github.com/CorianderPHP/CorianderPHP/blob/main/docs/migration-0.3.0.md).
 
 ## References for documentation updates
+
+Shared route validation: `RouteMap::validateNewRoute(directory, relative)` checks a proposed method filename against discovery. `RouteMap::METHODS` lists supported suffixes. Changed sources: `CorianderCore/core/Router/RouteMap.php`, `CorianderCore/core/Console/Commands/Make/Route/MakeRoute.php`, `CorianderCore/Tests/RouteValidationTest.php`; guide references: `docs/routing.md`, `docs/cli.md`, `docs/migration-0.3.0.md`, `readme.md`. Invalid generator arguments return 2 and definition conflicts return 1; manually created files remain validated during discovery.
 
 Production benchmark references: `CorianderCore/Tests/benchmarks/{production-fixture.php,production-load.py,run-production.sh}`, `.github/workflows/production-benchmark.yml` and `docs/benchmarks.md`. The optional nginx/FPM harness measures complete verified requests and concurrent sessions using only standard development tools.
 
