@@ -16,7 +16,7 @@ class MakeRouteTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$testPath = PROJECT_ROOT . '/CorianderCore/tests/_tmp_make_route/';
+        self::$testPath = PROJECT_ROOT . '/CorianderCore/Tests/_tmp_make_route/';
     }
 
     protected function setUp(): void

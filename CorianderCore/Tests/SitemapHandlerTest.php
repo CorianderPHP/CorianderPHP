@@ -36,7 +36,7 @@ class SitemapHandlerTest extends TestCase
             define('PROJECT_URL', '');
         }
 
-        self::$testPath = PROJECT_ROOT . "/CorianderCore/tests/_tmp/";
+        self::$testPath = PROJECT_ROOT . "/CorianderCore/Tests/_tmp/";
         self::$viewsPath = self::$testPath . 'public_views';
         self::$outputDir = self::$testPath . 'output/';
 
