@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace ApiControllers;
 
 use CorianderCore\Core\Security\Csrf;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class {{controllerName}}
@@ -22,27 +24,26 @@ class ControllerTemplatePlaceholder
     /**
      * Handles GET requests to /api/{{kebabControllerName}}.
      */
-    public function get(): void
+    public function get(): ResponseInterface
     {
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'OK', 'data' => []]);
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'],
+            json_encode(['status' => 'OK', 'data' => []]));
     }
 
     /**
      * Handles POST requests to /api/{{kebabControllerName}}.
      */
-    public function post(): void
+    public function post(): ResponseInterface
     {
         $input = json_decode(file_get_contents('php://input'), true);
-        if (!Csrf::validate($input['csrf_token'] ?? null)) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Invalid CSRF token']);
-            return;
+        $token = $input['csrf_token'] ?? null;
+        if (!is_string($token) || !Csrf::validate($token)) {
+            return new Response(403, ['Content-Type' => 'application/json; charset=utf-8'],
+                json_encode(['error' => 'Invalid CSRF token']));
         }
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Data received', 'data' => $input]);
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'],
+            json_encode(['message' => 'Data received', 'data' => $input]));
     }
 
     // -------------------------------------------------------------------
@@ -58,25 +59,23 @@ class ControllerTemplatePlaceholder
     // -------------------------------------------------------------------
 
     /*
-    public function get_stats(int $id = null): void
+    public function get_stats(?int $id = null): ResponseInterface
     {
-        header('Content-Type: application/json');
-        echo json_encode([
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], json_encode([
             'status' => 'OK',
             'action' => 'get_stats',
             'id' => $id,
-        ]);
+        ]));
     }
 
-    public function post_summary(): void
+    public function post_summary(): ResponseInterface
     {
         $input = json_decode(file_get_contents('php://input'), true);
-        header('Content-Type: application/json');
-        echo json_encode([
+        return new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], json_encode([
             'status' => 'OK',
             'action' => 'post_summary',
             'data' => $input,
-        ]);
+        ]));
     }
     */
 }

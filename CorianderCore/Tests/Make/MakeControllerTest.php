@@ -12,6 +12,45 @@ use CorianderCore\Core\Utils\DirectoryHandler;
  */
 class MakeControllerTest extends TestCase
 {
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testGeneratedControllerResponsesPreserveCsrfErrorsAndJsonHeaders(): void
+    {
+        $_POST = ['csrf_token' => 'invalid'];
+        foreach ([false, true] as $api) {
+            $args = $api ? ['GeneratedResponse', '--api'] : ['GeneratedResponse'];
+            ob_start();
+            try {
+                $this->assertSame(0, $this->makeController->execute($args));
+            } finally {
+                ob_end_clean();
+            }
+            $namespace = $api ? 'ApiControllers' : 'Controllers';
+            require self::$testPath . 'src/' . $namespace . '/GeneratedResponseController.php';
+            $handler = $api
+                ? new \CorianderCore\Core\Router\Handlers\ApiControllerHandler()
+                : new \CorianderCore\Core\Router\Handlers\WebControllerHandler();
+            $path = $api ? 'api/generated-response' : 'generated-response/store';
+            $response = $handler->dispatch($path, 'POST');
+            $this->assertSame(403, $response->getStatusCode());
+            $this->assertStringContainsString('Invalid CSRF token', (string) $response->getBody());
+            $this->assertSame($api ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8',
+                $response->getHeaderLine('Content-Type'));
+            if ($api) {
+                $getResponse = $handler->dispatch($path, 'GET');
+                $this->assertSame(200, $getResponse->getStatusCode());
+                $this->assertSame('application/json; charset=utf-8', $getResponse->getHeaderLine('Content-Type'));
+                $this->assertSame(['status' => 'OK', 'data' => []], json_decode((string) $getResponse->getBody(), true));
+                $router = new \CorianderCore\Core\Router\Router();
+                $router->get($path, fn() => (new \ApiControllers\GeneratedResponseController())->get());
+                $router->post($path, fn() => (new \ApiControllers\GeneratedResponseController())->post());
+                $this->assertSame((string) $getResponse->getBody(), (string) $router->dispatch(
+                    new \Nyholm\Psr7\ServerRequest('GET', '/' . $path))->getBody());
+                $this->assertSame(403, $router->dispatch(
+                    new \Nyholm\Psr7\ServerRequest('POST', '/' . $path))->getStatusCode());
+            }
+        }
+    }
+
     public function testGeneratedControllersDeclareDistinctLoadableClasses(): void
     {
         foreach ([false, true] as $api) {

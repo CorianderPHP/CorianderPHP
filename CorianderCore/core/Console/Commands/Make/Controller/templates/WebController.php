@@ -13,6 +13,8 @@ namespace Controllers;
 
 use CorianderCore\Core\Router\ViewRenderer;
 use CorianderCore\Core\Security\Csrf;
+use Nyholm\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class {{controllerName}}
@@ -78,14 +80,12 @@ class ControllerTemplatePlaceholder
      * This method processes data submitted via POST requests, such as form submissions.
      * It validates and handles the data, rendering a success message or redirection to another view.
      *
-     * @return void
+     * @return ResponseInterface|null An error response, or rendered success output.
      */
-    public function store(): void
+    public function store(): ?ResponseInterface
     {
         if (!Csrf::validateRequest()) {
-            http_response_code(403);
-            echo 'Invalid CSRF token';
-            return;
+            return new Response(403, ['Content-Type' => 'text/plain; charset=utf-8'], 'Invalid CSRF token');
         }
 
         // Example: Process form submission data
@@ -99,6 +99,7 @@ class ControllerTemplatePlaceholder
 
         // Use the ViewRenderer to render the success view
         $this->view->render('{{kebabControllerName}}/success', $data);
+        return null;
     }
 }
 
