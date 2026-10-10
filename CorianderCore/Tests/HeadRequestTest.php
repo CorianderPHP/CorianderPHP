@@ -16,6 +16,18 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class HeadRequestTest extends RouteFixtureTestCase
 {
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    public function testBodylessStatusesDoNotEmitOrReadTheBody(): void
+    {
+        foreach ([100, 103, 204, 205, 304] as $status) {
+            $response = new Response($status, [], 'must not be emitted');
+            [, $output] = OutputBuffer::capture(fn() => ResponseEmitter::emit($response, 'GET'));
+            self::assertSame('', $output);
+            self::assertSame(0, $response->getBody()->tell());
+            self::assertSame($status, http_response_code());
+        }
+    }
+
     public function testGetFallbackPreservesStatusHeadersAndOriginalMethod(): void
     {
         foreach ([200, 302, 404, 500] as $status) {

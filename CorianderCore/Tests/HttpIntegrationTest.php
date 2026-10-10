@@ -6,6 +6,30 @@ use PHPUnit\Framework\TestCase;
 
 class HttpIntegrationTest extends TestCase
 {
+    public function testBodylessStatusesAndFramingOverHttp(): void
+    {
+        $root = __DIR__ . '/fixtures/http';
+        $server = new HttpServer($root, $root . '/router.php');
+        try {
+            foreach ([204, 205, 304] as $status) {
+                $response = $server->request('GET', '/empty/' . $status);
+                self::assertSame($status, $response['status']);
+                self::assertSame('', $response['body']);
+                self::assertSame(['preserved'], $response['headers']['x-fixture']);
+                if ($status === 204) {
+                    self::assertArrayNotHasKey('content-length', $response['headers']);
+                } elseif ($status === 205) {
+                    self::assertSame(['0'], $response['headers']['content-length']);
+                } else {
+                    self::assertSame(['999'], $response['headers']['content-length']);
+                }
+                if ($status !== 304) {
+                    self::assertArrayNotHasKey('transfer-encoding', $response['headers']);
+                }
+            }
+        } finally { $server->stop(); }
+    }
+
     public function testStarterOverActualHttpServesPagesAssetsAndErrors(): void
     {
         $server = new HttpServer(PROJECT_ROOT . '/public', PROJECT_ROOT . '/public/index.php');
