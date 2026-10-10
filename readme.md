@@ -58,6 +58,8 @@ php coriander help
 
 Creating route and view files manually works the same way. `php coriander update` updates framework-managed files while preserving application code. Breaking upgrades require application changes; review the migration guide before updating an existing project.
 
+Generated views contain minimal content. Add forms and `Csrf::input()` when needed; ordinary views do not open a session. Construct application services directly and pass shared dependencies through their constructors.
+
 ## Validation
 
 Local development uses `APP_ENV=local` and `APP_DEBUG=1` for useful exception pages. Production always uses generic errors; see [environment configuration](docs/environment.md).

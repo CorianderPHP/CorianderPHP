@@ -136,6 +136,8 @@ php coriander make:migration CreateUsersTable
 
 Generate a method handler such as `src/Routes/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required. `make:view admin/profile` creates `src/Views/admin/profile.php`. Both generators are optional.
 
+Generated views contain a section and heading. Add your own content; a form is not generated automatically. When adding a mutating form, include `Csrf::input()` and create the corresponding method handler.
+
 ### `migrate`
 
 Apply pending migrations tracked in the `migrations` table.

@@ -1,16 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/*
- * DatabaseHandler manages a single PDO connection shared across the
- * application, supporting MySQL and SQLite with optional auto-closing.
- *
- * Workflow:
- * 1. Instantiated via dependency injection (e.g. service container).
- * 2. getPDO() exposes the underlying connection for queries.
- * 3. close() releases the connection when no longer needed.
- */
-
 namespace CorianderCore\Core\Database;
 
 use PDO;
@@ -21,9 +11,8 @@ use Psr\Log\LoggerInterface;
 /**
  * DatabaseHandler manages a PDO connection using the provided logger.
  *
- * Instances are intended to be shared via a service container rather than
- * accessed through a singleton. The handler supports both MySQL and SQLite
- * connections and reports issues through the injected PSR-3 logger.
+ * Each instance owns its MySQL or SQLite connection and reports issues through
+ * the injected PSR-3 logger. Pass shared instances to application services.
  */
 class DatabaseHandler
 {

@@ -8,3 +8,6 @@ composer.phar
 /cache/routes.php.lock
 /cache/routes.php.*.tmp
 /benchmark-results.json
+/benchmark-production.json
+/CorianderCore/Tests/_tmp*
+__pycache__/
