@@ -11,6 +11,39 @@ use PHPUnit\Framework\TestCase;
 
 class SQLManagerTest extends TestCase
 {
+    public function testUpdateWhereDoesNotOverwriteConditionBindings(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE items (id INTEGER PRIMARY KEY, w_id INTEGER, `a-b` TEXT)');
+        $pdo->exec("INSERT INTO items VALUES (1, 10, 'first'), (2, 20, 'second')");
+
+        SQLManager::updateWhere('items', ['w_id' => 2, 'a-b' => 'changed'], ['id' => 1]);
+
+        $this->assertSame([
+            ['id' => 1, 'w_id' => 2, 'a-b' => 'changed'],
+            ['id' => 2, 'w_id' => 20, 'a-b' => 'second'],
+        ], $pdo->query('SELECT * FROM items ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function testRawUpdatePreservesParametersResemblingGeneratedNames(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE items (id INTEGER PRIMARY KEY, value INTEGER)');
+        $pdo->exec('INSERT INTO items VALUES (1, 10), (2, 20)');
+
+        set_error_handler(static fn(int $severity): bool => $severity === E_USER_DEPRECATED);
+        try {
+            SQLManager::update('items', ['id' => 3, 'value' => 30], 'id = :set_0 AND value = :set_1', ['set_0' => 1, ':set_1' => 10]);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame([
+            ['id' => 2, 'value' => 20],
+            ['id' => 3, 'value' => 30],
+        ], $pdo->query('SELECT * FROM items ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function testFindWhereRejectsEmptyConditions(): void
     {
         $this->expectException(DatabaseException::class);

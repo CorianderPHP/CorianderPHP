@@ -411,11 +411,15 @@ class SQLManager
         $pdo = self::requirePdo();
         $table = self::quoteIdentifier($table);
         $set = [];
+        $assignmentIndex = 0;
 
         foreach ($data as $column => $value) {
-            $placeholder = ':' . $column;
+            do {
+                $parameter = 'set_' . $assignmentIndex++;
+            } while (array_key_exists($parameter, $params) || array_key_exists(':' . $parameter, $params));
+            $placeholder = ':' . $parameter;
             $set[] = sprintf('%s = %s', self::quoteIdentifier((string) $column), $placeholder);
-            $params[$column] = $value;
+            $params[$parameter] = $value;
         }
 
         $sql = sprintf('UPDATE %s SET %s WHERE %s', $table, implode(', ', $set), $where);
