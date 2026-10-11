@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "watch-typescript": "tsc --noEmit --watch",
-    "build-typescript": "tsc --noEmit",
-    "check-types": "tsc --noEmit",
+    "build-typescript": "npm run check-types",
+    "check-types": "node build.js --check",
     "test": "node --test tests/*.test.js",
     "watch-all": "node watch.all.js",
     "watch-ts": "node build.js --watch",

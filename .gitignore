@@ -11,3 +11,4 @@ composer.phar
 /benchmark-production.json
 /CorianderCore/Tests/_tmp*
 __pycache__/
+/public/assets/js/pages/.generated.json

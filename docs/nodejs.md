@@ -53,7 +53,11 @@ Coriander command; `php coriander nodejs npm install` would try to run
 
 ## Available Scripts
 
-`build-ts`, `build-all` and `build-prod` check TypeScript before bundling. `check-types` and the legacy `build-typescript` command run `tsc --noEmit`; `watch-typescript` checks continuously without writing JavaScript. Only esbuild produces browser assets. Type checking includes `src/Views`, `src/Scripts` and the existing `nodejs/src` tree. `build.js` accepts `--minify` or `--watch`; the duplicated `build.min.js` and `build.watch.js` are removed. Existing npm build/watch names remain available. Builds preserve manual JavaScript and leave previous output intact when compilation fails. Bundles use ES modules; load them with `<script type="module" src="..."></script>`.
+`build-ts`, `build-all` and `build-prod` check TypeScript before bundling. `check-types` and the legacy `build-typescript` command run `tsc --noEmit` through `build.js --check`, skipping empty PHP-only source trees; `watch-typescript` checks continuously without writing JavaScript. Only esbuild produces browser assets. Type checking includes `src/Views` and `src/Scripts`. `build.js` accepts `--minify`, `--watch` or `--check`; the duplicated `build.min.js` and `build.watch.js` are removed. Existing npm build/watch names remain available. Bundles use ES modules.
+
+`watch-ts` watches Views, Scripts and `nodejs/tsconfig.json`, rediscovers entries when pages are added, renamed or removed, and serializes rebuilds. Type errors are reported before publishing; fixing the file resumes builds without restarting. `watch-all` runs both tool CLIs directly through Node on Windows and Linux and closes both watchers on Ctrl+C or closed input.
+
+Successful builds record generated filenames in `public/assets/js/pages/.generated.json`. Cleanup removes only previously recorded bundles that are no longer entries. Manual JS stays intact, including unrecorded files inside `pages`. Failed compilation/type checks keep the last good bundles and list. Output and cleanup reject paths escaping the pages directory or following symlinks. Keep the list between local builds; it is ignored by Git and is unnecessary at runtime. Files from older builds without a list need deliberate manual cleanup.
 
 Run all commands from the project root.
 
@@ -96,6 +100,8 @@ Run all commands from the project root.
 - Reusable helpers: `src/Scripts`, imported by page/directory entries. They do not produce separate entry bundles. Private view directories are excluded from entry discovery.
 - Tailwind input: `public/assets/css/input.css`
 - Tailwind output: `public/assets/css/output.css`
+
+Tailwind sources are declared in `input.css` with `source(none)` and explicit `@source` paths for `src/Views` and `src/Scripts`, relative to the CSS file. Add an explicit source if your app stores class names elsewhere. The JavaScript config retains theme settings; legacy `nodejs/src` and `public_views` content paths are removed.
 
 ## Best Practices
 
