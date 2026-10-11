@@ -14,9 +14,7 @@
         "allowImportingTsExtensions": false,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": false,
-        "outDir": "../public/assets/js/", // Directory for compiled JS files
-        "rootDir": "./src", // Directory for TS files
+        "noEmit": true,
         /* Linting */
         "strict": true,
         "noUnusedLocals": true,
@@ -24,6 +22,8 @@
         "noFallthroughCasesInSwitch": true
     },
     "include": [
-        "src"
+        "src",
+        "../src/Views",
+        "../src/Scripts"
     ]
 }

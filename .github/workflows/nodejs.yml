@@ -34,6 +34,9 @@ jobs:
     - name: Audit asset dependencies
       run: npm audit --audit-level=high
 
+    - name: Verify asset builds
+      run: npm test
+
     - name: Build development assets
       run: npm run build-all
 

@@ -11,7 +11,7 @@ const tailwindBinary = path.join(
 let shuttingDown = false;
 
 const watchers = [
-  ['watch-ts', process.execPath, ['build.watch.js'], false],
+  ['watch-ts', process.execPath, ['build.js', '--watch'], false],
   [
     'watch-tw',
     tailwindBinary,

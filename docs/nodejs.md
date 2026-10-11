@@ -53,6 +53,8 @@ Coriander command; `php coriander nodejs npm install` would try to run
 
 ## Available Scripts
 
+`build-ts`, `build-all` and `build-prod` check TypeScript before bundling. `check-types` and the legacy `build-typescript` command run `tsc --noEmit`; `watch-typescript` checks continuously without writing JavaScript. Only esbuild produces browser assets. Type checking includes `src/Views`, `src/Scripts` and the existing `nodejs/src` tree. `build.js` accepts `--minify` or `--watch`; the duplicated `build.min.js` and `build.watch.js` are removed. Existing npm build/watch names remain available. Builds preserve manual JavaScript and leave previous output intact when compilation fails. Bundles use ES modules; load them with `<script type="module" src="..."></script>`.
+
 Run all commands from the project root.
 
 - **Watch TypeScript**
