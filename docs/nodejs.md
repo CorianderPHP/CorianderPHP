@@ -101,7 +101,11 @@ Run all commands from the project root.
 
 Share behavior between unrelated views using ordinary imports, for example `import { initializeMenu } from '../../Scripts/menu'` inside `src/Views/about/index.ts`. `menu.ts`, `http.ts` and `types.ts` are application-owned modules, not framework APIs or automatically loaded scripts. Use `import type` for shared interfaces; type-only imports produce no browser code. No metadata registration is needed. Keep initializers explicit so each page runs only the behavior it needs.
 
-Move existing `nodejs/src/**/index.ts` to its matching GET page and update relative imports. The builder now discovers `src/Views` only; it checks filenames without executing PHP. Build/watch scripts remain in `nodejs`. Existing generated files under `public/assets/js/home` are no longer used by the starter; remove obsolete app assets deliberately. Browser inclusion is explicit until the inherited script-loading step lands.
+Move existing `nodejs/src/**/index.ts` to its matching GET page and update relative imports. The builder discovers `src/Views` entries by filename without executing PHP. Build/watch scripts remain in `nodejs`. Existing generated files under `public/assets/js/home` are no longer used by the starter; remove obsolete app assets deliberately.
+
+Full rendered pages include existing compiled directory `_script.js` modules root to leaf, followed by the matching GET page module, before the inherited footer. Each selected asset appears once. Missing bundles are omitted, including on PHP-only sites. Tags use `type="module"`, encode filenames such as `[id].js`, respect `PUBLIC_URL_PREFIX`, and append the file modification time for cache invalidation. PHP only checks the selected page and ancestor asset paths; it never scans TypeScript or executes Node.
+
+Explicit handler responses (JSON, redirects or manually returned HTML) are unchanged. `Responses::view(..., layout: false)` renders a fragment without automatic scripts; full explicit templates receive ancestor scripts. Custom `ViewRenderer` view roots can pass their matching compiled pages directory as the second constructor argument; their asset URLs still use `assets/js/pages`. Custom roots otherwise skip automatic assets. Prebuilt assets can be deployed without Node or TypeScript source files.
 
 - Commit only compiled assets needed for production; ignore `node_modules/`.
 - Run `install` after pulling changes to ensure packages are up to date.
