@@ -1,6 +1,16 @@
 # Views and inherited layouts
 
-Templates live in `src/Views`. Render them explicitly from a route:
+Pages and handlers live in `src/Views`. A simple GET page needs only its PHP/HTML method file:
+
+```html
+<!-- src/Views/about/index.get.php -->
+<h1>About</h1>
+<p>Our website.</p>
+```
+
+It serves `/about` with inherited layouts. Dynamic pages use `$request->getAttribute('id')` for `[id]` parameters. Values read from the request are raw; use `htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` for ordinary HTML text/quoted attributes. URL and JavaScript contexts require their own encoding. The page executes once, before header/footer execution, so explicit handler responses can bypass layouts; put header data in explicit view data (metadata support follows separately).
+
+Unsuffixed templates can still be rendered explicitly from a handler:
 
 ```php
 use CorianderCore\Core\Http\Responses;
@@ -11,6 +21,8 @@ return static fn($request) => Responses::view('admin/users/show', [
 ```
 
 This renders `src/Views/admin/users/show.php`. Unsuffixed templates are not endpoints; method files in this same tree are discovered as routes.
+
+`Responses::view()` rejects method files such as `index.get.php`; dispatch those through the router. Returned callable handlers must not print output. Non-GET files cannot render HTML directly.
 
 ```text
 src/Views/

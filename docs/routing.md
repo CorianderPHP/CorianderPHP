@@ -1,6 +1,8 @@
 # File routing
 
-Routes are discovered automatically under `src/Views`. A route file returns a callable accepting `ServerRequestInterface` and returning `ResponseInterface`. Use `CorianderCore\Core\Http\Responses` for HTML, JSON, view and redirect helpers. Printed output and other return types are errors.
+Routes are discovered automatically under `src/Views`. GET files may contain PHP/HTML directly, with `$request` available for request data and parameter attributes. The framework captures the page once and wraps its HTML with independently inherited `_header.php` and `_footer.php` files. Escape raw request values for their output context.
+
+Any method file may instead return a callable accepting `ServerRequestInterface` and returning `ResponseInterface`. Non-GET files must return a callable. Use `CorianderCore\Core\Http\Responses` for HTML, JSON, view and redirect helpers. Returned responses bypass automatic layouts. Printed output mixed with a returned callable, output from handlers/middleware, and invalid return types are errors. Direct GET templates should have no explicit return statement.
 
 | File | Request |
 | --- | --- |
