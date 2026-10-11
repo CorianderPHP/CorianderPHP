@@ -5,6 +5,7 @@ namespace CorianderCore\Core\Router;
 
 use CorianderCore\Core\Http\Responses;
 use CorianderCore\Core\Support\OutputBuffer;
+use CorianderCore\Core\Support\PublicUrl;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 
 /**
@@ -12,7 +13,15 @@ use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
  */
 class ViewRenderer
 {
-    public function __construct(private string $directory = PROJECT_ROOT . '/src/Views') {}
+    private ?string $scriptDirectory;
+
+    /** Custom view roots may supply their matching compiled pages directory. */
+    public function __construct(private string $directory = PROJECT_ROOT . '/src/Views', ?string $scriptDirectory = null)
+    {
+        $canonical = realpath(PROJECT_ROOT . '/src/Views');
+        $this->scriptDirectory = $scriptDirectory ?? ($canonical !== false && realpath($directory) === $canonical
+            ? PROJECT_ROOT . '/public/assets/js/pages' : null);
+    }
 
     /** Execute a method file once; only GET files may render HTML directly. */
     public function dispatch(string $name, ServerRequestInterface $request): ResponseInterface
@@ -37,6 +46,7 @@ class ViewRenderer
         }
         [$header, $footer] = $this->layoutFiles($name);
         return Responses::html($this->renderFiles(array_filter([$header]), ['page' => $page], $request) . $html
+            . $this->scriptTags($name)
             . $this->renderFiles(array_filter([$footer]), ['page' => $page], $request));
     }
 
@@ -67,7 +77,42 @@ class ViewRenderer
             [$header, $footer] = $this->layoutFiles($name);
             $files = array_filter([$header, $file, $footer], static fn(?string $path): bool => $path !== null);
         }
-        return Responses::html($this->renderFiles($files, $this->escapeData($data)), $status);
+        return Responses::html($this->renderFiles($files, $this->escapeData($data),
+            after: $layout ? [$file => $this->scriptTags($name)] : []), $status);
+    }
+
+    private function scriptTags(string $name): string
+    {
+        if ($this->scriptDirectory === null || !is_dir($this->scriptDirectory)) {
+            return '';
+        }
+        $scripts = [];
+        $ancestor = dirname($name);
+        while (true) {
+            $scripts[] = ($ancestor === '.' ? '' : $ancestor . '/') . '_script.js';
+            if ($ancestor === '.') {
+                break;
+            }
+            $ancestor = dirname($ancestor);
+        }
+        $scripts = array_reverse($scripts);
+        if (str_ends_with($name, '.get.php') && !preg_match('#(?:^|/)[_.]#', $name)) {
+            $scripts[] = substr($name, 0, -8) . '.js';
+        }
+        $html = '';
+        foreach (array_unique($scripts) as $relative) {
+            if (!is_file($this->scriptDirectory . '/' . $relative)) {
+                continue;
+            }
+            $file = SafePath::resolveFile($this->scriptDirectory, $relative);
+            $url = PublicUrl::asset('assets/js/pages/' . implode('/', array_map('rawurlencode', explode('/', $relative))));
+            $mtime = filemtime($file);
+            if ($mtime !== false) {
+                $url .= '?' . $mtime;
+            }
+            $html .= '<script type="module" src="' . htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"></script>';
+        }
+        return $html;
     }
 
     /** @return array{?string,?string} Nearest header and footer, independently. */
@@ -126,13 +171,14 @@ class ViewRenderer
     /**
      * @param array<int,string> $files
      * @param array<string,mixed> $data
+     * @param array<string,string> $after HTML inserted after its corresponding template.
      */
-    private function renderFiles(array $files, array $data, ?ServerRequestInterface $request = null): string
+    private function renderFiles(array $files, array $data, ?ServerRequestInterface $request = null, array $after = []): string
     {
         if ($files === []) {
             return '';
         }
-        $render = static function (array $__files, array $__data, ?ServerRequestInterface $__request): void {
+        $render = static function (array $__files, array $__data, ?ServerRequestInterface $__request, array $__after): void {
             if ($__request !== null) {
                 $request = $__request;
             }
@@ -140,9 +186,10 @@ class ViewRenderer
             extract($__data, EXTR_SKIP);
             foreach ($__files as $__file) {
                 require $__file;
+                echo $__after[$__file] ?? '';
             }
         };
-        [, $html] = OutputBuffer::capture(fn() => $render($files, $data, $request));
+        [, $html] = OutputBuffer::capture(fn() => $render($files, $data, $request, $after));
         return $html;
     }
 

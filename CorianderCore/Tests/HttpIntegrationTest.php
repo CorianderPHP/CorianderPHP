@@ -93,13 +93,15 @@ class HttpIntegrationTest extends TestCase
 
     public function testStarterOverActualHttpServesPagesAssetsAndErrors(): void
     {
-        $server = new HttpServer(PROJECT_ROOT . '/public', PROJECT_ROOT . '/public/index.php');
+        $server = new HttpServer(PROJECT_ROOT . '/public', PROJECT_ROOT . '/public/index.php', ['PUBLIC_URL_PREFIX' => '/']);
         try {
             $home = $server->request('GET', '/');
             self::assertSame(200, $home['status']);
             self::assertStringContainsString('<title>Welcome to CorianderPHP</title>', $home['body']);
             self::assertSame(['nosniff'], $home['headers']['x-content-type-options']);
             self::assertArrayNotHasKey('set-cookie', $home['headers']);
+            self::assertSame(1, substr_count($home['body'], '<script type="module" src="/assets/js/pages/index.js?'), substr($home['body'], -700));
+            self::assertSame(200, $server->request('GET', '/assets/js/pages/index.js')['status']);
             self::assertSame(200, $server->request('GET', '/assets/css/output.css')['status']);
             foreach (['/missing' => 404, '/src/Views/index.get.php' => 404, '/sitemap.xml' => 200] as $path => $status) {
                 $response = $server->request('HEAD', $path);
