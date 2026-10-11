@@ -8,6 +8,29 @@ use Nyholm\Psr7\ServerRequest;
 
 class RouteCacheTest extends RouteFixtureTestCase
 {
+    public function testExpiredMapAutomaticallyDiscoversAddedAndRemovedDirectPages(): void
+    {
+        $this->put('index.get.php', 'echo "root";');
+        $cache = new RouteCache($this->directory, $this->directory . '/map.php', true, 0);
+        $router = new Router($this->directory, $cache);
+        self::assertSame('root', (string) $router->handle(new ServerRequest('GET', '/'))->getBody());
+        $this->put('about/index.get.php', 'echo "about";');
+        self::assertSame('about', (string) $router->handle(new ServerRequest('GET', '/about'))->getBody());
+        unlink($this->directory . '/index.get.php');
+        self::assertSame(404, $router->handle(new ServerRequest('GET', '/'))->getStatusCode());
+    }
+
+    public function testCachedMissingDirectPageFailsBeforeLoadingMetadata(): void
+    {
+        $this->put('index.get.php', 'echo "root";');
+        $cache = new RouteCache($this->directory, $this->directory . '/map.php', true, 3600);
+        $cache->get();
+        unlink($this->directory . '/index.get.php');
+        $this->put('_metadata.php', 'throw new \\RuntimeException("must not load metadata");');
+        $this->expectExceptionMessage('Required application file is missing');
+        (new Router($this->directory, $cache))->handle(new ServerRequest('GET', '/'));
+    }
+
     private function counter(): RouteMap
     {
         return new class extends RouteMap {
