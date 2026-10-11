@@ -43,6 +43,8 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 `src/Views/admin/_middleware.php` returns an array of PSR-15 middleware. Parents always apply, so child directories inherit authentication. Application classes use `App\` under `src`.
 
+Middleware protects direct pages before loading them. Their headers and footers also receive the matched `$request`, including attributes added by middleware.
+
 `Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; when neither exists, only the view renders. Pass `layout: false` for fragments.
 
 ## Guides

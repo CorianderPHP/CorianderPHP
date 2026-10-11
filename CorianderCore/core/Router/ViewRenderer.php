@@ -35,8 +35,8 @@ class ViewRenderer
             throw new \UnexpectedValueException('Expected a callable handler or a direct GET template: ' . $name);
         }
         [$header, $footer] = $this->layoutFiles($name);
-        return Responses::html($this->renderFiles(array_filter([$header]), []) . $html
-            . $this->renderFiles(array_filter([$footer]), []));
+        return Responses::html($this->renderFiles(array_filter([$header]), [], $request) . $html
+            . $this->renderFiles(array_filter([$footer]), [], $request));
     }
 
     /**
@@ -91,19 +91,22 @@ class ViewRenderer
      * @param array<int,string> $files
      * @param array<string,mixed> $data
      */
-    private function renderFiles(array $files, array $data): string
+    private function renderFiles(array $files, array $data, ?ServerRequestInterface $request = null): string
     {
         if ($files === []) {
             return '';
         }
-        $render = static function (array $__files, array $__data): void {
+        $render = static function (array $__files, array $__data, ?ServerRequestInterface $__request): void {
+            if ($__request !== null) {
+                $request = $__request;
+            }
             // Application data must not replace the renderer's file list.
             extract($__data, EXTR_SKIP);
             foreach ($__files as $__file) {
                 require $__file;
             }
         };
-        [, $html] = OutputBuffer::capture(fn() => $render($files, $data));
+        [, $html] = OutputBuffer::capture(fn() => $render($files, $data, $request));
         return $html;
     }
 
