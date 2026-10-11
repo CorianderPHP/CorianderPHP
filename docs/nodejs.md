@@ -90,12 +90,16 @@ Run all commands from the project root.
 
 ## Project Layout
 
-- TypeScript source: `nodejs/src`
-- Compiled JavaScript: `public/assets/js`
+- Page TypeScript: `src/Views/index.ts`, `about/index.ts`, `users/[id].ts`, paired with corresponding `.get.php` files.
+- Directory entries: `src/Views/**/_script.ts` for shared page behavior.
+- Compiled JavaScript: `public/assets/js/pages`, mirroring the view tree. `[id].js` is a single static asset shared by every requested ID.
+- Imported helpers remain ordinary modules and do not produce separate entry bundles. Private directories are excluded from entry discovery.
 - Tailwind input: `public/assets/css/input.css`
 - Tailwind output: `public/assets/css/output.css`
 
 ## Best Practices
+
+Move existing `nodejs/src/**/index.ts` to its matching GET page and update relative imports. The builder now discovers `src/Views` only; it checks filenames without executing PHP. Build/watch scripts remain in `nodejs`. Existing generated files under `public/assets/js/home` are no longer used by the starter; remove obsolete app assets deliberately. Browser inclusion is explicit until the inherited script-loading step lands.
 
 - Commit only compiled assets needed for production; ignore `node_modules/`.
 - Run `install` after pulling changes to ensure packages are up to date.
