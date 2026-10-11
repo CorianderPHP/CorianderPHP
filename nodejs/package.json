@@ -11,9 +11,9 @@
     "watch-ts": "node build.js --watch",
     "build-ts": "npm run check-types && node build.js",
     "watch-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch=always --minify",
-    "build-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
-    "build-all": "npm run build-ts && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
-    "build-prod": "npm run check-types && node build.js --minify && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
+    "build-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify && node fingerprint-css.js",
+    "build-all": "npm run build-ts && npm run build-tw",
+    "build-prod": "npm run check-types && node build.js --minify && npm run build-tw"
   },
   "author": "Dancuo Lohan",
   "license": "MIT",

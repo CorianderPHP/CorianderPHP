@@ -46,6 +46,8 @@ Header, page and footer receive the same recursively HTML-escaped string data. U
 
 Put assets in `public/assets`, and use `PublicUrl::versionedAsset()` or `ImageHandler::render()` for existing asset helpers. Set `PUBLIC_URL_PREFIX=/public` only when the web server serves the repository root.
 
+`PublicUrl::versionedAsset()` accepts a raw relative path and encodes its URL segments. CSS/JS use content versions, so changed content invalidates browser caches even with preserved timestamps; generated fingerprints keep request reads bounded. Missing files return an unversioned URL. An optional second argument maps the URL to a physical file in a custom asset root; automatic scripts use this for custom renderers. See [Node.js](nodejs.md) for generated CSS and watch behavior.
+
 ## Optional page metadata
 
 `_metadata.php` returns an array. Ancestor files load root to leaf; child keys replace parent keys shallowly, including whole nested arrays. Missing files mean an empty array. Declarations must not print output; invalid files report their relative path. Keep declarations free of side effects.

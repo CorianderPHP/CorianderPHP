@@ -111,6 +111,8 @@ Run all commands from the project root.
 
 Tailwind sources are declared in `input.css` with `source(none)` and explicit `@source` paths for `src/Views` and `src/Scripts`, relative to the CSS file. Add an explicit source if your app stores class names elsewhere. The JavaScript config retains theme settings; legacy `nodejs/src` and `public_views` content paths are removed.
 
+`build-tw`, `build-all` and `build-prod` prepend a content fingerprint to generated CSS automatically. Use `PublicUrl::versionedAsset('assets/css/output.css')` in your header. PHP reads only the first 96 bytes of marked CSS/JS to obtain its version. Unmarked files, including Tailwind watch output and older builds, use a full content hash, so rapid writes or preserved timestamps still change the URL when content changes. Deploy the complete generated files, retaining the fingerprint comments; no additional deployment command is required. Other asset types retain timestamp versioning.
+
 ## Best Practices
 
 Share behavior between unrelated views using ordinary imports, for example `import { initializeMenu } from '../../Scripts/menu'` inside `src/Views/about/index.ts`. `menu.ts`, `http.ts` and `types.ts` are application-owned modules, not framework APIs or automatically loaded scripts. Use `import type` for shared interfaces; type-only imports produce no browser code. No metadata registration is needed. Keep initializers explicit so each page runs only the behavior it needs.

@@ -10,8 +10,9 @@ Framework metadata now uses `$metadata`, leaving `$page` available for applicati
 - The starter header and 404 middleware use the new contract. Current view and security guides include the updated names and escaping rules.
 - Request URIs now include scheme, host and port while preserving encoded paths and queries. Host headers take precedence over server fallback values; HTTPS uses the existing trusted-proxy policy. Forwarded hosts and proxy listener ports are ignored, malformed hosts produce 400, and hostless injected requests retain relative URIs.
 - `SQLManager::findWhere()`, `updateWhere()` and `deleteWhere()` now treat null conditions as `IS NULL`, so nullable records match correctly. Other values keep bound equality matching, and empty conditions remain rejected.
+- CSS/JS URLs from `PublicUrl::versionedAsset()` now use content versions and encoded raw path segments. Existing Tailwind build commands add a CSS fingerprint automatically; PHP reads a bounded prefix for generated assets and hashes unmarked legacy/manual/watch files. Other asset types keep inexpensive timestamp versioning. Automatic page scripts share this helper, including custom asset roots.
 
-Metadata inheritance, optional files, layouts and scripts keep their existing behavior. PHP 8.2 remains the minimum; runtime dependencies are unchanged. The renderer uses the same loading and escaping path with renamed variables and keys.
+Metadata inheritance, optional files, layout inheritance and script selection keep their existing behavior. PHP 8.2 remains the minimum; runtime and Node dependency lists are unchanged. Metadata uses the same loading and escaping path with renamed variables and keys.
 
 ## Upgrade from 0.4.0
 
@@ -20,6 +21,8 @@ Metadata inheritance, optional files, layouts and scripts keep their existing be
 1. Rename metadata reads such as `$page['title']` to `$metadata['title']` in GET files, headers, footers and explicit templates. Keep `$page` wherever it represents application data.
 2. Change metadata overrides from `['page' => ['title' => 'Override']]` to `['metadata' => ['title' => 'Override']]`. Review custom 404 middleware and other `Responses::view()` callers.
 3. Keep `_metadata.php` filenames and returned arrays as they are. The updater preserves `src`, so apply these application changes yourself before deployment.
+
+For the other fixes, use `getPath()` when application code needs only a request path; `(string) getUri()` now includes the incoming origin when host information exists. Review database updates/deletes with null conditions, which now match SQL NULL rows. Treat CSS/JS asset versions as opaque content hashes, and pass raw paths to `versionedAsset()` rather than pre-encoded paths. Existing unmarked assets remain compatible; rebuilding with updated Node scripts enables the bounded fingerprint path. The updater preserves `nodejs` and `public`, so apply the updated build scripts and compiled assets to existing applications deliberately.
 
 For example, a handler can pass a document and metadata separately:
 
@@ -45,3 +48,4 @@ The template can use `$page` as its application document. Strings inside view-da
 - Updated guides: `docs/views.md`, `docs/security.md` and `readme.md`. Historical 0.4.0 guides link to this migration.
 - HTTP: `RequestFactory::fromGlobals()` in `CorianderCore/core/Http/RequestFactory.php` now populates the URI authority and scheme. See `docs/http.md`; applications that reconstruct absolute URLs can use `getUri()` directly.
 - Database: the three `SQLManager` array-condition helpers in `CorianderCore/core/Database/SQLManager.php` now match null values with `IS NULL`. See `docs/database.md`; review calls that previously relied on null conditions matching no rows, especially updates and deletes.
+- Assets: `PublicUrl::versionedAsset($path, $filePath = null)` in `CorianderCore/core/Support/PublicUrl.php` handles content versions for CSS/JS; `ViewRenderer::scriptTags()` reuses it. `nodejs/package.json` and `nodejs/fingerprint-css.js` add fingerprints through existing Tailwind build commands. See `docs/nodejs.md`, `docs/views.md` and `readme.md` for raw paths, fallback behavior and deployment guidance.
