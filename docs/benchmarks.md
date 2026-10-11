@@ -18,6 +18,22 @@ Run `php CorianderCore/Tests/benchmarks/page-scripts.php` for verified renderer 
 The latter pair renders identical bodies and checks only current ancestors. The small difference is not evidence of a filesystem-wide scan or a general performance bound. Asset-free versus scripted cases intentionally produce different bodies, so they are feature-cost scenarios rather than an equivalent-response before/after comparison. Each case reported a 4 MiB process allocator peak; this coarse figure includes the fixture and excludes process RSS and shared OPcache. The paired FPM workflow measures equivalent PHP-only responses separately, including actual individual HTTP latency percentiles.
 
 
+
+### Paired PHP-only FPM result
+
+The [pre-script baseline](benchmarks/page-scripts-paired-baseline.json) and [current result](benchmarks/page-scripts-paired-result.json) come from [CI run 38158814490](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38158814490), testing PR #241's merge checkout. Both used PHP 8.3.35/FPM/OPcache, eight workers and 80 requests per case on the same runner, with identical verified PHP-only response bodies and fresh server processes.
+
+| Case | Concurrency | Baseline p50 ms | Script rework p50 ms | Baseline p95 ms | Script rework p95 ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| static | 1 | 0.886 | 0.783 | 1.020 | 1.023 |
+| dynamic | 1 | 0.795 | 0.795 | 0.890 | 0.817 |
+| layout | 1 | 0.802 | 0.773 | 0.844 | 0.833 |
+| static | 8 | 3.528 | 3.414 | 6.369 | 5.633 |
+| dynamic | 8 | 3.504 | 3.638 | 6.025 | 6.148 |
+| layout | 8 | 3.667 | 3.318 | 6.291 | 5.845 |
+
+The single-client medians for these cases differ by -0.103 to effectively zero milliseconds; concurrency-eight medians differ by -0.349 to +0.134 ms. These small fixtures and shared-runner load cannot establish a universal speed gain or regression bound. Successful responses report the same 2 MiB PHP allocator peak; this excludes process RSS/shared OPcache, and error cases report null. Scripted renderer costs and JS bytes are measured separately above.
+
 ## Complete production requests
 
 On Linux with nginx, PHP-FPM, curl and Python 3 installed, run `bash CorianderCore/Tests/benchmarks/run-production.sh > benchmark-production.json`. `PHP_FPM_BINARY` defaults to `php-fpm8.3`; `BENCHMARK_REQUESTS` defaults to 80 requests per case. Composer dependencies must already be installed. These tools are optional benchmark prerequisites, not framework runtime dependencies.

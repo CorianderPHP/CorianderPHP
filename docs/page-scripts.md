@@ -82,6 +82,8 @@ initializeMenu(options);
 
 Another view imports the same helper normally. Type-only imports emit no browser code. Helpers do not produce standalone entries or require metadata registration. Each entry bundles its imports; put site-wide initialization in the root `_script.ts` and call page-specific behavior from page entries.
 
+Every TypeScript file has its own module scope, including plain entries without imports. Different pages can reuse local names such as `const button` without adding `export {}`. Shared values/types need explicit exports and imports; intentional ambient declarations should use TypeScript's `declare global` inside a module.
+
 ## Build and watch
 
 From the project root:

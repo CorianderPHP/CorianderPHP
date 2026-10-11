@@ -77,6 +77,8 @@ GET metadata loads before the selected GET file, including files returning handl
 
 Move `nodejs/src/**/index.ts` into its matching GET directory under `src/Views`, or use `[id].ts` beside `[id].get.php`. Use `_script.ts` for directory-wide initialization and move reusable helpers into `src/Scripts`. Update relative imports. Shared code and types use ordinary imports; metadata does not register bundles.
 
+Keep `moduleDetection: "force"` in the updated TypeScript configuration. Plain entries have independent local scopes; formerly implicit shared globals should become explicit exports/imports. Use `declare global` for deliberate ambient declarations.
+
 Copy updated `nodejs/{package.json,package-lock.json,tsconfig.json,build.js,watch.all.js,tailwind.config.js}` and `public/assets/css/input.css` deliberately; remove old duplicated `build.min.js`/`build.watch.js` after updating commands. Preserve custom theme settings. Tailwind now uses explicit CSS `@source` declarations for Views and Scripts; register other app class locations as needed. Use Node 24 (CI) or supported Node 22 for tooling. The lockfile pins Tailwind 4.3.0 to keep its watcher dependency on the patched version; run a clean `npm ci` and audit when changing it.
 
 Rebuild locally or in CI with `php coriander nodejs run build-prod` and deploy `public/assets/js/pages` and CSS. Existing apps must remove manually duplicated layout script tags after switching to automatic loading. Compiled dynamic names retain literal brackets and are reused across parameter values. Clean old `public/assets/js/home` or other unrecorded outputs manually. Preserve the build-only generated-file list between local builds; it is ignored by Git and unnecessary at runtime.
