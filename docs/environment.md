@@ -34,7 +34,7 @@ Existing server or shell environment variables are not overwritten by `.env`.
 
 This keeps production deployment variables in control while preserving a simple local developer workflow.
 
-## Automatic route caching in 0.3.0
+## Automatic route caching
 
 `APP_ENV=production` enables automatic persistence and a 30-second refresh on incoming requests. Other environments discover route filenames on each request. A deployment route-build command is not required; `cache clear` is optional. See [route caching](route-cache.md).
 

@@ -1,6 +1,6 @@
 # Automatic route discovery and caching
 
-File routes are enabled by default. No deployment command is required.
+Method files under `src/Views` are discovered by default. No deployment command is required. Direct pages and callable handlers share the same data-only route map; rendering data is not stored in it.
 
 In development, the router discovers filenames on each request. Set `APP_ENV=production` to persist a data-only map in `cache/routes.php`. Incoming requests refresh it after 30 seconds. New or renamed routes can take up to 30 seconds to appear; a warm request avoids a recursive directory scan. Production must have OPcache timestamp validation enabled for changed application PHP, or restart PHP workers as part of deployment.
 

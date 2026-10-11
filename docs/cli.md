@@ -192,6 +192,6 @@ Flags:
 
 - Run the CLI from the project root so generated files resolve to correct paths.
 - Inspect output carefully; many commands provide hints for missing dependencies or misconfigurations.
-Route maps rebuild automatically; cache clear is optional. Controllers and manual registration were removed in 0.3.0.
+- Route maps rebuild automatically; cache clear is optional.
 - Use `php coriander update --dry-run` before production updates.
 - In shared/production environments, do not edit applied migration files.

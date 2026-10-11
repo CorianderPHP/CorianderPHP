@@ -2,7 +2,7 @@
 
 A lightweight PHP framework focused on simple developer UX, performance and few dependencies. Routes are PHP files, middleware follows directories, and views inherit headers and footers independently. Application code lives in `src`; framework code lives in `CorianderCore`.
 
-The 0.4.0 rework uses one `src/Views` tree for templates and method handlers. Existing 0.3.0 applications must move handlers and `_middleware.php` declarations from `src/Routes` into this tree, resolving filename conflicts before removing the old directory. See the [0.4.0 execution contract and roadmap](docs/0.4.0-design.md) for the remaining implementation steps.
+The 0.4.0 rework uses one `src/Views` tree for pages and method handlers. Existing 0.3.0 applications must move handlers and `_middleware.php` declarations from `src/Routes` into this tree, resolving filename conflicts before removing the old directory. Follow the [0.4.0 migration guide](docs/migration-0.4.0.md); the [completed roadmap](docs/0.4.0-design.md) records the implementation.
 
 ## Start
 
@@ -51,7 +51,8 @@ Optional `_metadata.php` files return arrays: parent defaults inherit, child key
 
 ## Guides
 
-- [Upgrade to 0.3.0](docs/migration-0.3.0.md), [release notes](docs/release-notes-0.3.0.md)
+- [Upgrade to 0.4.0](docs/migration-0.4.0.md), [release notes](docs/release-notes-0.4.0.md)
+- [Earlier 0.3.0 migration](docs/migration-0.3.0.md)
 - [Routing](docs/routing.md), [HTTP requests and responses](docs/http.md)
 - [Middleware](docs/middleware.md), [views](docs/views.md), [security](docs/security.md)
 - [Automatic caching](docs/route-cache.md), [benchmarks](docs/benchmarks.md)
@@ -83,7 +84,7 @@ Creating route and view files manually works the same way. `php coriander update
 
 Local development uses `APP_ENV=local` and `APP_DEBUG=1` for useful exception pages. Production always uses generic errors; see [environment configuration](docs/environment.md).
 
-Request bodies are limited by `API_MAX_BODY_BYTES` before application parsing; oversized requests return 413. See the [completed stabilization roadmap](docs/0.3.0-stabilization.md) for the fixes, individual issues and PRs. The [benchmark guide](docs/benchmarks.md) records the complete FPM request comparison for lazy sessions.
+Request bodies are limited by `API_MAX_BODY_BYTES` before application parsing; oversized requests return 413. The [completed roadmap](docs/0.4.0-design.md) links each issue and PR. The [benchmark guide](docs/benchmarks.md) records the verified FPM comparison for unified pages and lazy sessions, including measurement limits.
 
 ```bash
 vendor/bin/phpunit --testdox
