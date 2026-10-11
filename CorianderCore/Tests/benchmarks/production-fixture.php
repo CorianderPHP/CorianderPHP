@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $root = $argv[1] ?? throw new InvalidArgumentException('Provide an empty fixture directory');
 $project = dirname(__DIR__, 3);
-foreach (['config', 'public', 'src/Views', 'src/Views/users', 'src/Views/session', 'cache'] as $directory) {
+foreach (['config', 'public', 'src/Views', 'src/Views/users', 'src/Views/session', 'src/Views/layout', 'cache'] as $directory) {
     mkdir($root . '/' . $directory, 0775, true);
 }
 symlink($project . '/CorianderCore', $root . '/CorianderCore');
@@ -11,9 +11,9 @@ symlink($project . '/vendor', $root . '/vendor');
 copy($project . '/public/index.php', $root . '/public/index.php');
 file_put_contents($root . '/config/config.php', '<?php define("PROJECT_ROOT", dirname(__DIR__)); require ' . var_export($project . '/config/config.php', true) . ';');
 $routes = [
-    'index.get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::html("static");',
-    'users/[id].get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::html("user:" . $r->getAttribute("id"));',
-    'layout.get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::view("page");',
+    'index.get.php' => 'echo "static";',
+    'users/[id].get.php' => 'echo "user:" . htmlspecialchars($request->getAttribute("id"), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");',
+    'layout/index.get.php' => 'echo "<main>body</main>";',
     'json.get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::json(["name" => "fixture"]);',
     'redirect.get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::redirect("/");',
     'form.get.php' => 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::html(\\CorianderCore\\Core\\Security\\Csrf::token());',
@@ -24,9 +24,8 @@ $routes = [
     'session/hold.get.php' => 'return static function($r) { \\CorianderCore\\Core\\Bootstrap\\SessionBootstrap::start(); $count = ++$_SESSION["requests"]; usleep(20_000); return \\CorianderCore\\Core\\Http\\Responses::json(["count" => $count]); };',
 ];
 foreach ($routes as $name => $code) { file_put_contents($root . '/src/Views/' . $name, '<?php ' . $code); }
-file_put_contents($root . '/src/Views/_header.php', '<header>header</header>');
-file_put_contents($root . '/src/Views/page.php', '<main>body</main>');
-file_put_contents($root . '/src/Views/_footer.php', '<footer>footer</footer>');
+file_put_contents($root . '/src/Views/layout/_header.php', '<header>header</header>');
+file_put_contents($root . '/src/Views/layout/_footer.php', '<footer>footer</footer>');
 file_put_contents($root . '/src/Views/_middleware.php', <<<'PHP'
 <?php
 return [
