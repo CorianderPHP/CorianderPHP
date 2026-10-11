@@ -43,7 +43,7 @@ class CommandHandler
             'examples' => ['php coriander version'],
         ],
         'make' => [
-            'description' => 'Generate project files such as views, routes, databases, sitemaps, and migrations.',
+            'description' => 'Generate GET pages and callable handlers in src/Views, databases, sitemaps, and migrations.',
             'usage' => [
                 'php coriander make:view <name>',
                 'php coriander make:route <path>[.<method>]',
@@ -52,7 +52,7 @@ class CommandHandler
                 'php coriander make:sitemap',
             ],
             'examples' => [
-                'php coriander make:view Home',
+                'php coriander make:view about',
                 'php coriander make:route "users/[id].post"',
                 'php coriander make:migration CreateUsersTable',
             ],
@@ -212,6 +212,7 @@ class CommandHandler
 
         ConsoleOutput::print('');
         ConsoleOutput::print('Common examples:');
+        ConsoleOutput::print('  php coriander make:view about');
         ConsoleOutput::print('  php coriander make:route "users/[id].get"');
         ConsoleOutput::print('  php coriander make:route admin/users');
         ConsoleOutput::print('  php coriander migrate:status');

@@ -69,7 +69,7 @@ php coriander make:migration CreateUsersTable
 php coriander migrate
 php coriander cache clear
 php coriander routes:list
-php coriander benchmark:router home 1000
+php coriander benchmark:router / 1000
 php coriander help
 ```
 
@@ -77,7 +77,7 @@ Creating route and view files manually works the same way. `php coriander update
 
 `make:route` checks the same definitions as discovery and rejects repeated parameters and conflicting routes before writing files.
 
-Generated views contain minimal content. Add forms and `Csrf::input()` when needed; ordinary views do not open a session. Construct application services directly and pass shared dependencies through their constructors.
+`make:view about` creates `about/index.get.php` with minimal HTML. `make:route` creates callable handlers in the same tree; `make:sitemap` creates a validated XML endpoint. Add forms and `Csrf::input()` when needed; ordinary pages do not open a session. Construct application services directly and pass shared dependencies through their constructors.
 
 ## Validation
 

@@ -14,7 +14,7 @@ class BenchmarkRouter
 {
     public function execute(array $args): int
     {
-        $route = $args[0] ?? 'home';
+        $route = $args[0] ?? '/';
         $iterations = isset($args[1]) ? filter_var($args[1], FILTER_VALIDATE_INT) : 1000;
         if ($iterations === false || $iterations < 1) {
             ConsoleOutput::print('Iterations must be a positive integer.');

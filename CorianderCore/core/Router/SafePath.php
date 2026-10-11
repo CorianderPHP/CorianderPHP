@@ -20,6 +20,10 @@ final class SafePath
         }
         $realRoot = realpath($root);
         $destination = $root . '/' . $relative;
+        // A dangling destination link can otherwise redirect a new file outside the root.
+        if (is_link($destination)) {
+            throw new \RuntimeException('Generated destination must not be a symlink');
+        }
         $ancestor = dirname($destination);
         while (!file_exists($ancestor) && !is_link($ancestor)) {
             $ancestor = dirname($ancestor);
