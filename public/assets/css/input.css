@@ -1,5 +1,7 @@
-@import "../../../nodejs/node_modules/tailwindcss";
+@import "../../../nodejs/node_modules/tailwindcss" source(none);
 @config "../../../nodejs/tailwind.config.js";
+@source "../../../src/Views";
+@source "../../../src/Scripts";
 
 @font-face {
     font-family: "Poppins";

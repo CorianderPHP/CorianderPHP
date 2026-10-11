@@ -1,6 +1,7 @@
 import esbuild from 'esbuild';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const projectRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -39,11 +40,24 @@ function outputPath(root, file) {
 }
 
 function publish(root, files) {
+  const directory = path.join(root, 'public/assets/js/pages');
+  const manifest = outputPath(root, path.join(directory, '.generated.json'));
+  const previous = fs.existsSync(manifest) ? JSON.parse(fs.readFileSync(manifest, 'utf8')) : [];
+  if (!Array.isArray(previous) || previous.some(name => typeof name !== 'string' || !name.endsWith('.js'))) {
+    throw new Error('Invalid generated asset list');
+  }
+  const current = files.map(file => path.relative(directory, file.path).replaceAll('\\', '/'));
+  const stale = previous.filter(name => !current.includes(name)).map(name => outputPath(root, path.resolve(directory, name)));
   for (const file of files) outputPath(root, file.path);
+  if (!files.length && !previous.length) return;
   for (const file of files) {
     fs.mkdirSync(path.dirname(file.path), { recursive: true });
     fs.writeFileSync(file.path, file.contents);
   }
+  // Only files recorded by a previous successful build belong to cleanup.
+  for (const file of stale) if (fs.existsSync(file)) fs.unlinkSync(file);
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(manifest, JSON.stringify(current.sort()) + '\n');
 }
 
 export function options(root, minify = false) {
@@ -62,38 +76,74 @@ export function options(root, minify = false) {
 
 export async function build(root = projectRoot, minify = false) {
   const settings = options(root, minify);
-  if (!settings.entryPoints.length) return [];
-  const result = await esbuild.build(settings);
+  const result = settings.entryPoints.length ? await esbuild.build(settings) : { outputFiles: [] };
   publish(root, result.outputFiles);
   return result.outputFiles;
 }
 
-export async function watch(root = projectRoot) {
-  const settings = options(root);
-  const context = await esbuild.context({
-    ...settings,
-    plugins: [{
-      name: 'publish-assets',
-      setup(builder) {
-        builder.onEnd(result => {
-          if (!result.errors.length) publish(root, result.outputFiles);
-        });
-      },
-    }],
+export async function checkTypes(root = projectRoot) {
+  const config = path.join(root, 'nodejs/tsconfig.json');
+  if (!fs.existsSync(config) || !['src/Views', 'src/Scripts'].some(directory => sourceFiles(path.join(root, directory)).some(file => file.endsWith('.ts')))) return;
+  await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [fileURLToPath(new URL('node_modules/typescript/bin/tsc', import.meta.url)), '--noEmit', '-p', config], { stdio: 'inherit' });
+    child.once('error', reject);
+    child.once('exit', code => code === 0 ? resolve() : reject(new Error('TypeScript check failed')));
   });
-  await context.watch();
-  return context;
+}
+
+export async function watch(root = projectRoot) {
+  const source = path.join(root, 'src');
+  fs.mkdirSync(source, { recursive: true });
+  let timer, running, dirty = false, stopped = false;
+  const rebuild = async () => {
+    dirty = true;
+    if (running || stopped) return;
+    running = (async () => {
+      while (dirty && !stopped) {
+        dirty = false;
+        try {
+          await checkTypes(root);
+          await build(root);
+          console.log('Page scripts rebuilt.');
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+    })();
+    try { await running; } finally { running = undefined; }
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    timer = setTimeout(rebuild, 100);
+  };
+  const watcher = fs.watch(source, { recursive: true }, (_, filename) => {
+    if (!filename || /^(Views|Scripts)([\\/]|$)/.test(filename)) schedule();
+  });
+  const config = path.join(root, 'nodejs/tsconfig.json');
+  const configWatcher = fs.existsSync(path.dirname(config)) ? fs.watch(path.dirname(config), (_, filename) => {
+    if (!filename || filename === 'tsconfig.json') schedule();
+  }) : null;
+  await rebuild();
+  return { async dispose() {
+    stopped = true;
+    clearTimeout(timer);
+    watcher.close();
+    configWatcher?.close();
+    await running;
+  }};
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try {
-    if (process.argv.slice(2).some(arg => !['--watch', '--minify'].includes(arg))) throw new Error('Use --watch or --minify');
+    if (process.argv.slice(2).some(arg => !['--watch', '--minify', '--check'].includes(arg))) throw new Error('Use --watch, --minify or --check');
     if (process.argv.includes('--watch')) {
       const context = await watch();
       for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, async () => {
         await context.dispose();
         process.exit(0);
       });
+    } else if (process.argv.includes('--check')) {
+      await checkTypes();
     } else {
       await build(projectRoot, process.argv.includes('--minify'));
     }

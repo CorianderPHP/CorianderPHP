@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["../public/public_views/**/*.php", "../public/**/*.php","../public/*.php","./src/**/*.ts","../src/**/*.php"],
   darkMode: 'selector',
   theme: {
     extend: {

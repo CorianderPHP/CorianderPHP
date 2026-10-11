@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { build } from '../build.js';
+import { build, watch, checkTypes } from '../build.js';
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'coriander-assets-'));
@@ -41,15 +41,19 @@ test('failed compilation preserves all previous bundles', async t => {
   put('src/Views/home/index.ts', 'console.log("before");');
   await build(root);
   const previous = fs.readFileSync(path.join(root, 'public/assets/js/pages/home/index.js'), 'utf8');
+  const manifest = fs.readFileSync(path.join(root, 'public/assets/js/pages/.generated.json'), 'utf8');
   put('src/Views/home/index.ts', 'console.log("after");');
   put('src/Views/broken/index.ts', 'const = invalid;');
   await assert.rejects(build(root));
   assert.equal(fs.readFileSync(path.join(root, 'public/assets/js/pages/home/index.js'), 'utf8'), previous);
   assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/broken/index.js')), false);
+  assert.equal(fs.readFileSync(path.join(root, 'public/assets/js/pages/.generated.json'), 'utf8'), manifest);
 });
 
 test('empty source works without an output directory', async t => {
-  const { root } = fixture(t);
+  const { root, put } = fixture(t);
+  put('nodejs/tsconfig.json', '{"include":["../src/Views","../src/Scripts"]}');
+  await checkTypes(root);
   assert.deepEqual(await build(root), []);
 });
 
@@ -110,4 +114,139 @@ test('multiple views import reusable values and types without separate helper bu
   assert.match(invalid.stdout, /not assignable/);
   assert.equal(fs.existsSync(path.join(root, 'src/Scripts/types.js')), false);
   assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/Scripts')), false);
+});
+
+test('renamed and removed entries clean only recorded generated bundles', async t => {
+  const { root, put } = fixture(t);
+  put('src/Views/old/index.ts', 'console.log("old");');
+  put('public/assets/js/pages/manual.js', 'manual');
+  await build(root);
+  fs.renameSync(path.join(root, 'src/Views/old'), path.join(root, 'src/Views/new'));
+  await build(root);
+  assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/old/index.js')), false);
+  assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/new/index.js')), true);
+  fs.unlinkSync(path.join(root, 'src/Views/new/index.get.php'));
+  await build(root);
+  assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/new/index.js')), false);
+  assert.equal(fs.readFileSync(path.join(root, 'public/assets/js/pages/manual.js'), 'utf8'), 'manual');
+});
+
+test('invalid cleanup paths are rejected before publishing or deleting assets', async t => {
+  const { root, put } = fixture(t);
+  put('src/Views/index.ts', 'console.log("first");');
+  await build(root);
+  const bundle = path.join(root, 'public/assets/js/pages/index.js');
+  const previous = fs.readFileSync(bundle, 'utf8');
+  put('public/assets/js/outside.js', 'manual');
+  put('public/assets/js/pages/.generated.json', '["../outside.js"]');
+  put('src/Views/index.ts', 'console.log("changed");');
+  await assert.rejects(build(root), /escapes/);
+  assert.equal(fs.readFileSync(bundle, 'utf8'), previous);
+  assert.equal(fs.readFileSync(path.join(root, 'public/assets/js/outside.js'), 'utf8'), 'manual');
+});
+
+
+test('stale cleanup refuses symlinks before replacing any current bundle', async t => {
+  const { root, put } = fixture(t);
+  put('src/Views/index.ts', 'console.log("before");');
+  put('src/Views/old/index.ts', 'console.log("old");');
+  await build(root);
+  const bundle = path.join(root, 'public/assets/js/pages/index.js');
+  const previous = fs.readFileSync(bundle, 'utf8');
+  const stale = path.join(root, 'public/assets/js/pages/old/index.js');
+  fs.unlinkSync(stale);
+  put('outside.js', 'manual');
+  try { fs.symlinkSync(path.join(root, 'outside.js'), stale); }
+  catch (error) {
+    if (['EPERM', 'EACCES'].includes(error.code)) return t.skip('Symlink creation requires host privileges');
+    throw error;
+  }
+  fs.unlinkSync(path.join(root, 'src/Views/old/index.ts'));
+  put('src/Views/index.ts', 'console.log("after");');
+  await assert.rejects(build(root), /symlink/);
+  assert.equal(fs.readFileSync(bundle, 'utf8'), previous);
+  assert.equal(fs.readFileSync(path.join(root, 'outside.js'), 'utf8'), 'manual');
+});
+
+async function until(check, message) {
+  const deadline = Date.now() + 15000;
+  while (!check()) {
+    if (Date.now() > deadline) throw new Error('Timed out: ' + message);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+}
+
+test('watch discovers new entries, follows shared edits, preserves type-error output and removes stale files', async t => {
+  const { root, put } = fixture(t);
+  put('nodejs/tsconfig.json', JSON.stringify({ compilerOptions: { strict: true, noEmit: true, skipLibCheck: true }, include: ['../src/Views', '../src/Scripts'] }));
+  const errors = [];
+  const originalError = console.error;
+  console.error = message => { errors.push(message); originalError(message); };
+  const watcher = await watch(root);
+  try {
+    put('src/Scripts/helper.ts', 'export const value: string = "before";');
+    put('src/Views/new/index.ts', 'import { value } from "../../Scripts/helper"; console.log(value);');
+    const file = path.join(root, 'public/assets/js/pages/new/index.js');
+    await until(() => fs.existsSync(file), 'new entry');
+    assert.match(fs.readFileSync(file, 'utf8'), /before/);
+    put('src/Scripts/helper.ts', 'export const value: string = 42;');
+    await until(() => errors.includes('TypeScript check failed'), 'type error');
+    assert.match(fs.readFileSync(file, 'utf8'), /before/);
+    put('src/Scripts/helper.ts', 'export const value: string = "after";');
+    await until(() => fs.readFileSync(file, 'utf8').includes('after'), 'shared edit recovery');
+    fs.renameSync(path.join(root, 'src/Views/new'), path.join(root, 'src/Views/renamed'));
+    const renamed = path.join(root, 'public/assets/js/pages/renamed/index.js');
+    await until(() => fs.existsSync(renamed) && !fs.existsSync(file), 'renamed directory');
+    fs.unlinkSync(path.join(root, 'src/Views/renamed/index.ts'));
+    fs.unlinkSync(path.join(root, 'src/Scripts/helper.ts'));
+    await until(() => !fs.existsSync(renamed), 'removed entry');
+  } finally {
+    await watcher.dispose();
+    console.error = originalError;
+  }
+});
+
+test('Tailwind scans views and shared scripts without build-tool fixtures', async t => {
+  const { root, put } = fixture(t);
+  const input = fs.readFileSync(new URL('../../public/assets/css/input.css', import.meta.url), 'utf8')
+    .replace('@import "../../../nodejs/node_modules/tailwindcss"', '@import ' + JSON.stringify(fileURLToPath(new URL('../node_modules/tailwindcss', import.meta.url)).replaceAll('\\', '/')))
+    .replace('@config "../../../nodejs/tailwind.config.js";', '');
+  put('public/assets/css/input.css', input);
+  put('src/Views/index.get.php', '<div class="p-[137px]"></div>');
+  put('src/Scripts/menu.ts', 'const className = "m-[139px]";');
+  put('nodejs/fixture.ts', 'const className = "p-[149px]";');
+  const cli = fileURLToPath(new URL('../node_modules/@tailwindcss/cli/dist/index.mjs', import.meta.url));
+  const result = spawnSync(process.execPath, [cli, '-i', path.join(root, 'public/assets/css/input.css'), '-o', path.join(root, 'output.css')], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const css = fs.readFileSync(path.join(root, 'output.css'), 'utf8');
+  assert.match(css, /padding: 137px/);
+  assert.match(css, /margin: 139px/);
+  assert.doesNotMatch(css, /padding: 149px/);
+});
+
+test('watch-all closes both Node children when its input closes', async t => {
+  const { root, put } = fixture(t);
+  put('watch.all.js', fs.readFileSync(new URL('../watch.all.js', import.meta.url), 'utf8'));
+  put('package.json', '{"type":"module"}');
+  const childSource = 'console.log("ready:" + process.pid); setInterval(() => {}, 1000);';
+  put('build.js', childSource);
+  put('node_modules/@tailwindcss/cli/package.json', '{"bin":{"tailwindcss":"dist/index.mjs"}}');
+  put('node_modules/@tailwindcss/cli/dist/index.mjs', childSource);
+  const child = spawn(process.execPath, [path.join(root, 'watch.all.js')], { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] });
+  let output = '';
+  child.stdout.on('data', chunk => { output += chunk; });
+  child.stderr.on('data', chunk => { output += chunk; });
+  const exited = new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
+  let pids = [];
+  try {
+    await until(() => [...output.matchAll(/ready:(\d+)/g)].length === 2, 'watcher children');
+    pids = [...output.matchAll(/ready:(\d+)/g)].map(match => Number(match[1]));
+    child.stdin.end();
+    assert.equal(await exited, 0, output);
+    for (const pid of pids) assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+  } finally {
+    child.kill();
+    for (const pid of pids) { try { process.kill(pid); } catch {} }
+    await exited;
+  }
 });
