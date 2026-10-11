@@ -45,6 +45,8 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 Middleware protects direct pages before loading them. Their headers and footers also receive the matched `$request`, including attributes added by middleware.
 
+Optional `_metadata.php` files return arrays: parent defaults inherit, child keys override, and GET pages/layouts read the escaped data through `$page`. Missing metadata means an empty array. See [views](docs/views.md) for escaping and explicit overrides.
+
 `Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; when neither exists, only the view renders. Pass `layout: false` for fragments.
 
 ## Guides
