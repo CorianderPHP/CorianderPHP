@@ -106,9 +106,12 @@ class ViewRenderer
             }
             $file = SafePath::resolveFile($this->scriptDirectory, $relative);
             $url = PublicUrl::asset('assets/js/pages/' . implode('/', array_map('rawurlencode', explode('/', $relative))));
-            $mtime = filemtime($file);
-            if ($mtime !== false) {
-                $url .= '?' . $mtime;
+            // Generated bundles carry their hash so requests only read a bounded prefix.
+            $prefix = file_get_contents($file, false, null, 0, 96);
+            $version = preg_match('/\A\/\/ coriander-version:([a-f0-9]{64})\n/', $prefix ?: '', $match)
+                ? $match[1] : hash_file('sha256', $file);
+            if ($version !== false) {
+                $url .= '?' . $version;
             }
             $html .= '<script type="module" src="' . htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"></script>';
         }

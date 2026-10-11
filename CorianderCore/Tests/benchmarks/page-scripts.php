@@ -29,17 +29,24 @@ try {
     $report['cases']['missing_asset_directory'] = $measure('body');
     mkdir($assets . '/admin', 0775, true);
     $report['cases']['missing_bundles'] = $measure('body');
-    $expected = 'body';
-    foreach (['_script.js', 'admin/_script.js', 'admin/index.js'] as $name) {
-        file_put_contents($assets . '/' . $name, 'console.log("fixture");');
-        touch($assets . '/' . $name, 1700000000);
-        $expected .= '<script type="module" src="' . htmlspecialchars(PublicUrl::asset('assets/js/pages/' . $name) . '?1700000000', ENT_QUOTES, 'UTF-8') . '"></script>';
-    }
-    $report['cases']['three_bundles'] = $measure($expected);
+    $writeScripts = static function (string $content, bool $generated) use ($assets): string {
+        $expected = 'body';
+        $version = hash('sha256', $content);
+        foreach (['_script.js', 'admin/_script.js', 'admin/index.js'] as $name) {
+            file_put_contents($assets . '/' . $name, ($generated ? '// coriander-version:' . $version . "\n" : '') . $content);
+            touch($assets . '/' . $name, 1700000000);
+            $expected .= '<script type="module" src="' . htmlspecialchars(PublicUrl::asset('assets/js/pages/' . $name) . '?' . $version, ENT_QUOTES, 'UTF-8') . '"></script>';
+        }
+        return $expected;
+    };
+    $report['cases']['three_legacy_bundles'] = $measure($writeScripts('console.log("fixture");', false));
+    $expected = $writeScripts('console.log("fixture");', true);
+    $report['cases']['three_generated_bundles'] = $measure($expected);
     for ($file = 0; $file < 500; $file++) {
         file_put_contents($assets . '/unrelated' . $file . '.js', 'console.log("unrelated");');
     }
-    $report['cases']['three_bundles_with_500_unrelated_assets'] = $measure($expected);
+    $report['cases']['three_generated_bundles_with_500_unrelated_assets'] = $measure($expected);
+    $report['cases']['three_generated_1mib_bundles_with_500_unrelated_assets'] = $measure($writeScripts('/*' . str_repeat('x', 1_048_572) . '*/', true));
     $json = json_encode($report, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . PHP_EOL;
     if (isset($argv[1])) {
         if (file_put_contents($argv[1], $json) === false) { throw new RuntimeException('Cannot save script benchmark'); }

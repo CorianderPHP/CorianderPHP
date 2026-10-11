@@ -44,7 +44,7 @@ For `users/[id].get.php`, the possible order is:
 2. `pages/users/_script.js`
 3. `pages/users/[id].js`
 
-Tags use `type="module"`, respect `PUBLIC_URL_PREFIX` and append the asset modification time as a cache version. Modules run after HTML parsing. Directory script exports do not become implicit globals; import dependencies explicitly. Tag order is root to leaf, but asynchronous work should coordinate through promises/imports.
+Tags use `type="module"`, respect `PUBLIC_URL_PREFIX` and append a content fingerprint as a cache version. Generated scripts carry this fingerprint in a leading comment, so PHP only reads a bounded prefix. Existing unmarked scripts use a SHA-256 content-hash fallback; rebuild them to use the fast path. Content changes invalidate URLs even when timestamps are preserved. Modules run after HTML parsing. Directory script exports do not become implicit globals; import dependencies explicitly. Tag order is root to leaf, but asynchronous work should coordinate through promises/imports.
 
 Returned handler responses retain their content: JSON, redirects and explicit HTML are not decorated. HEAD emits no body. Explicit unsuffixed templates receive ancestor scripts when rendering with layouts; `Responses::view(..., layout: false)` produces a fragment without automatic scripts.
 

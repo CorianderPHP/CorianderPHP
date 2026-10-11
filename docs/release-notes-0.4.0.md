@@ -21,6 +21,7 @@ CorianderPHP now uses one `src/Views` tree for pages and HTTP handlers. Simple w
 - Optional `index.ts`/`[id].ts` entries pair with GET pages. Directory `_script.ts` modules accumulate root to leaf, followed by the page module. Missing bundles are omitted; modules use encoded, versioned asset URLs and work without Node or source files on the server.
 - Reuse helpers such as `src/Scripts/menu.ts` and shared types through ordinary imports. No metadata registration or separate helper bundles are required.
 - Shared imports use generated ESM chunks, preserving a single module instance across directory and page scripts. Deploy the complete compiled pages directory, including `_chunks`.
+- Script cache versions follow content rather than whole-second timestamps. Builds embed fingerprints for bounded PHP reads; existing unmarked scripts use a compatible content-hash fallback.
 - Plain TypeScript entries have independent module scopes, so local variable names can be reused across pages without boilerplate exports. Former implicit shared globals need explicit imports or intentional ambient declarations.
 - Watch handles new, renamed and removed entries, shared edits and type-error recovery. Type checks emit no JavaScript; failed checks preserve last good output. Cleanup removes only previously recorded generated bundles, preserving manual JS.
 - The PHP `nodejs run watch-all` wrapper keeps watcher input open, preventing immediate successful exit before watching begins.
