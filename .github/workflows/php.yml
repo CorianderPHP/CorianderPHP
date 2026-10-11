@@ -59,6 +59,9 @@ jobs:
     - name: Record OPcache CLI benchmarks
       run: php -d opcache.enable_cli=1 -d opcache.file_update_protection=0 CorianderCore/Tests/benchmarks/file-router.php benchmark-results-opcache.json
 
+    - name: Record verified page script overhead
+      run: php -d opcache.enable_cli=1 -d opcache.file_update_protection=0 CorianderCore/Tests/benchmarks/page-scripts.php benchmark-results-page-scripts.json
+
     - name: Upload benchmark results
       uses: actions/upload-artifact@v7
       with:

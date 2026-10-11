@@ -18,6 +18,8 @@ performance, and a low dependency count.
 - `CorianderCore/` contains framework-owned code.
 - `src/` is the app-owned structure for projects using the framework.
 - `src/Views/` is the single private tree for method pages and HTTP handlers.
+- `src/Scripts/` contains app-owned TypeScript helpers shared through ordinary imports.
+- `nodejs/` holds optional asset tooling; compiled page modules mirror Views in `public/assets/js/pages/`.
 - `public/` contains the front controller and assets; keep application PHP outside it.
 - `docs/` contains framework documentation.
 - `.github/workflows/` contains CI and release automation.
@@ -30,6 +32,13 @@ performance, and a low dependency count.
   escape metadata/view strings once for HTML. See `docs/0.4.0-design.md`.
 - Reuse route discovery validation for generators and keep discovery free of
   application execution. No deployment build command is required.
+- Pair optional page scripts with GET files; directory `_script.ts` entries accumulate
+  root to leaf. Keep PHP script selection limited to current ancestor asset paths.
+  Do not compile or scan TypeScript in requests. See `docs/page-scripts.md`.
+- Use ordinary imports for shared scripts and types; no metadata registration.
+  Preserve manual JS and last good builds; cleanup owns only recorded generated files.
+- Run `npm test` and relevant asset builds from `nodejs/` when changing tooling.
+  Keep Tailwind source declarations aligned with Views and Scripts.
 
 - Keep changes scoped to the requested behavior.
 - Add or update tests for behavior changes.
