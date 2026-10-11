@@ -6,8 +6,10 @@ namespace CorianderCore\Core\Http;
 use Nyholm\Psr7\ServerRequest;
 use Nyholm\Psr7\Stream;
 use Nyholm\Psr7\UploadedFile;
+use Nyholm\Psr7\Uri;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Message\UriInterface;
 
 final class RequestFactory
 {
@@ -69,7 +71,7 @@ final class RequestFactory
 
         $request = new ServerRequest(
             (string) ($serverParams['REQUEST_METHOD'] ?? 'GET'),
-            (string) ($serverParams['REQUEST_URI'] ?? '/'),
+            self::uri($serverParams, $headers),
             $headers,
             $rawBody,
             $version,
@@ -109,6 +111,46 @@ final class RequestFactory
             return $request->withParsedBody($postParams !== [] ? $postParams : $form);
         }
         return $postParams !== [] ? $request->withParsedBody($postParams) : $request;
+    }
+
+    /**
+     * @param array<string,mixed> $serverParams
+     * @param array<string,string> $headers
+     */
+    private static function uri(array $serverParams, array $headers): UriInterface
+    {
+        $host = null;
+        foreach ($headers as $name => $value) {
+            if (strcasecmp($name, 'Host') === 0) {
+                $host = $value;
+                break;
+            }
+        }
+        $fallback = $host === null;
+        $host ??= (string) ($serverParams['SERVER_NAME'] ?? $serverParams['SERVER_ADDR'] ?? '');
+        if ($fallback && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $host = '[' . $host . ']';
+        }
+        try {
+            $uri = new Uri((string) ($serverParams['REQUEST_URI'] ?? '/'));
+            if ($fallback && $host === '') {
+                return $uri;
+            }
+            if (!preg_match('/\A(?:\[[a-f0-9:.]+\]|[a-z0-9._~-]+)(?::[0-9]+)?\z/i', $host)) {
+                throw new \InvalidArgumentException('Invalid request host');
+            }
+            $scheme = TrustedProxy::isSecureRequest($serverParams) ? 'https' : 'http';
+            // Forwarded hosts and proxy listener ports must not replace the incoming authority.
+            $authority = new Uri($scheme . '://' . $host);
+            if (str_starts_with($host, '[') && !filter_var(trim($authority->getHost(), '[]'), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                throw new \InvalidArgumentException('Invalid IPv6 request host');
+            }
+            $port = $fallback ? ($serverParams['SERVER_PORT'] ?? null) : $authority->getPort();
+            return $uri->withScheme($scheme)->withHost($authority->getHost())->withPort($port === null ? null : (int) $port)
+                ->withUserInfo('')->withFragment('');
+        } catch (\InvalidArgumentException $exception) {
+            throw new BadRequestException('Invalid request URI or host', previous: $exception);
+        }
     }
 
     /**

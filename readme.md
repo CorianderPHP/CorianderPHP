@@ -44,6 +44,8 @@ GET pages render directly with inherited layouts. `$request` exposes request dat
 
 ## Handle a request
 
+PSR requests expose a complete incoming URL through `getUri()`; HTTPS detection uses the existing trusted-proxy policy. See [HTTP](docs/http.md) for host and port handling.
+
 `src/Views/users/[id].get.php`:
 
 ```php

@@ -8,6 +8,54 @@ use PHPUnit\Framework\TestCase;
 
 class RequestFactoryTest extends TestCase
 {
+    public function testUriUsesHostAndHttpsWhilePreservingEncodedPathAndQuery(): void
+    {
+        $request = RequestFactory::fromGlobals(['REQUEST_URI' => '/users/%3Cid%3E?tags%5B%5D=one&name=a%20b', 'HTTPS' => 'on', 'SERVER_PORT' => '443'], [], ['hOsT' => 'Example.test:8443'], '', [], []);
+        self::assertSame('https://example.test:8443/users/%3Cid%3E?tags%5B%5D=one&name=a%20b', (string) $request->getUri());
+        self::assertSame('Example.test:8443', $request->getHeaderLine('Host'));
+        self::assertSame(['tags' => ['one'], 'name' => 'a b'], $request->getQueryParams());
+        self::assertSame('/users/%3Cid%3E?tags%5B%5D=one&name=a%20b', $request->getRequestTarget());
+    }
+
+    public function testUriHandlesIpv6AndDefaultPorts(): void
+    {
+        foreach ([['[::1]:8080', [], 'http://[::1]:8080/'], ['example.test:443', ['HTTPS' => 'on'], 'https://example.test/'], ['example.test:80', ['HTTPS' => 'on'], 'https://example.test:80/']] as [$host, $server, $expected]) {
+            self::assertSame($expected, (string) RequestFactory::fromGlobals($server, [], ['Host' => $host], '', [], [])->getUri());
+        }
+    }
+
+    public function testUriUsesServerNameOrAddressOnlyWhenHostIsAbsent(): void
+    {
+        foreach ([['SERVER_NAME' => 'example.test', 'SERVER_PORT' => '8080'], ['SERVER_ADDR' => '::1', 'SERVER_PORT' => '8080']] as $server) {
+            $request = RequestFactory::fromGlobals($server, [], [], '', [], []);
+            self::assertSame(8080, $request->getUri()->getPort());
+            self::assertSame('http', $request->getUri()->getScheme());
+            self::assertSame($server['SERVER_NAME'] ?? '[::1]', $request->getUri()->getHost());
+        }
+        self::assertSame('/about?q=one', (string) RequestFactory::fromGlobals(['REQUEST_URI' => '/about?q=one'], [], [], '', [], [])->getUri());
+    }
+
+    public function testUriUsesExistingProxyTrustWithoutForwardedHostOrListenerPort(): void
+    {
+        foreach (['127.0.0.1' => 'https', '192.0.2.1' => 'http'] as $remote => $scheme) {
+            $request = RequestFactory::fromGlobals(['REMOTE_ADDR' => $remote, 'HTTP_X_FORWARDED_PROTO' => 'https', 'HTTP_X_FORWARDED_HOST' => 'wrong.test', 'HTTP_HOST' => 'example.test', 'SERVER_PORT' => '8080'], [], null, '', [], []);
+            self::assertSame($scheme . '://example.test/', (string) $request->getUri());
+        }
+    }
+
+    public function testMalformedHostsBecomeClientErrors(): void
+    {
+        foreach (['', 'example.test/path', 'user@example.test', 'example.test?query', 'example.test#fragment', 'example.test:65536', '[:::]', '[1]', "example.test\r\nX-Test: value"] as $host) {
+            try {
+                RequestFactory::fromGlobals([], [], ['Host' => $host], '', [], []);
+            } catch (\CorianderCore\Core\Http\BadRequestException $exception) {
+                self::assertSame(400, \CorianderCore\Core\Http\ErrorResponse::fromException($exception)->getStatusCode());
+                continue;
+            }
+            self::fail('Malformed host accepted: ' . $host);
+        }
+    }
+
     public function testBodyLimitAcceptsBoundaryAndRejectsActualOverflowBeforeJsonParsing(): void
     {
         $request = RequestFactory::fromGlobals([], [], [], '1234', [], [], maxBodyBytes: 4);
