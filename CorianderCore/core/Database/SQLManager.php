@@ -157,7 +157,7 @@ class SQLManager
     /**
      * Retrieves rows from a table using an equality-based condition map.
      *
-     * @param array<string,mixed> $conditions Associative column => value conditions.
+     * @param array<string,mixed> $conditions Column => value conditions; null matches SQL NULL.
      */
     public static function findWhere(array $columns, string $table, array $conditions): array
     {
@@ -354,7 +354,7 @@ class SQLManager
     }
 
     /**
-     * Build a safe equality-based WHERE clause from an associative array.
+     * Build bound equality conditions, using IS NULL for null values.
      *
      * @param array<string,mixed> $conditions
      * @return array{0:string,1:array<string,mixed>}
@@ -370,6 +370,10 @@ class SQLManager
 
         foreach ($conditions as $column => $value) {
             $safeColumn = self::quoteIdentifier((string) $column);
+            if ($value === null) {
+                $clauses[] = $safeColumn . ' IS NULL';
+                continue;
+            }
             $placeholder = ':' . $placeholderPrefix . preg_replace('/[^a-zA-Z0-9_]/', '_', (string) $column);
             $index = 1;
             $basePlaceholder = $placeholder;

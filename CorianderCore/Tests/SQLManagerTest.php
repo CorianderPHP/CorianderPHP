@@ -11,6 +11,34 @@ use PHPUnit\Framework\TestCase;
 
 class SQLManagerTest extends TestCase
 {
+    public function testNullConditionsSelectUpdateAndDeleteMatchingRowsOnly(): void
+    {
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE items (id INTEGER PRIMARY KEY, tenant INTEGER, deleted_at TEXT, label TEXT)');
+        $pdo->exec("INSERT INTO items VALUES (1, 10, NULL, 'first'), (2, 10, 'deleted', 'second'), (3, 20, NULL, 'third')");
+
+        self::assertSame([['id' => 1], ['id' => 3]], SQLManager::findWhere(['id'], 'items', ['deleted_at' => null]));
+        self::assertTrue(SQLManager::updateWhere('items', ['label' => 'changed'], ['deleted_at' => null, 'tenant' => 10]));
+        self::assertSame([
+            ['id' => 1, 'label' => 'changed'], ['id' => 2, 'label' => 'second'], ['id' => 3, 'label' => 'third'],
+        ], $pdo->query('SELECT id, label FROM items ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC));
+        self::assertTrue(SQLManager::deleteWhere('items', ['tenant' => 20, 'deleted_at' => null]));
+        self::assertSame([['id' => 1], ['id' => 2]], $pdo->query('SELECT id FROM items ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function testNullConditionsDoNotBindValuesOrChangeZeroAndEmptyStringMatching(): void
+    {
+        $method = new \ReflectionMethod(SQLManager::class, 'buildWhereFromArray');
+        self::assertSame(['`deleted_at` IS NULL', []], $method->invoke(null, ['deleted_at' => null], 'w_'));
+        self::assertSame(['`a-b` IS NULL AND `a_b` = :w_a_b AND `a b` = :w_a_b_1', ['w_a_b' => 0, 'w_a_b_1' => '']], $method->invoke(null, ['a-b' => null, 'a_b' => 0, 'a b' => ''], 'w_'));
+
+        $pdo = $this->createSqliteHandler();
+        $pdo->exec('CREATE TABLE items (id INTEGER PRIMARY KEY, number INTEGER, text TEXT)');
+        $pdo->exec("INSERT INTO items VALUES (1, NULL, NULL), (2, 0, ''), (3, 1, 'text')");
+        self::assertSame([['id' => 2]], SQLManager::findWhere(['id'], 'items', ['number' => 0, 'text' => '']));
+        self::assertSame([['id' => 1]], SQLManager::findWhere(['id'], 'items', ['number' => null, 'text' => null]));
+    }
+
     public function testUpdateWhereDoesNotOverwriteConditionBindings(): void
     {
         $pdo = $this->createSqliteHandler();
