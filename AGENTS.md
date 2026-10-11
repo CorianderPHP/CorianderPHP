@@ -39,6 +39,8 @@ performance, and a low dependency count.
   Preserve forced module detection so plain entries keep independent scopes.
   Preserve ESM splitting so shared imports retain module identity across entries;
   deploy generated chunks with entries and include them in asset byte measurements.
+  Keep script cache versions content-based; generated fingerprints belong in asset
+  prefixes so PHP reads stay bounded. Preserve hashing fallback for unmarked assets.
   Preserve manual JS and last good builds; cleanup owns only recorded generated files.
 - Run `npm test` and relevant asset builds from `nodejs/` when changing tooling.
   Keep Tailwind source declarations aligned with Views and Scripts.

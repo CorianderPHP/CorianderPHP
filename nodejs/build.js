@@ -2,6 +2,7 @@ import esbuild from 'esbuild';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const projectRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -79,6 +80,10 @@ export function options(root, minify = false) {
 export async function build(root = projectRoot, minify = false) {
   const settings = options(root, minify);
   const result = settings.entryPoints.length ? await esbuild.build(settings) : { outputFiles: [] };
+  for (const file of result.outputFiles) {
+    const version = createHash('sha256').update(file.contents).digest('hex');
+    file.contents = Buffer.concat([Buffer.from('// coriander-version:' + version + '\n'), file.contents]);
+  }
   publish(root, result.outputFiles);
   return result.outputFiles;
 }

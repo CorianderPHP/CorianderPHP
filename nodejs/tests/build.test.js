@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, watch, checkTypes } from '../build.js';
 
@@ -55,6 +56,34 @@ test('empty source works without an output directory', async t => {
   put('nodejs/tsconfig.json', '{"include":["../src/Views","../src/Scripts"]}');
   await checkTypes(root);
   assert.deepEqual(await build(root), []);
+});
+
+test('generated scripts carry stable content versions across rapid builds and shared edits', async t => {
+  const { root, put } = fixture(t);
+  put('src/Scripts/value.ts', 'export const value = "one";');
+  put('src/Views/_script.ts', 'import { value } from "../Scripts/value"; console.log(value);');
+  put('src/Views/index.ts', 'import { value } from "../Scripts/value"; console.log(value);');
+  const versions = async () => {
+    const files = await build(root, true);
+    const result = {};
+    for (const file of files) {
+      const source = Buffer.from(file.contents).toString();
+      const newline = source.indexOf('\n');
+      const version = source.slice(0, newline).match(/^\/\/ coriander-version:([a-f0-9]{64})$/)?.[1];
+      assert.equal(version, createHash('sha256').update(source.slice(newline + 1)).digest('hex'));
+      fs.utimesSync(file.path, 1700000000, 1700000000);
+      result[path.relative(root, file.path)] = version;
+    }
+    return result;
+  };
+  const first = await versions();
+  assert.deepEqual(await versions(), first);
+  put('src/Scripts/value.ts', 'export const value = "two";');
+  const changed = await versions();
+  for (const entry of ['_script.js', 'index.js']) {
+    const name = path.join('public/assets/js/pages', entry);
+    assert.notEqual(changed[name], first[name]);
+  }
 });
 
 test('discovers directory and dynamic page entries without executing PHP or bundling private helpers', async t => {

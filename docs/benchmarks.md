@@ -8,6 +8,8 @@ The [local Windows build report](benchmarks/page-scripts-build-windows.json) use
 
 Run `php CorianderCore/Tests/benchmarks/page-scripts.php` for verified renderer batch means. CI enables CLI OPcache; the [local Windows report](benchmarks/page-scripts-renderer-windows.json) used PHP 8.2.10 with OPcache unavailable. Seven samples of 200 renders include constructor, metadata/layout checks, response creation and validation. They exclude application/process startup, HTTP, JS transfer and browser execution.
 
+Current fixtures distinguish old unmarked scripts from generated scripts carrying content fingerprints. They also verify three generated 1 MiB scripts alongside 500 unrelated assets: rendering reads only each selected script's bounded prefix. The historical table below predates content fingerprints. Current build measurements include shared chunk bytes and execute the fixture's modules to verify their output.
+
 | Local renderer case | Median batch mean µs |
 | --- | ---: |
 | Missing asset directory | 222.7 |

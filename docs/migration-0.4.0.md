@@ -79,6 +79,8 @@ Move `nodejs/src/**/index.ts` into its matching GET directory under `src/Views`,
 
 Shared imports now emit generated `_chunks` modules; deploy the complete `public/assets/js/pages` directory. Shared module state and top-level initialization are reused across directory and page entries loaded together.
 
+Updated builds embed a content fingerprint in each script. Rebuild and deploy assets with the updated `nodejs/build.js` to use bounded fingerprint reads in PHP. Old unmarked prebuilt scripts remain compatible through a content-hash fallback and still invalidate correctly when timestamps are unchanged. No extra runtime manifest is required.
+
 Keep `moduleDetection: "force"` in the updated TypeScript configuration. Plain entries have independent local scopes; formerly implicit shared globals should become explicit exports/imports. Use `declare global` for deliberate ambient declarations.
 
 Copy updated `nodejs/{package.json,package-lock.json,tsconfig.json,build.js,watch.all.js,tailwind.config.js}` and `public/assets/css/input.css` deliberately; remove old duplicated `build.min.js`/`build.watch.js` after updating commands. Preserve custom theme settings. Tailwind now uses explicit CSS `@source` declarations for Views and Scripts; register other app class locations as needed. Use Node 24 (CI) or supported Node 22 for tooling. The lockfile pins Tailwind 4.3.0 to keep its watcher dependency on the patched version; run a clean `npm ci` and audit when changing it.

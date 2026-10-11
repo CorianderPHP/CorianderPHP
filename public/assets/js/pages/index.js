@@ -1,1 +1,2 @@
+// coriander-version:bbdef0bcca540d12d67725a606f5c4be386c8e7d3cf0fc574e93b34f99d7b928
 var a=Object.defineProperty;var t=(o,r,e)=>r in o?a(o,r,{enumerable:!0,configurable:!0,writable:!0,value:e}):o[r]=e;var n=(o,r,e)=>t(o,typeof r!="symbol"?r+"":r,e);var m=class{constructor(){n(this,"_randomNumber",Math.floor(Math.random()*10))}get randomNumber(){return this._randomNumber}logTheRandomNumber(){console.log("The random number: "+this.randomNumber)}};var u=new m;u.logTheRandomNumber();

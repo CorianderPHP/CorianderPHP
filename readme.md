@@ -27,6 +27,8 @@ Each TypeScript entry has an independent module scope, even without imports; pag
 
 Rendered pages automatically include existing compiled `_script.js` modules from root to leaf, followed by their page module, before the footer. Missing assets are omitted. Fragments (`layout: false`) and explicit JSON/redirect responses keep their existing behavior. PHP never builds assets or scans TypeScript.
 
+Script URLs use content fingerprints, so rapid rebuilds and preserved timestamps cannot leave stale versions. Generated scripts carry their fingerprint for bounded PHP reads; old unmarked scripts remain compatible through content hashing.
+
 `php coriander nodejs run watch-all` keeps the TypeScript and Tailwind watchers running. Watch mode detects page additions, renames, removals and shared imports, reports type errors and preserves the last good output. Builds remove only recorded generated bundles, preserving manual JavaScript. Tailwind scans `src/Views` and `src/Scripts` explicitly. See [page script examples](docs/page-scripts.md).
 
 ## Create a page

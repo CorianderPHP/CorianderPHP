@@ -25,7 +25,7 @@ class PageScriptsTest extends RouteFixtureTestCase
 
     private function tag(string $name): string
     {
-        $url = PublicUrl::asset('assets/js/pages/' . implode('/', array_map('rawurlencode', explode('/', $name)))) . '?1700000000';
+        $url = PublicUrl::asset('assets/js/pages/' . implode('/', array_map('rawurlencode', explode('/', $name)))) . '?' . hash('sha256', 'console.log("fixture");');
         return '<script type="module" src="' . htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"></script>';
     }
 
@@ -83,6 +83,33 @@ class PageScriptsTest extends RouteFixtureTestCase
         $this->put('index.get.php', 'echo "custom";');
         $this->script('index.js');
         self::assertSame('custom', (string) (new ViewRenderer($this->directory))->dispatch('index.get.php', new ServerRequest('GET', '/'))->getBody());
+    }
+
+    public function testContentChangesInvalidateGeneratedAndLegacyScriptsWithTheSameTimestamp(): void
+    {
+        $this->put('index.get.php', 'echo "body";');
+        $this->script('index.js');
+        $file = $this->directory . '/assets/index.js';
+        $renderer = $this->renderer();
+        $request = new ServerRequest('GET', '/');
+        foreach ([false, true] as $generated) {
+            $bodies = [];
+            foreach (['console.log("one");', 'console.log("two");'] as $content) {
+                $version = hash('sha256', $content);
+                file_put_contents($file, ($generated ? '// coriander-version:' . $version . "\n" : '') . $content);
+                touch($file, 1700000000);
+                clearstatcache(true, $file);
+                $bodies[] = (string) $renderer->dispatch('index.get.php', $request)->getBody();
+                self::assertStringContainsString('index.js?' . $version, end($bodies));
+            }
+            self::assertNotSame($bodies[0], $bodies[1]);
+            touch($file, 1700000001);
+            clearstatcache(true, $file);
+            self::assertSame($bodies[1], (string) $renderer->dispatch('index.get.php', $request)->getBody());
+        }
+        file_put_contents($file, "// coriander-version:invalid\nconsole.log('manual');");
+        self::assertStringContainsString('index.js?' . hash_file('sha256', $file),
+            (string) $renderer->dispatch('index.get.php', $request)->getBody());
     }
 
     public function testAssetNamesAreUrlEncodedAndPrivateTemplatesHaveNoPageBundle(): void
