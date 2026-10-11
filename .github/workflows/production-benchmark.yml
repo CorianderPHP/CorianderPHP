@@ -10,7 +10,7 @@ jobs:
   benchmark:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
@@ -20,7 +20,7 @@ jobs:
       run: sudo apt-get update -qq && sudo apt-get install -y nginx php8.3-fpm
     - run: composer install --prefer-dist --no-progress --no-interaction
     - name: Check out the pre-routing baseline
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         ref: 72fff84956f0a22eb65eb9eb81aa1f59c746a40a
         path: benchmark-baseline
@@ -36,7 +36,7 @@ jobs:
       run: |
         set -o pipefail
         bash CorianderCore/Tests/benchmarks/run-production.sh | tee benchmark-production.json
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: production-benchmark
         path: benchmark-production*.json

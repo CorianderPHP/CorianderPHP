@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout framework repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -86,7 +86,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Trigger documentation update PR
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.DOCUMENTATION_REPO_TOKEN }}
           repository: CorianderPHP/Documentation
