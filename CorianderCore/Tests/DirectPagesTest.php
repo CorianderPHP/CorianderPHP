@@ -52,18 +52,23 @@ class DirectPagesTest extends RouteFixtureTestCase
     public function testInvalidReturnsAndMixedOutputAreRejectedWithoutLeakingBuffers(): void
     {
         $level = ob_get_level();
-        foreach (['mixed.get.php' => 'echo "leak"; return static fn($r) => new \\Nyholm\\Psr7\\Response();',
+        $cases = ['mixed.get.php' => 'echo "leak"; return static fn($r) => new \\Nyholm\\Psr7\\Response();',
             'invalid.get.php' => 'echo "leak"; return [];',
             'template.post.php' => 'echo "leak";',
-            'bad.get.php' => 'echo "leak"; throw new \\RuntimeException("template failure");'] as $name => $code) {
+            'bad.get.php' => 'echo "leak"; throw new \\RuntimeException("template failure");'];
+        foreach ($cases as $name => $code) {
             $this->put($name, $code);
+        }
+        $router = new Router($this->directory);
+        foreach ($cases as $name => $code) {
             try {
-                (new Router($this->directory))->handle(new ServerRequest(str_contains($name, '.post.') ? 'POST' : 'GET', '/' . explode('.', $name)[0]));
-                self::fail('Invalid execution accepted');
+                $router->handle(new ServerRequest(str_contains($name, '.post.') ? 'POST' : 'GET', '/' . explode('.', $name)[0]));
             } catch (\UnexpectedValueException | \RuntimeException $error) {
                 self::assertSame($level, ob_get_level());
                 if ($name !== 'bad.get.php') { self::assertStringContainsString($name, $error->getMessage()); }
+                continue;
             }
+            self::fail('Invalid execution accepted: ' . $name);
         }
     }
 
