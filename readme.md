@@ -1,4 +1,4 @@
-# CorianderPHP 0.4.0 development
+# CorianderPHP 0.4.1 development
 
 A lightweight PHP framework focused on simple developer UX, performance and few dependencies. Routes are PHP files, middleware follows directories, and views inherit headers and footers independently. Application code lives in `src`; framework code lives in `CorianderCore`.
 
@@ -61,12 +61,13 @@ Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.optio
 
 Middleware protects direct pages before loading them. Their headers and footers also receive the matched `$request`, including attributes added by middleware.
 
-Optional `_metadata.php` files return arrays: parent defaults inherit, child keys override, and GET pages/layouts read the escaped data through `$page`. Missing metadata means an empty array. See [views](docs/views.md) for escaping and explicit overrides.
+Optional `_metadata.php` files return arrays: parent defaults inherit, child keys override, and GET pages/layouts read the escaped data through `$metadata`. Missing metadata means an empty array. `Responses::view()` accepts array overrides through the `metadata` key; `page` is available for application data. See [views](docs/views.md) for escaping and explicit overrides.
 
 `Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; when neither exists, only the view renders. Pass `layout: false` for fragments.
 
 ## Guides
 
+- [0.4.1 release notes and upgrade](docs/release-notes-0.4.1.md): rename metadata variables and override keys when upgrading from 0.4.0.
 - [Upgrade to 0.4.0](docs/migration-0.4.0.md), [release notes](docs/release-notes-0.4.0.md)
 - [Earlier 0.3.0 migration](docs/migration-0.3.0.md)
 - [Routing](docs/routing.md), [HTTP requests and responses](docs/http.md)

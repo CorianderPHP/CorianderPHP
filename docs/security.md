@@ -27,7 +27,7 @@ Views and HTTP handlers live under `src/Views`. Only method-suffixed files creat
 
 ## Output encoding
 
-Direct pages expose raw request data through `$request`; encode it for the output context. Metadata and explicit view-data strings are HTML-escaped recursively by the renderer and should not be escaped again. HTML escaping does not validate URL schemes or encode JavaScript. `_metadata.php` returns arrays without output, inherits shallowly, and keeps its keys inside `$page`. Method files cannot be executed through `Responses::view()`; see [views](views.md).
+Direct pages expose raw request data through `$request`; encode it for the output context. Metadata and explicit view-data strings are HTML-escaped recursively by the renderer and should not be escaped again. Object properties remain raw and need encoding for their output context. HTML escaping does not validate URL schemes or encode JavaScript. `_metadata.php` returns arrays without output, inherits shallowly, and keeps its keys inside `$metadata`. The `page` key is ordinary application data. Method files cannot be executed through `Responses::view()`; see [views](views.md).
 
 ## CSRF Protection
 

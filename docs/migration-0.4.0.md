@@ -1,5 +1,7 @@
 # Upgrade to CorianderPHP 0.4.0
 
+This guide describes the 0.4.0 contract. When upgrading to 0.4.1, also apply the [metadata naming migration](release-notes-0.4.1.md#upgrade-from-040): `$page` metadata becomes `$metadata`, and the override key becomes `metadata`.
+
 0.4.0 makes `src/Views` the single tree for pages and HTTP handlers. This is a breaking upgrade from 0.3.0. PHP 8.2 remains the minimum and no runtime dependency was added.
 
 ## Move application files together

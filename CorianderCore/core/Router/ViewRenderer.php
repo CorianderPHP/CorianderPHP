@@ -27,8 +27,8 @@ class ViewRenderer
     public function dispatch(string $name, ServerRequestInterface $request): ResponseInterface
     {
         $file = SafePath::resolveFile($this->directory, $name);
-        $page = str_ends_with($name, '.get.php') ? $this->escapeData($this->metadata($name)) : [];
-        [$result, $html] = OutputBuffer::capture(static function () use ($file, $request, $page) {
+        $metadata = str_ends_with($name, '.get.php') ? $this->escapeData($this->metadata($name)) : [];
+        [$result, $html] = OutputBuffer::capture(static function () use ($file, $request, $metadata) {
             return require $file;
         });
         if (is_callable($result)) {
@@ -45,13 +45,14 @@ class ViewRenderer
             throw new \UnexpectedValueException('Expected a callable handler or a direct GET template: ' . $name);
         }
         [$header, $footer] = $this->layoutFiles($name);
-        return Responses::html($this->renderFiles(array_filter([$header]), ['page' => $page], $request) . $html
+        return Responses::html($this->renderFiles(array_filter([$header]), ['metadata' => $metadata], $request) . $html
             . $this->scriptTags($name)
-            . $this->renderFiles(array_filter([$footer]), ['page' => $page], $request));
+            . $this->renderFiles(array_filter([$footer]), ['metadata' => $metadata], $request));
     }
 
     /**
      * Use the nearest existing header and footer independently; omit absent parts.
+     * The metadata data key overrides inherited defaults and must be an array; page is ordinary application data.
      *
      * @param array<string,mixed> $data Variables exposed to all rendered files; strings are HTML-escaped recursively.
      * @throws \InvalidArgumentException For reserved or invalid view names.
@@ -68,10 +69,10 @@ class ViewRenderer
             throw new \InvalidArgumentException('Method files must be dispatched by the router');
         }
         $file = SafePath::resolveFile($this->directory, $name);
-        if (array_key_exists('page', $data) && !is_array($data['page'])) {
-            throw new \InvalidArgumentException('View page data must be an array');
+        if (array_key_exists('metadata', $data) && !is_array($data['metadata'])) {
+            throw new \InvalidArgumentException('View metadata must be an array');
         }
-        $data['page'] = array_replace($this->metadata($name), $data['page'] ?? []);
+        $data['metadata'] = array_replace($this->metadata($name), $data['metadata'] ?? []);
         $files = [$file];
         if ($layout) {
             [$header, $footer] = $this->layoutFiles($name);
@@ -152,7 +153,7 @@ class ViewRenderer
             }
             $ancestor = dirname($ancestor);
         }
-        $page = [];
+        $metadata = [];
         foreach (array_reverse($ancestors) as $ancestor) {
             $relative = ($ancestor === '.' ? '' : $ancestor . '/') . '_metadata.php';
             clearstatcache(true, $this->directory . '/' . $relative);
@@ -166,9 +167,9 @@ class ViewRenderer
             if (!is_array($data) || $output !== '') {
                 throw new \UnexpectedValueException('Metadata must return an array without printing output: ' . $relative);
             }
-            $page = array_replace($page, $data);
+            $metadata = array_replace($metadata, $data);
         }
-        return $page;
+        return $metadata;
     }
 
     /**
