@@ -30,6 +30,8 @@ src/
 
 `index.ts` pairs with `index.get.php`; `[id].ts` pairs with `[id].get.php`. POST-only files do not create browser entries. Other TypeScript files are ordinary imported modules. Private names/directories beginning with `_` or `.` are excluded from entry discovery, except directory `_script.ts`. Discovery reads filenames without executing PHP metadata or pages.
 
+Imports shared by directory and page entries use generated ESM chunks under `public/assets/js/pages/_chunks`. A shared module initializes once and keeps the same state across entries on one page. Deploy the entire generated pages directory, including chunks; keep initialization calls explicit when each entry needs its own behavior.
+
 Output mirrors the tree under `public/assets/js/pages`. A request for `/users/42` uses `users/[id].js`, with literal brackets URL-encoded in its tag. All IDs share that asset; builds do not generate a file per user.
 
 ## Directory inheritance

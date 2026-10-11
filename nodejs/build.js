@@ -67,6 +67,8 @@ export function options(root, minify = false) {
     outdir: path.join(root, 'public/assets/js/pages'),
     bundle: true,
     format: 'esm',
+    splitting: true,
+    chunkNames: '_chunks/[name]-[hash]',
     platform: 'browser',
     target: 'es2020',
     minify,
