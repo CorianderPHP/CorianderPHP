@@ -25,6 +25,29 @@ It verifies 10/100/1000 total routes (half static, half dynamic), discovery, a n
 
 Median and p95 are **batch means per operation**, not individual HTTP latency percentiles. Cached request startup includes reading the map and dispatch, but excludes creating the PSR request and process/application boot. Repeated dispatch reuses one router. HTTP includes socket/server/bootstrap costs, with development discovery enabled in the fixture. Discovery uses single-operation batches. Memory is the process-wide peak, not allocation per request. The OPcache run disables file-update protection for its freshly generated disposable fixtures. Reports include PHP, OS and OPcache settings; compare matching environments.
 
+## Unified pages: paired 0.4.0 results
+
+The [paired baseline](benchmarks/unified-pages-paired-baseline.json) and [unified-pages result](benchmarks/unified-pages-result.json) come from [CI run 38150348575](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38150348575). Both used PHP 8.3.35/FPM/OPcache, eight workers, Python 3.12.3 and 80 requests per case on the same Linux runner, with fresh server processes. Request paths, methods, bodies, session behavior and load were equivalent and verified. The result commit is GitHub's tested PR merge checkout.
+
+| Case | Concurrency | Baseline p50 ms | 0.4.0 p50 ms | Baseline p95 ms | 0.4.0 p95 ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| static | 1 | 0.662 | 0.709 | 0.742 | 0.828 |
+| dynamic | 1 | 0.664 | 0.719 | 0.775 | 0.777 |
+| layout | 1 | 0.686 | 0.720 | 0.839 | 0.767 |
+| json | 1 | 0.668 | 0.704 | 0.792 | 0.762 |
+| redirect | 1 | 0.618 | 0.685 | 0.720 | 0.752 |
+| post | 1 | 0.732 | 0.791 | 0.808 | 0.945 |
+| static | 8 | 2.790 | 2.355 | 4.714 | 4.251 |
+| dynamic | 8 | 2.635 | 2.617 | 4.528 | 4.644 |
+| layout | 8 | 2.634 | 2.426 | 4.846 | 4.081 |
+| json | 8 | 2.933 | 2.725 | 4.804 | 4.095 |
+| redirect | 8 | 2.622 | 2.591 | 4.567 | 4.550 |
+| post | 8 | 3.178 | 3.358 | 5.130 | 4.921 |
+
+Single-client median latency increased by about 0.03–0.07 ms across these tiny-response cases; concurrency-eight results vary in both directions. These observations include the renderer changes and shared-host/client noise and cannot isolate their individual costs. They do not establish a universal speed gain or regression bound. With eight concurrent requests, the 20 ms public/session workloads remain around 22/163 ms respectively, retaining lazy-session behavior and all session counter writes.
+
+Successful cases report a 2 MiB PHP allocator peak in both reports. This coarse figure excludes process RSS and shared OPcache; error cases without the measurement header report null. Repeat equivalent runs on deployment hardware before setting a latency or capacity budget.
+
 ## Initial Windows results
 
 The saved [PHP 8.2 Windows report](benchmark-results-0.3-windows-php82.json) used OPcache disabled. Median batch means, rounded to microseconds:

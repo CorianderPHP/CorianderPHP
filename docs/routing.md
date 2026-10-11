@@ -20,7 +20,7 @@ Static segments take precedence before method selection. With `users/new.get.php
 
 GET supplies a HEAD fallback. An explicit `.head.php` wins. The emitter suppresses bodies for every HEAD response, including errors and redirects. Missing paths return 404; unsupported methods return 405 with `Allow`. OPTIONS is explicit rather than automatically generated. Paths are case-sensitive; trailing slashes are accepted. URL segments decode once. Dot segments, encoded separators, backslashes, NUL and double slashes are rejected.
 
-Dot/underscore-prefixed route files or directories are private. `_middleware.php` applies ordered PSR-15 middleware from root to leaf; see [middleware](middleware.md). Views never create routes. Discovery does not execute handlers. Only the selected handler loads after middleware permits the request.
+Dot/underscore-prefixed route files or directories are private. `_middleware.php` applies ordered PSR-15 middleware from root to leaf; see [middleware](middleware.md). Only method-suffixed files create routes. Discovery inspects filenames without executing application code. The selected method file and its rendering helpers load after middleware permits the request.
 
 Custom bootstrap:
 

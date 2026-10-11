@@ -17,10 +17,19 @@ performance, and a low dependency count.
 
 - `CorianderCore/` contains framework-owned code.
 - `src/` is the app-owned structure for projects using the framework.
+- `src/Views/` is the single private tree for method pages and HTTP handlers.
+- `public/` contains the front controller and assets; keep application PHP outside it.
 - `docs/` contains framework documentation.
 - `.github/workflows/` contains CI and release automation.
 
 ## Development
+
+- Direct `.get.php` pages render PHP/HTML once; other methods return request-to-response callables.
+- Preserve inherited `_middleware.php`, independent `_header.php`/`_footer.php`,
+  and optional shallow `_metadata.php` defaults. Keep request values raw and
+  escape metadata/view strings once for HTML. See `docs/0.4.0-design.md`.
+- Reuse route discovery validation for generators and keep discovery free of
+  application execution. No deployment build command is required.
 
 - Keep changes scoped to the requested behavior.
 - Add or update tests for behavior changes.
