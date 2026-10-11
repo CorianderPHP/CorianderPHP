@@ -21,6 +21,8 @@ Optional page scripts live beside their GET files: `about/index.ts` pairs with `
 
 Use ordinary imports from `src/Scripts` for code shared by several views. `import type` shares interfaces without browser output. Helpers require no registration in metadata.
 
+Each TypeScript entry has an independent module scope, even without imports; pages can reuse local variable names.
+
 Rendered pages automatically include existing compiled `_script.js` modules from root to leaf, followed by their page module, before the footer. Missing assets are omitted. Fragments (`layout: false`) and explicit JSON/redirect responses keep their existing behavior. PHP never builds assets or scans TypeScript.
 
 Watch mode detects page additions, renames, removals and shared imports, reports type errors and preserves the last good output. Builds remove only recorded generated bundles, preserving manual JavaScript. Tailwind scans `src/Views` and `src/Scripts` explicitly. See [page script examples](docs/page-scripts.md).

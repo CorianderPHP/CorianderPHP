@@ -116,6 +116,15 @@ test('multiple views import reusable values and types without separate helper bu
   assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/Scripts')), false);
 });
 
+test('page entries without imports have independent TypeScript module scopes', async t => {
+  const { root, put } = fixture(t);
+  put('nodejs/tsconfig.json', fs.readFileSync(new URL('../tsconfig.json', import.meta.url), 'utf8'));
+  put('src/Views/_script.ts', 'const value: string = "directory"; console.log(value);');
+  put('src/Views/about/index.ts', 'const value: string = "page"; console.log(value);');
+  await checkTypes(root);
+  assert.equal((await build(root)).length, 2);
+});
+
 test('renamed and removed entries clean only recorded generated bundles', async t => {
   const { root, put } = fixture(t);
   put('src/Views/old/index.ts', 'console.log("old");');

@@ -3,6 +3,7 @@
         "target": "ES2020",
         "useDefineForClassFields": true,
         "module": "ESNext",
+        "moduleDetection": "force",
         "lib": [
             "ES2020",
             "DOM",
