@@ -10,7 +10,7 @@ return static fn($request) => Responses::view('admin/users/show', [
 ]);
 ```
 
-This renders `src/Views/admin/users/show.php`. A view file never creates a route.
+This renders `src/Views/admin/users/show.php`. Unsuffixed templates are not endpoints; method files in this same tree are discovered as routes.
 
 ```text
 src/Views/

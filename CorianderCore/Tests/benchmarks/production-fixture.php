@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $root = $argv[1] ?? throw new InvalidArgumentException('Provide an empty fixture directory');
 $project = dirname(__DIR__, 3);
-foreach (['config', 'public', 'src/Routes/users', 'src/Routes/session', 'src/Views', 'cache'] as $directory) {
+foreach (['config', 'public', 'src/Views', 'src/Views/users', 'src/Views/session', 'cache'] as $directory) {
     mkdir($root . '/' . $directory, 0775, true);
 }
 symlink($project . '/CorianderCore', $root . '/CorianderCore');
@@ -23,11 +23,11 @@ $routes = [
     'session/start.get.php' => 'return static function($r) { \\CorianderCore\\Core\\Bootstrap\\SessionBootstrap::start(); $_SESSION["requests"] = 0; return \\CorianderCore\\Core\\Http\\Responses::html("session"); };',
     'session/hold.get.php' => 'return static function($r) { \\CorianderCore\\Core\\Bootstrap\\SessionBootstrap::start(); $count = ++$_SESSION["requests"]; usleep(20_000); return \\CorianderCore\\Core\\Http\\Responses::json(["count" => $count]); };',
 ];
-foreach ($routes as $name => $code) { file_put_contents($root . '/src/Routes/' . $name, '<?php ' . $code); }
+foreach ($routes as $name => $code) { file_put_contents($root . '/src/Views/' . $name, '<?php ' . $code); }
 file_put_contents($root . '/src/Views/_header.php', '<header>header</header>');
 file_put_contents($root . '/src/Views/page.php', '<main>body</main>');
 file_put_contents($root . '/src/Views/_footer.php', '<footer>footer</footer>');
-file_put_contents($root . '/src/Routes/_middleware.php', <<<'PHP'
+file_put_contents($root . '/src/Views/_middleware.php', <<<'PHP'
 <?php
 return [
     new class implements \Psr\Http\Server\MiddlewareInterface {

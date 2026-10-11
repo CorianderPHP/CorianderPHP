@@ -7,7 +7,7 @@ use CorianderCore\Core\Http\{ErrorResponse, RequestFactory, ResponseEmitter};
 use CorianderCore\Core\Router\Router;
 try {
     SessionBootstrap::configure(false);
-    $response = (new Router(__DIR__ . '/Routes'))->handle(RequestFactory::fromGlobals(maxBodyBytes: 1024));
+    $response = (new Router(__DIR__ . '/Views'))->handle(RequestFactory::fromGlobals(maxBodyBytes: 1024));
 } catch (Throwable $exception) {
     $response = ErrorResponse::fromException($exception);
 }

@@ -1,6 +1,6 @@
 # File routing
 
-Routes are discovered automatically under `src/Routes`. A route file returns a callable accepting `ServerRequestInterface` and returning `ResponseInterface`. Use `CorianderCore\Core\Http\Responses` for HTML, JSON, view and redirect helpers. Printed output and other return types are errors.
+Routes are discovered automatically under `src/Views`. A route file returns a callable accepting `ServerRequestInterface` and returning `ResponseInterface`. Use `CorianderCore\Core\Http\Responses` for HTML, JSON, view and redirect helpers. Printed output and other return types are errors.
 
 | File | Request |
 | --- | --- |

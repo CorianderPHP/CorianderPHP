@@ -66,7 +66,7 @@ class HttpIntegrationTest extends TestCase
             self::assertSame(['nosniff'], $home['headers']['x-content-type-options']);
             self::assertArrayNotHasKey('set-cookie', $home['headers']);
             self::assertSame(200, $server->request('GET', '/assets/css/output.css')['status']);
-            foreach (['/missing' => 404, '/src/Routes/index.get.php' => 404, '/sitemap.xml' => 200] as $path => $status) {
+            foreach (['/missing' => 404, '/src/Views/index.get.php' => 404, '/sitemap.xml' => 200] as $path => $status) {
                 $response = $server->request('HEAD', $path);
                 self::assertSame($status, $response['status']);
                 self::assertSame('', $response['body']);

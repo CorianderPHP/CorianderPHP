@@ -7,7 +7,7 @@ use CorianderCore\Core\Router\{RouteMap, SafePath};
 
 class MakeRoute
 {
-    public function __construct(private string $basePath = PROJECT_ROOT . '/src/Routes') {}
+    public function __construct(private string $basePath = PROJECT_ROOT . '/src/Views') {}
 
     public function execute(array $args): int
     {
