@@ -59,12 +59,18 @@ class NodeJS
             return CommandExitCode::FAILURE;
         }
 
-        fclose($pipes[0]);
+        // Watchers treat stdin EOF as shutdown; keep their pipe alive until exit.
+        if (!$this->isWatchCommand($args)) {
+            fclose($pipes[0]);
+        }
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
 
         $observedExitCode = $this->streamProcessOutput($process, $pipes[1], $pipes[2]);
 
+        if (is_resource($pipes[0])) {
+            fclose($pipes[0]);
+        }
         fclose($pipes[1]);
         fclose($pipes[2]);
 

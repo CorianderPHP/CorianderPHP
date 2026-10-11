@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 class NodeJSTest extends TestCase
 {
+    use \CorianderCore\Tests\Support\TestDirectoryHelperTrait;
+
     private ?string $previousCorianderNpmExecutable = null;
     private ?string $previousNpmExecutable = null;
 
@@ -75,6 +77,46 @@ PHP);
             $this->assertStringNotContainsString('npm command failed', $output);
         } finally {
             @unlink($scriptPath);
+        }
+    }
+
+    public function testWatchKeepsChildInputOpenWhileBuildReceivesEof(): void
+    {
+        $probe = proc_open(['node', '--version'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $probePipes);
+        if (!is_resource($probe)) {
+            self::markTestSkipped('Optional Node.js is unavailable');
+        }
+        foreach ($probePipes as $pipe) {
+            stream_get_contents($pipe);
+            fclose($pipe);
+        }
+        if (proc_close($probe) !== 0) {
+            self::markTestSkipped('Optional Node.js is unavailable');
+        }
+        $root = $this->createTemporaryDirectory('_tmp_nodejs_stdin');
+        mkdir($root . '/nodejs');
+        file_put_contents($root . '/nodejs/run', <<<'JS'
+const timer = setTimeout(() => { console.log('input-open'); process.stdin.pause(); }, 100);
+process.stdin.once('end', () => { clearTimeout(timer); console.log('input-closed'); });
+process.stdin.resume();
+JS);
+        try {
+            foreach (['watch-all' => 'input-open', 'build-prod' => 'input-closed'] as $script => $expected) {
+                $code = 'define("PROJECT_ROOT", ' . var_export($root, true) . '); require '
+                    . var_export(PROJECT_ROOT . '/vendor/autoload.php', true) . '; exit((new '
+                    . '\\CorianderCore\\Core\\Console\\Commands\\NodeJS("node"))->execute(["run", '
+                    . var_export($script, true) . ']));';
+                $process = proc_open([PHP_BINARY, '-r', $code], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, PROJECT_ROOT);
+                self::assertIsResource($process);
+                $output = stream_get_contents($pipes[1]);
+                $errors = stream_get_contents($pipes[2]);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                self::assertSame(0, proc_close($process), $errors);
+                self::assertStringContainsString($expected, $output);
+            }
+        } finally {
+            $this->deleteDirectory($root);
         }
     }
 

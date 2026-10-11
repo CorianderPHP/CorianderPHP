@@ -4,6 +4,8 @@ CorianderPHP provides NodeJS tooling for compiling TypeScript and TailwindCSS as
 
 See [page scripts](page-scripts.md) for file naming, inheritance and ordinary shared imports.
 
+`php coriander nodejs run watch-all` keeps both watchers running until stopped; the PHP wrapper keeps watcher input open instead of sending an immediate EOF.
+
 The starter uses `moduleDetection: "force"` so plain page scripts have independent scopes. No empty export statement is needed to reuse a local variable name in another page.
 
 ## Requirements
