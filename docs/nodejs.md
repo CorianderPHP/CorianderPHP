@@ -93,11 +93,13 @@ Run all commands from the project root.
 - Page TypeScript: `src/Views/index.ts`, `about/index.ts`, `users/[id].ts`, paired with corresponding `.get.php` files.
 - Directory entries: `src/Views/**/_script.ts` for shared page behavior.
 - Compiled JavaScript: `public/assets/js/pages`, mirroring the view tree. `[id].js` is a single static asset shared by every requested ID.
-- Imported helpers remain ordinary modules and do not produce separate entry bundles. Private directories are excluded from entry discovery.
+- Reusable helpers: `src/Scripts`, imported by page/directory entries. They do not produce separate entry bundles. Private view directories are excluded from entry discovery.
 - Tailwind input: `public/assets/css/input.css`
 - Tailwind output: `public/assets/css/output.css`
 
 ## Best Practices
+
+Share behavior between unrelated views using ordinary imports, for example `import { initializeMenu } from '../../Scripts/menu'` inside `src/Views/about/index.ts`. `menu.ts`, `http.ts` and `types.ts` are application-owned modules, not framework APIs or automatically loaded scripts. Use `import type` for shared interfaces; type-only imports produce no browser code. No metadata registration is needed. Keep initializers explicit so each page runs only the behavior it needs.
 
 Move existing `nodejs/src/**/index.ts` to its matching GET page and update relative imports. The builder now discovers `src/Views` only; it checks filenames without executing PHP. Build/watch scripts remain in `nodejs`. Existing generated files under `public/assets/js/home` are no longer used by the starter; remove obsolete app assets deliberately. Browser inclusion is explicit until the inherited script-loading step lands.
 
