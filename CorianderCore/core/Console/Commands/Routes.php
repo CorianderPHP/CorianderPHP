@@ -8,7 +8,7 @@ use CorianderCore\Core\Router\RouteMap;
 
 final class Routes
 {
-    public function __construct(private string $directory = PROJECT_ROOT . '/src/Routes') {}
+    public function __construct(private string $directory = PROJECT_ROOT . '/src/Views') {}
 
     /** @param list<string> $args */
     public function execute(array $args): int

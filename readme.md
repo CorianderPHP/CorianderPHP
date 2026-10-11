@@ -1,6 +1,8 @@
-# CorianderPHP 0.3.0
+# CorianderPHP 0.4.0 development
 
 A lightweight PHP framework focused on simple developer UX, performance and few dependencies. Routes are PHP files, middleware follows directories, and views inherit headers and footers independently. Application code lives in `src`; framework code lives in `CorianderCore`.
+
+The 0.4.0 rework uses one `src/Views` tree for templates and method handlers. Existing 0.3.0 applications must move handlers and `_middleware.php` declarations from `src/Routes` into this tree, resolving filename conflicts before removing the old directory. See the [0.4.0 execution contract and roadmap](docs/0.4.0-design.md) for the remaining implementation steps.
 
 ## Start
 
@@ -15,7 +17,7 @@ Open `/`. New applications default to production with debugging disabled and aut
 
 ## Create a route
 
-`src/Routes/users/[id].get.php`:
+`src/Views/users/[id].get.php`:
 
 ```php
 <?php
@@ -28,7 +30,7 @@ return static fn(ServerRequestInterface $request) => Responses::json([
 
 Use `.post.php`, `.put.php`, `.patch.php`, `.delete.php`, `.head.php` or `.options.php` for other methods. `index.get.php` handles its directory root. Query values, parsed bodies, cookies and uploads use PSR request methods. Handlers return PSR responses; use `Responses::html`, `json`, `view` or `redirect`.
 
-`src/Routes/admin/_middleware.php` returns an array of PSR-15 middleware. Parents always apply, so child directories inherit authentication. Application classes use `App\` under `src`.
+`src/Views/admin/_middleware.php` returns an array of PSR-15 middleware. Parents always apply, so child directories inherit authentication. Application classes use `App\` under `src`.
 
 `Responses::view('admin/profile', $data)` renders `src/Views/admin/profile.php`, using the nearest `_header.php` and nearest `_footer.php` independently. A local header can use the root footer, and a local footer can use the root header. Either part is omitted if absent throughout the view ancestry; when neither exists, only the view renders. Pass `layout: false` for fragments.
 

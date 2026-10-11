@@ -134,7 +134,7 @@ php coriander make:migration CreateUsersTable
 
 ### `make:route`
 
-Generate a method handler such as `src/Routes/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required. `make:view admin/profile` creates `src/Views/admin/profile.php`. Both generators are optional.
+Generate a method handler such as `src/Views/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required. `make:view admin/profile` creates `src/Views/admin/profile.php`. Both generators are optional.
 
 The route generator shares discovery's filename and parameter validation. Invalid syntax or private names return exit code 2. Conflicting routes or invalid existing definitions return 1. Repeated parameters, ambiguous parameter names and duplicate `index` aliases are rejected before creating directories or writing files. Validation reads current filenames without executing application code or updating production caches.
 

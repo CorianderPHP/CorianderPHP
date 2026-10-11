@@ -12,7 +12,7 @@ final class RouteCache
     private RouteMap $discovery;
 
     public function __construct(
-        private string $directory = PROJECT_ROOT . '/src/Routes',
+        private string $directory = PROJECT_ROOT . '/src/Views',
         ?string $file = null,
         ?bool $production = null,
         private int $refreshInterval = 30,

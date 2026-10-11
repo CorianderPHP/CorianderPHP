@@ -25,7 +25,7 @@ class MakeRouteTest extends TestCase
             mkdir(self::$testPath, 0755, true);
         }
 
-        $this->makeRoute = new MakeRoute(self::$testPath . 'src/Routes/');
+        $this->makeRoute = new MakeRoute(self::$testPath . 'src/Views/');
     }
 
     protected function tearDown(): void
@@ -41,10 +41,10 @@ class MakeRouteTest extends TestCase
 
         $this->expectOutputRegex('/Success/');
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
-        $this->assertFileExists(self::$testPath . 'src/Routes/admin.get.php');
+        $this->assertFileExists(self::$testPath . 'src/Views/admin.get.php');
         $this->assertStringContainsString(
             'return static',
-            (string) file_get_contents(self::$testPath . 'src/Routes/admin.get.php')
+            (string) file_get_contents(self::$testPath . 'src/Views/admin.get.php')
         );
     }
 
@@ -54,7 +54,7 @@ class MakeRouteTest extends TestCase
 
         $this->expectOutputRegex('/Success/');
         $this->assertSame(CommandExitCode::SUCCESS, $exitCode);
-        $this->assertFileExists(self::$testPath . 'src/Routes/admin/users.get.php');
+        $this->assertFileExists(self::$testPath . 'src/Views/admin/users.get.php');
     }
 
     public function testRouteFileAlreadyExists(): void
@@ -71,7 +71,7 @@ class MakeRouteTest extends TestCase
     {
         $this->expectOutputRegex('/Success/');
         self::assertSame(0, $this->makeRoute->execute(['users/[id].post']));
-        $router = new \CorianderCore\Core\Router\Router(self::$testPath . 'src/Routes');
+        $router = new \CorianderCore\Core\Router\Router(self::$testPath . 'src/Views');
         $response = $router->handle(new \Nyholm\Psr7\ServerRequest('POST', '/users/42'));
         self::assertSame('Hello', (string) $response->getBody());
         self::assertSame(200, $response->getStatusCode());

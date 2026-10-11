@@ -15,7 +15,7 @@ class Router implements RequestHandlerInterface
 {
     private RouteCache $cache;
 
-    public function __construct(private string $directory = PROJECT_ROOT . '/src/Routes', ?RouteCache $cache = null)
+    public function __construct(private string $directory = PROJECT_ROOT . '/src/Views', ?RouteCache $cache = null)
     {
         $this->cache = $cache ?? new RouteCache($directory);
     }

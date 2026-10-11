@@ -21,9 +21,9 @@ execution only through the front controller.
 
 ## Routing and View Path Safety
 
-Routes are discovered under `src/Routes` by default. Protect directories using inherited `_middleware.php` files. Static paths cannot fall through to dynamic handlers on method mismatches. Discovery never executes handlers. Cached missing handlers or middleware fail closed.
+Routes are discovered under `src/Views` by default. Protect directories using inherited `_middleware.php` files. Static paths cannot fall through to dynamic handlers on method mismatches. Discovery never executes handlers. Cached missing handlers or middleware fail closed.
 
-Views live under `src/Views` and never create public routes. Only normalized relative template paths are accepted; dot segments, absolute paths, NUL and escaping symlinks are rejected. Headers and footers are resolved independently from the view ancestry, independently of route ancestry. Existing invalid layout files still throw; only absent parts are omitted.
+Views and HTTP handlers live under `src/Views`. Only method-suffixed files create endpoints; private and unsuffixed files remain undiscovered. Only normalized relative template paths are accepted; dot segments, absolute paths, NUL and escaping symlinks are rejected. Headers and footers are resolved independently from the rendered view ancestry. Existing invalid layout files still throw; only absent parts are omitted.
 
 ## CSRF Protection
 

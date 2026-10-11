@@ -29,9 +29,9 @@ class MakeSitemap
      * Constructor for the MakeSitemap class.
      * Initializes the path to the directory where sitemap templates are stored and the path where the sitemap will be created.
      * 
-     * @param string $sitemapFilePath The path where the sitemap will be generated (default: PROJECT_ROOT . '/public/sitemap.php').
+     * @param string $sitemapFilePath The method file to generate under the application view tree by default.
      */
-    public function __construct(string $sitemapFilePath = PROJECT_ROOT . '/src/Routes/sitemap.xml.get.php')
+    public function __construct(string $sitemapFilePath = PROJECT_ROOT . '/src/Views/sitemap.xml.get.php')
     {
         $this->sitemapFilePath = $sitemapFilePath;
         $this->templatesPath = PROJECT_ROOT . '/CorianderCore/core/Console/Commands/Make/Sitemap/templates';

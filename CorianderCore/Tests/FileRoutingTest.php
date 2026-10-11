@@ -74,16 +74,22 @@ class FileRoutingTest extends RouteFixtureTestCase
         (new RouteMap())->discover($this->directory);
     }
 
-    public function testUnsafePathsAreRejectedAndViewsAreNotRoutes(): void
+    public function testUnsafePathsAndPrivateOrUnsuffixedFilesAreNotRoutes(): void
     {
         $this->response('users/[id].get.php');
         $this->put('_header.php', 'throw new \\RuntimeException("not a handler");');
+        $this->put('index.php', 'throw new \\RuntimeException("not a handler");');
+        $this->put('about.php', 'throw new \\RuntimeException("not a handler");');
+        $this->put('_private/index.get.php', 'throw new \\RuntimeException("not a handler");');
         $router = new Router($this->directory);
         foreach (['/users/%2F', '/users/%5C', '/users/%00', '/users/%2E%2E', '/users//42'] as $path) {
             self::assertSame(400, $router->handle(new ServerRequest('GET', $path))->getStatusCode(), $path);
         }
         self::assertNull(RouteMap::requestPath('/users/%zz'));
         self::assertSame(404, $router->handle(new ServerRequest('GET', '/_header'))->getStatusCode());
+        foreach (['/', '/about', '/_private'] as $path) {
+            self::assertSame(404, $router->handle(new ServerRequest('GET', $path))->getStatusCode());
+        }
     }
 
     public function testHandlerContractAndOutputBufferCleanup(): void
