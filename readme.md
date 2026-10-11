@@ -15,7 +15,18 @@ php -S localhost:8000 -t public public/index.php
 
 Open `/`. New applications default to production with debugging disabled and automatic route caching. For local development, set `APP_ENV=local` and `APP_DEBUG=1` in the automatically created `.env`. No route build command is required. Node.js is optional for rebuilding the bundled assets; see [Node.js](docs/nodejs.md).
 
-## Create a route
+## Create a page
+
+Create `src/Views/about/index.get.php`:
+
+```html
+<h1>About us</h1>
+<p>Visit /about. No forwarding handler is needed.</p>
+```
+
+GET pages render directly with inherited layouts. `$request` exposes request data and matched parameters; escape raw values when displaying them in HTML. Files without a method suffix are not endpoints.
+
+## Handle a request
 
 `src/Views/users/[id].get.php`:
 
