@@ -14,11 +14,19 @@ export function sourceFiles(directory) {
 }
 
 export function entries(root) {
-  return sourceFiles(path.join(root, 'nodejs/src')).filter(file => path.basename(file) === 'index.ts');
+  const directory = path.join(root, 'src/Views');
+  return sourceFiles(directory).filter(file => {
+    if (!file.endsWith('.ts')) return false;
+    const segments = path.relative(directory, file).split(path.sep);
+    if (segments.slice(0, -1).some(segment => /^[_.]/.test(segment))) return false;
+    if (path.basename(file) === '_script.ts') return true;
+    if (/^[_.]/.test(path.basename(file))) return false;
+    return fs.lstatSync(file.slice(0, -3) + '.get.php', { throwIfNoEntry: false })?.isFile() ?? false;
+  });
 }
 
 function outputPath(root, file) {
-  const directory = path.join(root, 'public/assets/js');
+  const directory = path.join(root, 'public/assets/js/pages');
   const relative = path.relative(directory, file);
   if ((relative === '..' || relative.startsWith('..' + path.sep)) || path.isAbsolute(relative)) throw new Error('Asset output escapes its directory');
   // Never follow an output symlink while publishing a generated bundle.
@@ -41,8 +49,8 @@ function publish(root, files) {
 export function options(root, minify = false) {
   return {
     entryPoints: entries(root),
-    outbase: path.join(root, 'nodejs/src'),
-    outdir: path.join(root, 'public/assets/js'),
+    outbase: path.join(root, 'src/Views'),
+    outdir: path.join(root, 'public/assets/js/pages'),
     bundle: true,
     format: 'esm',
     platform: 'browser',

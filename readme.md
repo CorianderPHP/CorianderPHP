@@ -17,6 +17,8 @@ Open `/`. New applications default to production with debugging disabled and aut
 
 Asset builds check TypeScript without emitting files, then bundle with esbuild. Development, production and watch commands use the same implementation, preserve manual JavaScript and emit browser modules; load bundles with `type="module"`.
 
+Optional page scripts live beside their GET files: `about/index.ts` pairs with `about/index.get.php`, and `users/[id].ts` pairs with `users/[id].get.php`. Directory `_script.ts` files are also build entries. Output mirrors the view tree under `public/assets/js/pages`; imported helper files do not become separate bundles.
+
 ## Create a page
 
 Create `src/Views/about/index.get.php`:
