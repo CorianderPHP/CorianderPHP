@@ -3,15 +3,17 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "watch-typescript": "tsc --watch",
-    "build-typescript": "tsc",
+    "watch-typescript": "tsc --noEmit --watch",
+    "build-typescript": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
+    "test": "node --test tests/*.test.js",
     "watch-all": "node watch.all.js",
-    "watch-ts": "node build.watch.js",
-    "build-ts": "node build.js",
+    "watch-ts": "node build.js --watch",
+    "build-ts": "npm run check-types && node build.js",
     "watch-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --watch=always --minify",
     "build-tw": "tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
-    "build-all": "node build.js && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
-    "build-prod": "tsc && node build.min.js && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
+    "build-all": "npm run build-ts && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify",
+    "build-prod": "npm run check-types && node build.js --minify && tailwindcss -i ../public/assets/css/input.css -o ../public/assets/css/output.css --minify"
   },
   "author": "Dancuo Lohan",
   "license": "MIT",

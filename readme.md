@@ -15,6 +15,8 @@ php -S localhost:8000 -t public public/index.php
 
 Open `/`. New applications default to production with debugging disabled and automatic route caching. For local development, set `APP_ENV=local` and `APP_DEBUG=1` in the automatically created `.env`. No route build command is required. Node.js is optional for rebuilding the bundled assets; see [Node.js](docs/nodejs.md).
 
+Asset builds check TypeScript without emitting files, then bundle with esbuild. Development, production and watch commands use the same implementation, preserve manual JavaScript and emit browser modules; load bundles with `type="module"`.
+
 ## Create a page
 
 Create `src/Views/about/index.get.php`:
