@@ -10,6 +10,8 @@ Pages and handlers live in `src/Views`. A simple GET page needs only its PHP/HTM
 
 It serves `/about` with inherited layouts. Dynamic pages use `$request->getAttribute('id')` for `[id]` parameters. Values read from the request are raw; use `htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` for ordinary HTML text/quoted attributes. URL and JavaScript contexts require their own encoding. The page executes once, before header/footer execution, so explicit handler responses can bypass layouts; put header data in explicit view data (metadata support follows separately).
 
+Automatic direct-page headers and footers also receive `$request`, including matched parameters and attributes added by middleware. The framework chooses each layout part from its closest ancestor independently. A dynamic file such as `users/[id].get.php` uses the helpers in `users`; `users/[id]/index.get.php` can also use helpers inside `[id]`.
+
 Unsuffixed templates can still be rendered explicitly from a handler:
 
 ```php

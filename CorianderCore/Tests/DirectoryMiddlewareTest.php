@@ -71,4 +71,33 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
         $this->expectExceptionMessage('Expected PSR-15');
         (new Router($this->directory))->handle(new ServerRequest('GET', '/'));
     }
+
+    public function testDirectPagesAndTheirLayoutsReceiveMiddlewareAdjustedRequest(): void
+    {
+        $this->middleware('', 'root');
+        $this->middleware('admin', 'admin');
+        $this->middleware('admin/[id]', 'user');
+        $this->put('_header.php', 'echo "rootheader:";');
+        $this->put('_footer.php', 'echo ":rootfooter:" . $request->getAttribute("trace");');
+        $this->put('admin/_header.php', 'echo "adminheader:" . $request->getAttribute("id") . ":";');
+        $this->put('admin/[id]/index.get.php', 'echo $request->getAttribute("trace");');
+        $response = (new Router($this->directory))->handle(new ServerRequest('GET', '/admin/42'));
+        self::assertSame('adminheader:42:rootadminuser:rootfooter:rootadminuser', (string) $response->getBody());
+        foreach (['root', 'admin', 'user'] as $name) {
+            self::assertSame('applied', $response->getHeaderLine('X-' . $name));
+        }
+    }
+
+    public function testAuthenticationRejectionPreventsDirectPageAndLayoutExecution(): void
+    {
+        $this->middleware('admin', 'auth', true);
+        $this->put('_header.php', 'throw new \\RuntimeException("must not load header");');
+        $this->put('admin/_footer.php', 'throw new \\RuntimeException("must not load footer");');
+        $marker = $this->directory . '/executed';
+        $this->put('admin/users/_middleware.php', 'return [];');
+        $this->put('admin/users/index.get.php', 'file_put_contents(' . var_export($marker, true) . ', "page"); echo "private";');
+        $response = (new Router($this->directory))->handle(new ServerRequest('GET', '/admin/users'));
+        self::assertSame(403, $response->getStatusCode());
+        self::assertFileDoesNotExist($marker);
+    }
 }

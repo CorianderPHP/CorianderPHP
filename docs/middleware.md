@@ -1,4 +1,4 @@
-# Middleware in 0.3.0
+# Directory middleware
 
 Place application middleware classes in `src/Middleware`. Each `src/Views/**/_middleware.php` returns an ordered array of PSR-15 `MiddlewareInterface` instances:
 
@@ -8,7 +8,9 @@ use App\Middleware\AuthMiddleware;
 return [new AuthMiddleware()];
 ```
 
-A request for `src/Views/admin/users/[id].get.php` runs middleware from the routes root, `admin`, then `admin/users`, in that order. Middleware sees the matched parameters through `$request->getAttribute('id')`. It may return a response immediately to deny access or redirect, or call `$handler->handle($request)` and modify its response.
+A request for `src/Views/admin/users/[id].get.php` runs middleware from `src/Views`, `admin`, then `admin/users`, in that order. Middleware sees the matched parameters through `$request->getAttribute('id')`. It may return a response immediately to deny access or redirect, or call `$handler->handle($request)` and modify its response.
+
+The same chain protects direct PHP/HTML GET pages and callable handlers. Rejection happens before loading the page or its layouts. Direct pages, their headers and their footers receive the request after middleware adjustments. Use `admin/[id]/index.get.php` when a dynamic page needs its own `_middleware.php` or layouts in that directory.
 
 Parent middleware always applies. A child file returning `[]` cannot disable its parent's authentication. Response middleware unwinds in reverse order. Root middleware also wraps 404 and invalid-path responses; directory middleware wraps a matched path's 405 response.
 

@@ -78,4 +78,21 @@ class DirectPagesTest extends RouteFixtureTestCase
         $this->expectExceptionMessage('Method files must be dispatched by the router');
         (new ViewRenderer($this->directory))->response('index.get');
     }
+
+    public function testDirectPagesResolveHeaderAndFooterIndependentlyAcrossDirectories(): void
+    {
+        $this->put('_header.php', 'echo "root:";');
+        $this->put('_footer.php', 'echo ":root";');
+        $this->put('header/_header.php', 'echo "child:";');
+        $this->put('footer/_footer.php', 'echo ":child";');
+        $this->put('nested/_header.php', 'echo "nested:";');
+        $this->put('nested/users/_footer.php', 'echo ":users";');
+        foreach (['header', 'footer', 'nested/users/[id]'] as $directory) {
+            $this->put($directory . '/index.get.php', 'echo "body";');
+        }
+        $router = new Router($this->directory);
+        foreach (['/header' => 'child:body:root', '/footer' => 'root:body:child', '/nested/users/42' => 'nested:body:users'] as $path => $expected) {
+            self::assertSame($expected, (string) $router->handle(new ServerRequest('GET', $path))->getBody());
+        }
+    }
 }
