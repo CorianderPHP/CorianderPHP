@@ -10,7 +10,7 @@ The 0.4.0 baseline is the production benchmark artifact from the PR that adds th
 
 Reports contain individual request p50/p95/p99 (nearest rank), completed throughput, PHP/FPM/OPcache metadata and PHP allocator peak bytes reported by the fixture. The memory figure excludes OS process RSS, nginx, shared OPcache and the load generator; error responses have no memory header and report null. The Python thread client and server share the machine, use new connections and closed-loop load, so these are reproducible comparisons rather than maximum server capacity or production guarantees. File-update protection is disabled for newly generated fixtures only. CI saves verified JSON artifacts without unstable absolute timing gates. Compare matching environments before changing routing or session behavior.
 
-`php coriander benchmark:router home 1000` measures a discovered GET handler using seven batches of 1,000 dispatches. It checks status and body and refuses unexpected errors. The second argument is iterations per sample.
+`php coriander benchmark:router / 1000` measures a discovered GET handler using seven batches of 1,000 dispatches. It checks status and body and refuses unexpected errors. The second argument is iterations per sample.
 
 Run the fixture suite with:
 

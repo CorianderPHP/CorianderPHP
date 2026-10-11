@@ -134,7 +134,11 @@ php coriander make:migration CreateUsersTable
 
 ### `make:route`
 
-Generate a method handler such as `src/Views/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required. `make:view admin/profile` creates `src/Views/admin/profile.php`. Both generators are optional.
+Generate a callable method handler such as `src/Views/users/[id].post.php` with `php coriander make:route "users/[id].post"`. Omitting the suffix defaults to GET. Files are discovered automatically; no registration is required.
+
+`make:view about` creates a direct HTML page at `src/Views/about/index.get.php`. Use `make:view index` for `/`, `make:view admin/profile` for `admin/profile/index.get.php`, or an explicit GET filename such as `make:view "users/[id].get"`. Static CamelCase names become kebab-case; parameter names retain their case. `make:view` accepts GET pages only; other methods use `make:route`. Both generators share discovery validation, reject conflicts before creating directories, and preserve existing files. Unsuffixed templates may be created manually.
+
+`make:sitemap` creates `src/Views/sitemap.xml.get.php`, validates route conflicts and checks its destination before writing. Custom `MakeSitemap` construction now takes a destination directory, matching `MakeView` and `MakeRoute`; replace the old filename argument with its directory. Generators reject dangling destination symlinks. These commands remain optional.
 
 The route generator shares discovery's filename and parameter validation. Invalid syntax or private names return exit code 2. Conflicting routes or invalid existing definitions return 1. Repeated parameters, ambiguous parameter names and duplicate `index` aliases are rejected before creating directories or writing files. Validation reads current filenames without executing application code or updating production caches.
 

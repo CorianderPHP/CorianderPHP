@@ -50,7 +50,7 @@ class CommandHandlerTest extends TestCase
         $this->assertStringContainsString('CorianderPHP CLI Help', $output);
         $this->assertStringContainsString('Commands:', $output);
         $this->assertStringContainsString('Show CLI help.', $output);
-        $this->assertStringContainsString('Generate project files', $output);
+        $this->assertStringContainsString('Generate GET pages and callable handlers in src/Views', $output);
         $this->assertStringContainsString('php coriander nodejs run build-prod', $output);
     }
 

@@ -11,8 +11,15 @@ final class NotFoundMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
-        return $response->getStatusCode() === 404
-            ? Responses::view('notfound', ['title' => 'Page not found'], status: 404)
-            : $response;
+        if ($response->getStatusCode() !== 404) {
+            return $response;
+        }
+        $page = Responses::view('_notfound', ['page' => ['title' => 'Page not found']], status: 404);
+        $response = $response->withBody($page->getBody())->withHeader('Content-Type', $page->getHeaderLine('Content-Type'));
+        // The replacement HTML invalidates the original representation's framing and validators.
+        foreach (['Content-Length', 'Transfer-Encoding', 'Content-Encoding', 'Content-Range', 'ETag', 'Last-Modified'] as $header) {
+            $response = $response->withoutHeader($header);
+        }
+        return $response;
     }
 }

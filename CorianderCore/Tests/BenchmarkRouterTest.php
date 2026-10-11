@@ -19,7 +19,7 @@ class BenchmarkRouterTest extends TestCase
 
     public function testMeasuresRegisteredHomepageAndReportsEnvironment(): void
     {
-        [$code, $output] = OutputBuffer::capture(fn() => (new BenchmarkRouter())->execute(['home', '2']));
+        [$code, $output] = OutputBuffer::capture(fn() => (new BenchmarkRouter())->execute(['/', '2']));
         self::assertSame(0, $code);
         self::assertStringContainsString('median_batch_mean_us', $output);
         self::assertStringContainsString(PHP_VERSION, $output);
