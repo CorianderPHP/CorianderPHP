@@ -1,4 +1,4 @@
-import { HomeDependency } from './_scripts/HomeDependency';
+import { HomeDependency } from '../Scripts/HomeDependency';
 
 const homeDependency = new HomeDependency();
 homeDependency.logTheRandomNumber();

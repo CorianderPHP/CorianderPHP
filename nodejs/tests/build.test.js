@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { build } from '../build.js';
 
 function fixture(t) {
@@ -82,4 +84,30 @@ test('generated output cannot follow a destination symlink', async t => {
   }
   await assert.rejects(build(root), /symlink/);
   assert.equal(fs.readFileSync(path.join(root, 'outside/index.js'), 'utf8'), 'untouched');
+});
+
+test('multiple views import reusable values and types without separate helper bundles', async t => {
+  const { root, put } = fixture(t);
+  put('src/Scripts/types.ts', 'export interface PageState { title: string }');
+  put('src/Scripts/menu.ts', 'export function menu(title: string) { return "menu:" + title; }');
+  put('src/Scripts/http.ts', 'export function endpoint(id: number) { return "/users/" + id; }');
+  const source = 'import type { PageState } from "../../Scripts/types"; import { menu } from "../../Scripts/menu"; import { endpoint } from "../../Scripts/http"; const page: PageState = { title: "shared" }; console.log(menu(page.title), endpoint(42));';
+  for (const page of ['about', 'products']) put('src/Views/' + page + '/index.ts', source);
+  const files = await build(root);
+  assert.equal(files.length, 2);
+  for (const file of files) {
+    const text = Buffer.from(file.contents).toString();
+    assert.match(text, /menu:/);
+    assert.match(text, /\/users\//);
+    assert.doesNotMatch(text, /PageState|types\.ts/);
+  }
+  const compiler = fileURLToPath(new URL('../node_modules/typescript/bin/tsc', import.meta.url));
+  const args = [compiler, '--noEmit', '--strict', '--skipLibCheck', path.join(root, 'src/Views/about/index.ts'), path.join(root, 'src/Views/products/index.ts')];
+  assert.equal(spawnSync(process.execPath, args, { encoding: 'utf8' }).status, 0);
+  put('src/Scripts/types.ts', 'export interface PageState { title: number }');
+  const invalid = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stdout, /not assignable/);
+  assert.equal(fs.existsSync(path.join(root, 'src/Scripts/types.js')), false);
+  assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/Scripts')), false);
 });

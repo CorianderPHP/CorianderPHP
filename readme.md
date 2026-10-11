@@ -19,6 +19,8 @@ Asset builds check TypeScript without emitting files, then bundle with esbuild. 
 
 Optional page scripts live beside their GET files: `about/index.ts` pairs with `about/index.get.php`, and `users/[id].ts` pairs with `users/[id].get.php`. Directory `_script.ts` files are also build entries. Output mirrors the view tree under `public/assets/js/pages`; imported helper files do not become separate bundles.
 
+Use ordinary imports from `src/Scripts` for code shared by several views. `import type` shares interfaces without browser output. Helpers require no registration in metadata.
+
 ## Create a page
 
 Create `src/Views/about/index.get.php`:
