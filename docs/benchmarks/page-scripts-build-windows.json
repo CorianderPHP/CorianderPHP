@@ -1,0 +1,46 @@
+{
+  "description": "Warm esbuild rebuilds including discovery and publishing; type checking, npm/process startup, Tailwind and browser execution excluded.",
+  "source_commit": "c2a5779c8f306b76f4664133928210870dc181ec",
+  "environment": {
+    "node": "v22.18.0",
+    "esbuild": "0.28.2",
+    "os": "win32",
+    "release": "10.0.26300",
+    "arch": "x64"
+  },
+  "cases": [
+    {
+      "pages": 1,
+      "samples": 3,
+      "median_build_ms": 23.93249999999999,
+      "max_build_ms": 25.488500000000016,
+      "bundle_count": 2,
+      "total_js_bytes": 87,
+      "total_gzip_bytes": 127,
+      "one_page_js_bytes": 87,
+      "one_page_gzip_bytes": 127
+    },
+    {
+      "pages": 20,
+      "samples": 3,
+      "median_build_ms": 39.248400000000004,
+      "max_build_ms": 43.6814,
+      "bundle_count": 21,
+      "total_js_bytes": 1142,
+      "total_gzip_bytes": 1562,
+      "one_page_js_bytes": 87,
+      "one_page_gzip_bytes": 127
+    },
+    {
+      "pages": 100,
+      "samples": 3,
+      "median_build_ms": 104.60000000000002,
+      "max_build_ms": 106.53390000000002,
+      "bundle_count": 101,
+      "total_js_bytes": 5622,
+      "total_gzip_bytes": 7642,
+      "one_page_js_bytes": 87,
+      "one_page_gzip_bytes": 127
+    }
+  ]
+}

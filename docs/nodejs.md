@@ -2,6 +2,8 @@
 
 CorianderPHP provides NodeJS tooling for compiling TypeScript and TailwindCSS assets.
 
+See [page scripts](page-scripts.md) for file naming, inheritance and ordinary shared imports.
+
 ## Requirements
 
 Use Node.js 24 LTS with npm for asset tooling; CI builds on Linux and Windows with this version. Node.js 22 remains supported. PHP-only applications do not require Node.js. On Windows, the official

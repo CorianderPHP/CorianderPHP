@@ -9,6 +9,7 @@ CorianderPHP now uses one `src/Views` tree for pages and HTTP handlers. Simple w
 - Direct GET pages render once with inherited layouts. Other methods return request-to-response callables. GET callables remain suitable for JSON and redirects; returned responses bypass automatic layouts.
 - `Responses::view()` rejects method files and reserved helpers. The `page` data key must be an array.
 - `make:view` now generates direct GET pages, normally `name/index.get.php`. Custom `MakeSitemap` construction accepts a directory rather than a filename. The starter removes the redundant `/home` alias and renames its 404 template to `_notfound.php`.
+- Browser entries move from `nodejs/src` beside GET pages in `src/Views`; generated modules mirror that tree under `public/assets/js/pages`. Update imports, asset paths and manually duplicated layout tags. The old separate build/minify/watch implementations are consolidated in `nodejs/build.js`.
 
 ## Developer experience
 
@@ -17,6 +18,10 @@ CorianderPHP now uses one `src/Views` tree for pages and HTTP handlers. Simple w
 - Directory middleware runs before pages; children retain parent authentication. Raw request parameters need output encoding; escaped metadata/view data should not be escaped again.
 - Generators share discovery validation, preserve existing files and reject unsafe destinations, including dangling symlinks.
 - Custom 404 rendering preserves unrelated response headers while replacing body-specific headers and validators.
+- Optional `index.ts`/`[id].ts` entries pair with GET pages. Directory `_script.ts` modules accumulate root to leaf, followed by the page module. Missing bundles are omitted; modules use encoded, versioned asset URLs and work without Node or source files on the server.
+- Reuse helpers such as `src/Scripts/menu.ts` and shared types through ordinary imports. No metadata registration or separate helper bundles are required.
+- Watch handles new, renamed and removed entries, shared edits and type-error recovery. Type checks emit no JavaScript; failed checks preserve last good output. Cleanup removes only previously recorded generated bundles, preserving manual JS.
+- Tailwind explicitly scans Views and Scripts. Asset CI uses Node 24 and current Node 24 action runtimes; Node 22 remains supported locally. The audited lockfile updates TypeScript/esbuild and retains a safe Tailwind/watcher combination.
 
 GET metadata is evaluated before the selected file, including callable GET handlers. Keep declarations free of side effects. Explicit responses are not decorated; non-GET dispatch skips metadata unless its handler explicitly renders a view.
 
@@ -31,6 +36,7 @@ Upgrade application code with the framework. See the [0.4.0 migration guide](htt
 ## Documentation references
 
 - Runtime: `CorianderCore/core/Router/{Router,RouteCache,ViewRenderer,SafePath}.php`; new `ViewRenderer::dispatch(name, request)`, default `src/Views`, explicit view restrictions and inherited metadata.
+- Script loading: optional `ViewRenderer` constructor `scriptDirectory`, inherited compiled modules, encoded/versioned URLs, fragment/explicit-response behavior. Build tooling remains in `nodejs`; page entries move to Views and ordinary imports to Scripts. See `docs/{page-scripts,nodejs}.md`, `nodejs/{build.js,watch.all.js,tsconfig.json}`, and `public/assets/css/input.css`.
 - CLI: `CorianderCore/core/Console/Commands/Make/{Route/MakeRoute,View/MakeView,Sitemap/MakeSitemap}.php`, Routes and BenchmarkRouter commands. Update generator paths, GET examples and the custom sitemap constructor.
 - Starter: `src/Views/{index.get,_metadata,_header,_footer,_middleware,_notfound,sitemap.xml.get}.php` and `src/Middleware/NotFoundMiddleware.php`. Existing application-owned files require manual migration.
 - Guides: `docs/{routing,views,middleware,cli,route-cache,security,sitemap,benchmarks,migration-0.4.0,0.4.0-design}.md` and `readme.md`.

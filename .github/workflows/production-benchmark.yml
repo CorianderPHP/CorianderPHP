@@ -19,10 +19,10 @@ jobs:
     - name: Install development benchmark tools
       run: sudo apt-get update -qq && sudo apt-get install -y nginx php8.3-fpm
     - run: composer install --prefer-dist --no-progress --no-interaction
-    - name: Check out the pre-routing baseline
+    - name: Check out the pre-script baseline
       uses: actions/checkout@v7
       with:
-        ref: 72fff84956f0a22eb65eb9eb81aa1f59c746a40a
+        ref: d2432347cbb6b4030c8cfde68200111b755791eb
         path: benchmark-baseline
     - name: Install baseline benchmark dependencies
       run: composer install --working-dir=benchmark-baseline --prefer-dist --no-progress --no-interaction

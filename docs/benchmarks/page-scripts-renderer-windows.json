@@ -1,0 +1,58 @@
+{
+    "description": "Verified renderer batch means in microseconds; not individual HTTP latency. Includes constructor, rendering and response validation. Process allocator peak excludes RSS, browser assets and shared OPcache.",
+    "source_commit": "c2a5779c8f306b76f4664133928210870dc181ec",
+    "cases": {
+        "missing_asset_directory": {
+            "median_batch_mean_us": 222.651,
+            "p95_batch_mean_us": 252.1915,
+            "samples": 7,
+            "iterations_per_sample": 200,
+            "peak_process_memory_bytes": 4194304,
+            "environment": {
+                "php": "8.2.10",
+                "os": "Windows",
+                "opcache": false,
+                "opcache_cli": false
+            }
+        },
+        "missing_bundles": {
+            "median_batch_mean_us": 319.4185,
+            "p95_batch_mean_us": 332.3925,
+            "samples": 7,
+            "iterations_per_sample": 200,
+            "peak_process_memory_bytes": 4194304,
+            "environment": {
+                "php": "8.2.10",
+                "os": "Windows",
+                "opcache": false,
+                "opcache_cli": false
+            }
+        },
+        "three_bundles": {
+            "median_batch_mean_us": 375.51,
+            "p95_batch_mean_us": 421.3025,
+            "samples": 7,
+            "iterations_per_sample": 200,
+            "peak_process_memory_bytes": 4194304,
+            "environment": {
+                "php": "8.2.10",
+                "os": "Windows",
+                "opcache": false,
+                "opcache_cli": false
+            }
+        },
+        "three_bundles_with_500_unrelated_assets": {
+            "median_batch_mean_us": 381.131,
+            "p95_batch_mean_us": 429.7305,
+            "samples": 7,
+            "iterations_per_sample": 200,
+            "peak_process_memory_bytes": 4194304,
+            "environment": {
+                "php": "8.2.10",
+                "os": "Windows",
+                "opcache": false,
+                "opcache_cli": false
+            }
+        }
+    }
+}

@@ -95,6 +95,57 @@ class PageScriptsTest extends RouteFixtureTestCase
         self::assertSame('private', (string) $this->renderer()->response('_private')->getBody());
     }
 
+
+    public function testPrebuiltDynamicModulesWorkOverHttpWithoutNodeOrSources(): void
+    {
+        $this->put('src/Views/teams/[team]/users/[id].get.php', 'echo "user:" . htmlspecialchars($request->getAttribute("id"), ENT_QUOTES, "UTF-8");');
+        $this->put('src/Views/json.get.php', 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::json(["ok" => true]);');
+        $this->put('src/Views/redirect.get.php', 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::redirect("/target");');
+        $this->put('src/Views/index.post.php', 'return static fn($r) => \\CorianderCore\\Core\\Http\\Responses::html("posted");');
+        $assets = $this->directory . '/public/assets/js/pages';
+        $names = ['_script.js', 'teams/_script.js', 'teams/[team]/users/[id].js'];
+        foreach ($names as $name) {
+            $file = $assets . '/' . $name;
+            if (!is_dir(dirname($file))) { mkdir(dirname($file), 0775, true); }
+            file_put_contents($file, 'console.log("prebuilt");');
+        }
+        $this->put('public/index.php', 'define("PROJECT_ROOT", dirname(__DIR__)); require ' . var_export(PROJECT_ROOT . '/vendor/autoload.php', true) . '; require ' . var_export(PROJECT_ROOT . '/config/config.php', true) . ';
+            $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+            if (str_starts_with($path, "/assets/")) {
+                \\CorianderCore\\Core\\Router\\SafePath::resolveFile(__DIR__, ltrim(rawurldecode($path), "/"));
+                return false;
+            }
+            $response = (new \\CorianderCore\\Core\\Router\\Router())->handle(\\CorianderCore\\Core\\Http\\RequestFactory::fromGlobals());
+            \\CorianderCore\\Core\\Http\\ResponseEmitter::emit($response, $_SERVER["REQUEST_METHOD"]);');
+        $server = new \CorianderCore\Tests\Support\HttpServer($this->directory . '/public', $this->directory . '/public/index.php',
+            ['APP_ENV' => 'production', 'PUBLIC_URL_PREFIX' => '/']);
+        try {
+            $first = $server->request('GET', '/teams/7/users/42');
+            self::assertSame(200, $first['status']);
+            self::assertStringStartsWith('user:42<script', $first['body']);
+            preg_match_all('/<script type="module" src="([^"]+)"><\/script>/', $first['body'], $matches);
+            self::assertCount(3, $matches[1]);
+            self::assertStringContainsString('teams/%5Bteam%5D/users/%5Bid%5D.js?', $matches[1][2]);
+            foreach ($matches[1] as $url) {
+                $asset = $server->request('GET', html_entity_decode($url));
+                self::assertSame(200, $asset['status']);
+                self::assertSame('console.log("prebuilt");', $asset['body']);
+            }
+            $second = $server->request('GET', '/teams/9/users/99');
+            self::assertSame(str_replace('user:42', 'user:99', $first['body']), $second['body']);
+            $head = $server->request('HEAD', '/teams/7/users/42');
+            self::assertSame(200, $head['status']);
+            self::assertSame('', $head['body']);
+            self::assertSame('{"ok":true}', $server->request('GET', '/json')['body']);
+            self::assertSame('', $server->request('GET', '/redirect')['body']);
+            self::assertSame('posted', $server->request('POST', '/')['body']);
+            foreach ($names as $name) { unlink($assets . '/' . $name); }
+            self::assertSame('user:42', $server->request('GET', '/teams/7/users/42')['body']);
+            self::assertDirectoryDoesNotExist($this->directory . '/nodejs');
+            self::assertFileDoesNotExist($this->directory . '/src/Views/teams/[team]/users/[id].ts');
+        } finally { $server->stop(); }
+    }
+
     public function testScriptSymlinksCannotEscapeTheirRoot(): void
     {
         $this->put('index.get.php', 'echo "body";');

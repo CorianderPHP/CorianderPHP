@@ -1,5 +1,23 @@
 # Benchmarks
 
+## Page scripts: optional asset and renderer measurements
+
+Run `node nodejs/benchmarks/build.js` after installing optional npm dependencies. It verifies one directory entry plus 1/20/100 page entries importing a shared helper, warms each fixture once, and records three minified rebuild samples including discovery/publishing. Type checking, npm/process startup, Tailwind and browser execution are excluded. Reported gzip sizes compress each bundle separately. CI uploads reports on Node 24 for Linux and Windows; no timing threshold gates merges.
+
+The [local Windows build report](benchmarks/page-scripts-build-windows.json) used Node 22.18.0 and esbuild 0.28.2 against runtime commit `c2a5779c8f306b76f4664133928210870dc181ec`. Median rebuilds were 23.9/39.2/104.6 ms for 1/20/100 pages. These deliberately tiny fixtures generated 87/1,142/5,622 total JS bytes; a single page selected 87 bytes across its page and root modules. Tiny gzip output is larger because of compression headers. This verifies selected bundles remain independent of total page count, not a production bundle-size promise.
+
+Run `php CorianderCore/Tests/benchmarks/page-scripts.php` for verified renderer batch means. CI enables CLI OPcache; the [local Windows report](benchmarks/page-scripts-renderer-windows.json) used PHP 8.2.10 with OPcache unavailable. Seven samples of 200 renders include constructor, metadata/layout checks, response creation and validation. They exclude application/process startup, HTTP, JS transfer and browser execution.
+
+| Local renderer case | Median batch mean µs |
+| --- | ---: |
+| Missing asset directory | 222.7 |
+| Existing directory, missing bundles | 319.4 |
+| Three selected bundles | 375.5 |
+| Same three bundles with 500 unrelated assets | 381.1 |
+
+The latter pair renders identical bodies and checks only current ancestors. The small difference is not evidence of a filesystem-wide scan or a general performance bound. Asset-free versus scripted cases intentionally produce different bodies, so they are feature-cost scenarios rather than an equivalent-response before/after comparison. Each case reported a 4 MiB process allocator peak; this coarse figure includes the fixture and excludes process RSS and shared OPcache. The paired FPM workflow measures equivalent PHP-only responses separately, including actual individual HTTP latency percentiles.
+
+
 ## Complete production requests
 
 On Linux with nginx, PHP-FPM, curl and Python 3 installed, run `bash CorianderCore/Tests/benchmarks/run-production.sh > benchmark-production.json`. `PHP_FPM_BINARY` defaults to `php-fpm8.3`; `BENCHMARK_REQUESTS` defaults to 80 requests per case. Composer dependencies must already be installed. These tools are optional benchmark prerequisites, not framework runtime dependencies.
@@ -8,7 +26,7 @@ The runner copies the current starter bootstrap into a disposable app, starts it
 
 The [0.4.0 baseline](benchmarks/unified-pages-baseline.json) comes from [production CI run 38147258670](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38147258670), before changing route discovery or page execution. Keep request count, worker count, client, PHP/FPM/OPcache settings and response bodies equivalent for the final comparison. Separate hosted runners introduce timing noise; allocator peak is not process RSS. Final static/dynamic/layout cases use direct GET pages with equivalent responses; JSON/redirect/POST cases retain callable handlers. The layout's header/footer move into its directory so unrelated pages keep their original bare responses.
 
-Production CI also checks out the fixed baseline commit `72fff84956f0a22eb65eb9eb81aa1f59c746a40a` and runs it before the current code on the same runner, with independent Composer installations and fresh nginx/FPM processes. Both verified reports are uploaded together. This reduces differences between machines, but sequential execution and shared host load still introduce noise; it is not an absolute performance gate.
+The historical unified-pages comparison uses fixed baseline `72fff84956f0a22eb65eb9eb81aa1f59c746a40a`. Current production CI checks out pre-script commit `d2432347cbb6b4030c8cfde68200111b755791eb` and runs it before current code on the same runner, with independent Composer installations and fresh nginx/FPM processes. Its PHP-only fixtures have no compiled assets and verify identical response bodies. Both reports are uploaded together. This reduces machine differences, but sequential execution and shared host load still introduce noise; it is not an absolute performance gate.
 
 Reports contain individual request p50/p95/p99 (nearest rank), completed throughput, PHP/FPM/OPcache metadata and PHP allocator peak bytes reported by the fixture. The memory figure excludes OS process RSS, nginx, shared OPcache and the load generator; error responses have no memory header and report null. The Python thread client and server share the machine, use new connections and closed-loop load, so these are reproducible comparisons rather than maximum server capacity or production guarantees. File-update protection is disabled for newly generated fixtures only. CI saves verified JSON artifacts without unstable absolute timing gates. Compare matching environments before changing routing or session behavior.
 
@@ -26,6 +44,8 @@ It verifies 10/100/1000 total routes (half static, half dynamic), discovery, a n
 Median and p95 are **batch means per operation**, not individual HTTP latency percentiles. Cached request startup includes reading the map and dispatch, but excludes creating the PSR request and process/application boot. Repeated dispatch reuses one router. HTTP includes socket/server/bootstrap costs, with development discovery enabled in the fixture. Discovery uses single-operation batches. Memory is the process-wide peak, not allocation per request. The OPcache run disables file-update protection for its freshly generated disposable fixtures. Reports include PHP, OS and OPcache settings; compare matching environments.
 
 ## Unified pages: paired 0.4.0 results
+
+The historical reports in this section retain their original pre-routing baseline; the page-script comparison uses the newer pre-script baseline described above.
 
 The [paired baseline](benchmarks/unified-pages-paired-baseline.json) and [unified-pages result](benchmarks/unified-pages-result.json) come from [CI run 38150348575](https://github.com/CorianderPHP/CorianderPHP/actions/runs/38150348575). Both used PHP 8.3.35/FPM/OPcache, eight workers, Python 3.12.3 and 80 requests per case on the same Linux runner, with fresh server processes. Request paths, methods, bodies, session behavior and load were equivalent and verified. The result commit is GitHub's tested PR merge checkout.
 

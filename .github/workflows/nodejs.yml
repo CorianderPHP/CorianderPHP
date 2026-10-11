@@ -42,3 +42,11 @@ jobs:
 
     - name: Build production assets
       run: npm run build-prod
+
+    - name: Measure verified page bundles
+      run: node benchmarks/build.js > ../benchmark-assets.json
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: asset-benchmark-${{ runner.os }}
+        path: benchmark-assets.json

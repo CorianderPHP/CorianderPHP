@@ -73,6 +73,18 @@ GET metadata loads before the selected GET file, including files returning handl
 
 ## Tooling and starter changes
 
+### Browser assets
+
+Move `nodejs/src/**/index.ts` into its matching GET directory under `src/Views`, or use `[id].ts` beside `[id].get.php`. Use `_script.ts` for directory-wide initialization and move reusable helpers into `src/Scripts`. Update relative imports. Shared code and types use ordinary imports; metadata does not register bundles.
+
+Copy updated `nodejs/{package.json,package-lock.json,tsconfig.json,build.js,watch.all.js,tailwind.config.js}` and `public/assets/css/input.css` deliberately; remove old duplicated `build.min.js`/`build.watch.js` after updating commands. Preserve custom theme settings. Tailwind now uses explicit CSS `@source` declarations for Views and Scripts; register other app class locations as needed. Use Node 24 (CI) or supported Node 22 for tooling. The lockfile pins Tailwind 4.3.0 to keep its watcher dependency on the patched version; run a clean `npm ci` and audit when changing it.
+
+Rebuild locally or in CI with `php coriander nodejs run build-prod` and deploy `public/assets/js/pages` and CSS. Existing apps must remove manually duplicated layout script tags after switching to automatic loading. Compiled dynamic names retain literal brackets and are reused across parameter values. Clean old `public/assets/js/home` or other unrecorded outputs manually. Preserve the build-only generated-file list between local builds; it is ignored by Git and unnecessary at runtime.
+
+Direct GET pages automatically include existing ancestor modules and their page bundle before the footer. Returned PSR responses and fragments (`layout: false`) remain undecorated. Custom `ViewRenderer` roots may pass a matching compiled pages directory as the second constructor argument, still served at `assets/js/pages`. Missing bundles are omitted. PHP-only sites and servers deploying prebuilt assets require no Node or TypeScript source files. See [page scripts](page-scripts.md).
+
+### PHP commands and starter
+
 - `make:view about` creates `about/index.get.php`; `make:view index` creates the root page. Explicit GET paths are accepted. Other methods use `make:route`.
 - `make:route`, `make:view` and `make:sitemap` validate definitions against current files before writing. Custom `MakeSitemap` construction takes a destination **directory**, replacing the previous filename argument.
 - The starter root is `index.get.php`, with root `_metadata.php` and a private `_notfound.php`. Its redundant `/home` alias was removed. Preserve an explicit redirect if your app needs that URL.
