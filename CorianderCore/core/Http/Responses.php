@@ -29,7 +29,9 @@ final class Responses
         return new Response($status, ['Location' => $location]);
     }
 
-    /** @param array<string,mixed> $data View variables; string values are HTML-escaped recursively. */
+    /**
+     * @param array<string,mixed> $data View variables; strings are HTML-escaped recursively. The metadata key must be an array; page is app data.
+     */
     public static function view(string $view, array $data = [], int $status = 200, bool $layout = true): ResponseInterface
     {
         return (new ViewRenderer())->response($view, $data, $status, $layout);

@@ -1,5 +1,7 @@
 # CorianderPHP 0.4.0
 
+These notes describe 0.4.0. Version 0.4.1 renames framework `$page` metadata to `$metadata` and frees `page` for application data; see the [0.4.1 upgrade notes](release-notes-0.4.1.md#upgrade-from-040).
+
 CorianderPHP now uses one `src/Views` tree for pages and HTTP handlers. Simple websites can place PHP/HTML directly in `about/index.get.php` without a forwarding route file.
 
 ## Breaking changes

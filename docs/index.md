@@ -26,6 +26,7 @@ Use this index as the recommended reading order for CorianderPHP documentation.
 
 ## Upgrade Notes
 
+- [0.4.1 release notes and upgrade](release-notes-0.4.1.md)
 - [Upgrade to 0.4.0](migration-0.4.0.md)
 - [0.4.0 release notes](release-notes-0.4.0.md)
 - [Completed unified-pages roadmap](0.4.0-design.md)

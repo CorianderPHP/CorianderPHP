@@ -60,9 +60,22 @@ return ['title' => 'My website', 'description' => 'Our work'];
 return ['title' => 'About us'];
 ```
 
-Direct GET pages and their layouts receive this data as `$page`. For example, the header can use `<title><?= $page['title'] ?? '' ?></title>`. Metadata strings are already HTML-escaped recursively; do not escape them again. Request attributes remain raw. Metadata keys stay inside `$page` and cannot overwrite `$request` or internal file variables.
+Direct GET pages and their layouts receive this data as `$metadata`. For example, the header can use `<title><?= $metadata['title'] ?? '' ?></title>`. Metadata strings are already HTML-escaped recursively; do not escape them again. Request attributes remain raw. Metadata keys stay inside `$metadata` and cannot overwrite `$request` or internal file variables.
 
-Metadata is evaluated before the GET file, including GET files returning a callable. Returned PSR responses are not automatically decorated. Non-GET callable dispatch skips metadata; explicitly calling `Responses::view()` loads it for that view. Explicit view data can override metadata through `['page' => ['title' => 'Override']]`; `page` must be an array and is merged before one escaping pass. This also applies to explicit rendering with `layout: false`.
+Metadata is evaluated before the GET file, including GET files returning a callable. Returned PSR responses are not automatically decorated. Non-GET callable dispatch skips metadata; explicitly calling `Responses::view()` loads it for that view. Explicit view data can override metadata through `['metadata' => ['title' => 'Override']]`; `metadata` must be an array and is merged before one escaping pass. This also applies to explicit rendering with `layout: false`.
+
+`page` is ordinary application data and can hold an object, array, scalar or null. It does not override metadata. For example:
+
+```php
+Responses::view('documentation', [
+    'page' => $document,
+    'metadata' => ['title' => 'Documentation'],
+]);
+```
+
+The template receives `$page` and `$metadata` separately. Explicit view data is shared with its header and footer. Object properties are preserved without automatic escaping; encode them for their output context. Strings inside arrays are HTML-escaped recursively. Direct GET pages can define their own `$page`; page-local assignments are not forwarded to layouts.
+
+0.4.0 applications must rename metadata uses of `$page` and the `page` override key. See the [0.4.1 upgrade notes](release-notes-0.4.1.md#upgrade-from-040).
 
 New, edited or removed metadata files are reflected on the next request even with a cached route map. Legacy `metadata.php` is not automatically loaded; rename it to `_metadata.php` and migrate its contents to the array contract.
 

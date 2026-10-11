@@ -29,7 +29,9 @@ performance, and a low dependency count.
 - Direct `.get.php` pages render PHP/HTML once; other methods return request-to-response callables.
 - Preserve inherited `_middleware.php`, independent `_header.php`/`_footer.php`,
   and optional shallow `_metadata.php` defaults. Keep request values raw and
-  escape metadata/view strings once for HTML. See `docs/0.4.0-design.md`.
+  escape metadata/view strings once for HTML. Expose metadata as `$metadata`;
+  explicit `metadata` overrides must be arrays. Keep `page` available for app data.
+  See `docs/views.md`.
 - Reuse route discovery validation for generators and keep discovery free of
   application execution. No deployment build command is required.
 - Pair optional page scripts with GET files; directory `_script.ts` entries accumulate

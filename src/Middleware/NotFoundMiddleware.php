@@ -14,7 +14,7 @@ final class NotFoundMiddleware implements MiddlewareInterface
         if ($response->getStatusCode() !== 404) {
             return $response;
         }
-        $page = Responses::view('_notfound', ['page' => ['title' => 'Page not found']], status: 404);
+        $page = Responses::view('_notfound', ['metadata' => ['title' => 'Page not found']], status: 404);
         $response = $response->withBody($page->getBody())->withHeader('Content-Type', $page->getHeaderLine('Content-Type'));
         // The replacement HTML invalidates the original representation's framing and validators.
         foreach (['Content-Length', 'Transfer-Encoding', 'Content-Encoding', 'Content-Range', 'ETag', 'Last-Modified'] as $header) {
