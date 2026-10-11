@@ -4,7 +4,7 @@ CorianderPHP provides NodeJS tooling for compiling TypeScript and TailwindCSS as
 
 ## Requirements
 
-Install Node.js with npm before using the NodeJS commands. On Windows, the official
+Use Node.js 24 LTS with npm for asset tooling; CI builds on Linux and Windows with this version. Node.js 22 remains supported. PHP-only applications do not require Node.js. On Windows, the official
 installer usually provides npm at:
 
 ```powershell
@@ -100,6 +100,8 @@ Run all commands from the project root.
 - For troubleshooting, run the underlying npm command directly inside the `nodejs` directory.
 
 ## Dependency security
+
+The starter pins Tailwind CSS and CLI to 4.3.0. CLI 4.3.3 pins `@parcel/watcher` 2.5.1, which pulls in unpatched vulnerable `braces`. The lockfile uses watcher 2.6.0; keep the Tailwind pin until the upstream dependency is fixed. TypeScript stays on major 5 and esbuild stays on 0.28.
 
 Use the committed `nodejs/package-lock.json` for reproducible installs. From `nodejs`, run `npm ci` after updating the lockfile and `npm audit` to check advisories. CI audits all asset dependencies, including development dependencies, and builds both development and production assets on Linux and Windows.
 
