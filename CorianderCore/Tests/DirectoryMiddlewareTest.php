@@ -91,6 +91,7 @@ class DirectoryMiddlewareTest extends RouteFixtureTestCase
     public function testAuthenticationRejectionPreventsDirectPageAndLayoutExecution(): void
     {
         $this->middleware('admin', 'auth', true);
+        $this->put('_metadata.php', 'throw new \\RuntimeException("must not load metadata");');
         $this->put('_header.php', 'throw new \\RuntimeException("must not load header");');
         $this->put('admin/_footer.php', 'throw new \\RuntimeException("must not load footer");');
         $marker = $this->directory . '/executed';

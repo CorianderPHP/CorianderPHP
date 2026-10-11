@@ -8,7 +8,7 @@ Pages and handlers live in `src/Views`. A simple GET page needs only its PHP/HTM
 <p>Our website.</p>
 ```
 
-It serves `/about` with inherited layouts. Dynamic pages use `$request->getAttribute('id')` for `[id]` parameters. Values read from the request are raw; use `htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` for ordinary HTML text/quoted attributes. URL and JavaScript contexts require their own encoding. The page executes once, before header/footer execution, so explicit handler responses can bypass layouts; put header data in explicit view data (metadata support follows separately).
+It serves `/about` with inherited layouts. Dynamic pages use `$request->getAttribute('id')` for `[id]` parameters. Values read from the request are raw; use `htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` for ordinary HTML text/quoted attributes. URL and JavaScript contexts require their own encoding. The page executes once, before header/footer execution, so explicit handler responses can bypass layouts; provide header data through `_metadata.php` or explicit view data rather than variables assigned inside the page.
 
 Automatic direct-page headers and footers also receive `$request`, including matched parameters and attributes added by middleware. The framework chooses each layout part from its closest ancestor independently. A dynamic file such as `users/[id].get.php` uses the helpers in `users`; `users/[id]/index.get.php` can also use helpers inside `[id]`.
 
@@ -46,4 +46,24 @@ Header, page and footer receive the same recursively HTML-escaped string data. U
 
 Put assets in `public/assets`, and use `PublicUrl::versionedAsset()` or `ImageHandler::render()` for existing asset helpers. Set `PUBLIC_URL_PREFIX=/public` only when the web server serves the repository root.
 
-The 0.3.0 starter migration removes `public/public_views`, metadata templates and automatic view fallback. Move title/description metadata into data passed by your route. Optional `make:view` creates a template directly in src/Views.
+## Optional page metadata
+
+`_metadata.php` returns an array. Ancestor files load root to leaf; child keys replace parent keys shallowly, including whole nested arrays. Missing files mean an empty array. Declarations must not print output; invalid files report their relative path. Keep declarations free of side effects.
+
+```php
+<?php // src/Views/_metadata.php
+return ['title' => 'My website', 'description' => 'Our work'];
+```
+
+```php
+<?php // src/Views/about/_metadata.php
+return ['title' => 'About us'];
+```
+
+Direct GET pages and their layouts receive this data as `$page`. For example, the header can use `<title><?= $page['title'] ?? '' ?></title>`. Metadata strings are already HTML-escaped recursively; do not escape them again. Request attributes remain raw. Metadata keys stay inside `$page` and cannot overwrite `$request` or internal file variables.
+
+Metadata is evaluated before the GET file, including GET files returning a callable. Returned PSR responses are not automatically decorated. Non-GET callable dispatch skips metadata; explicitly calling `Responses::view()` loads it for that view. Explicit view data can override metadata through `['page' => ['title' => 'Override']]`; `page` must be an array and is merged before one escaping pass. This also applies to explicit rendering with `layout: false`.
+
+New, edited or removed metadata files are reflected on the next request even with a cached route map. Legacy `metadata.php` is not automatically loaded; rename it to `_metadata.php` and migrate its contents to the array contract.
+
+The 0.4.0 tree stays outside the public document root. Move old handlers and templates into `src/Views`, resolving filename conflicts. Existing explicit view data remains supported alongside inherited metadata.

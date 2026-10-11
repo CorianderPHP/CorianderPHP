@@ -18,7 +18,8 @@ class ViewRenderer
     public function dispatch(string $name, ServerRequestInterface $request): ResponseInterface
     {
         $file = SafePath::resolveFile($this->directory, $name);
-        [$result, $html] = OutputBuffer::capture(static function () use ($file, $request) {
+        $page = str_ends_with($name, '.get.php') ? $this->escapeData($this->metadata($name)) : [];
+        [$result, $html] = OutputBuffer::capture(static function () use ($file, $request, $page) {
             return require $file;
         });
         if (is_callable($result)) {
@@ -35,8 +36,8 @@ class ViewRenderer
             throw new \UnexpectedValueException('Expected a callable handler or a direct GET template: ' . $name);
         }
         [$header, $footer] = $this->layoutFiles($name);
-        return Responses::html($this->renderFiles(array_filter([$header]), [], $request) . $html
-            . $this->renderFiles(array_filter([$footer]), [], $request));
+        return Responses::html($this->renderFiles(array_filter([$header]), ['page' => $page], $request) . $html
+            . $this->renderFiles(array_filter([$footer]), ['page' => $page], $request));
     }
 
     /**
@@ -49,7 +50,7 @@ class ViewRenderer
     public function response(string $view, array $data = [], int $status = 200, bool $layout = true): \Psr\Http\Message\ResponseInterface
     {
         $name = SafePath::normalizeRelativePath($view);
-        if ($name === null || in_array(basename($name), ['_header', '_footer', '_header.php', '_footer.php'], true)) {
+        if ($name === null || in_array(pathinfo(basename($name), PATHINFO_FILENAME), ['_header', '_footer', '_middleware', '_metadata'], true)) {
             throw new \InvalidArgumentException('Invalid view name');
         }
         $name = str_ends_with($name, '.php') ? $name : $name . '.php';
@@ -57,6 +58,10 @@ class ViewRenderer
             throw new \InvalidArgumentException('Method files must be dispatched by the router');
         }
         $file = SafePath::resolveFile($this->directory, $name);
+        if (array_key_exists('page', $data) && !is_array($data['page'])) {
+            throw new \InvalidArgumentException('View page data must be an array');
+        }
+        $data['page'] = array_replace($this->metadata($name), $data['page'] ?? []);
         $files = [$file];
         if ($layout) {
             [$header, $footer] = $this->layoutFiles($name);
@@ -87,6 +92,37 @@ class ViewRenderer
         return [$header, $footer];
     }
 
+    /** @return array<string|int,mixed> Parent defaults with shallow child overrides. */
+    private function metadata(string $name): array
+    {
+        $ancestors = [];
+        $ancestor = dirname($name);
+        while (true) {
+            $ancestors[] = $ancestor;
+            if ($ancestor === '.') {
+                break;
+            }
+            $ancestor = dirname($ancestor);
+        }
+        $page = [];
+        foreach (array_reverse($ancestors) as $ancestor) {
+            $relative = ($ancestor === '.' ? '' : $ancestor . '/') . '_metadata.php';
+            clearstatcache(true, $this->directory . '/' . $relative);
+            if (!file_exists($this->directory . '/' . $relative)) {
+                continue;
+            }
+            $file = SafePath::resolveFile($this->directory, $relative);
+            [$data, $output] = OutputBuffer::capture(static function () use ($file) {
+                return require $file;
+            });
+            if (!is_array($data) || $output !== '') {
+                throw new \UnexpectedValueException('Metadata must return an array without printing output: ' . $relative);
+            }
+            $page = array_replace($page, $data);
+        }
+        return $page;
+    }
+
     /**
      * @param array<int,string> $files
      * @param array<string,mixed> $data
@@ -111,8 +147,8 @@ class ViewRenderer
     }
 
     /**
-     * @param array<string,mixed> $data
-     * @return array<string,mixed>
+     * @param array<string|int,mixed> $data
+     * @return array<string|int,mixed>
      */
     private function escapeData(array $data): array
     {
