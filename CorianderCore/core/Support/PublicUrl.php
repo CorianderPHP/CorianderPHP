@@ -10,17 +10,26 @@ final class PublicUrl
         return self::toPublicUrl('/public/' . ltrim(str_replace('\\', '/', $path), '/'));
     }
 
-    public static function versionedAsset(string $path): string
+    /** Raw relative asset path; an optional physical file maps a custom asset root. */
+    public static function versionedAsset(string $path, ?string $filePath = null): string
     {
-        $url = self::asset($path);
-        $filePath = self::publicFilePath($path);
+        $path = ltrim(str_replace('\\', '/', $path), '/');
+        $url = self::asset(implode('/', array_map('rawurlencode', explode('/', $path))));
+        $filePath ??= self::publicFilePath($path);
 
         if (!is_file($filePath)) {
             return $url;
         }
 
-        $mtime = filemtime($filePath);
-        return $mtime === false ? $url : $url . '?' . $mtime;
+        if (in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['css', 'js'], true)) {
+            // Generated assets carry their hash so requests only read a bounded prefix.
+            $prefix = file_get_contents($filePath, false, null, 0, 96);
+            $version = preg_match('~\A(?:// coriander-version:([a-f0-9]{64})\n|/\* coriander-version:([a-f0-9]{64}) \*/\n)~', $prefix ?: '', $match)
+                ? ($match[1] ?: $match[2]) : hash_file('sha256', $filePath);
+        } else {
+            $version = filemtime($filePath);
+        }
+        return $version === false ? $url : $url . '?' . $version;
     }
 
     public static function toPublicUrl(string $path): string

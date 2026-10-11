@@ -29,6 +29,8 @@ Rendered pages automatically include existing compiled `_script.js` modules from
 
 Script URLs use content fingerprints, so rapid rebuilds and preserved timestamps cannot leave stale versions. Generated scripts carry their fingerprint for bounded PHP reads; old unmarked scripts remain compatible through content hashing.
 
+CSS uses the same content versioning through `PublicUrl::versionedAsset()`. Existing Tailwind build commands add the fingerprint automatically; unmarked CSS, including watch output, falls back to content hashing. Pass raw relative asset paths; the helper encodes URL segments.
+
 `php coriander nodejs run watch-all` keeps the TypeScript and Tailwind watchers running. Watch mode detects page additions, renames, removals and shared imports, reports type errors and preserves the last good output. Builds remove only recorded generated bundles, preserving manual JavaScript. Tailwind scans `src/Views` and `src/Scripts` explicitly. See [page script examples](docs/page-scripts.md).
 
 ## Create a page

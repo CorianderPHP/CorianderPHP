@@ -86,6 +86,19 @@ Single-client median latency increased by about 0.03–0.07 ms across these tiny
 
 Successful cases report a 2 MiB PHP allocator peak in both reports. This coarse figure excludes process RSS and shared OPcache; error cases without the measurement header report null. Repeat equivalent runs on deployment hardware before setting a latency or capacity budget.
 
+## 0.4.1 asset versioning check
+
+The 0.4.1 shared asset-versioning check compared the renderer from `13caa20`
+with the new helper on Windows, PHP 8.2.10, OPcache off. The verified
+`page-scripts.php` fixture used seven batches of 200 renders. Median batch
+means were 430/438 microseconds before/after for three generated scripts with
+500 unrelated assets, and 1,221/1,222 microseconds for three 1 MiB scripts.
+The large case reported a 6 MiB process allocator peak in both runs; fixture
+creation contributes to that process-wide peak. These are CLI batch means,
+not individual HTTP percentiles or RSS measurements. Generated CSS/JS reads
+remain limited to a 96-byte fingerprint prefix; unmarked files require a
+full hash. Timings vary with the filesystem and are informational.
+
 ## Initial Windows results
 
 The saved [PHP 8.2 Windows report](benchmark-results-0.3-windows-php82.json) used OPcache disabled. Median batch means, rounded to microseconds:

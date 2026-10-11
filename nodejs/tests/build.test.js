@@ -7,6 +7,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, watch, checkTypes } from '../build.js';
+import { fingerprintCss } from '../fingerprint-css.js';
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'coriander-assets-'));
@@ -22,6 +23,25 @@ function fixture(t) {
   };
   return { root, put };
 }
+
+test('CSS fingerprints preserve output, remain stable and change independently of timestamps', t => {
+  const { root, put } = fixture(t);
+  const file = path.join(root, 'public/assets/css/output.css');
+  const css = '/*! license */\n.test{color:red}\n';
+  put('public/assets/css/output.css', css);
+  fingerprintCss(file);
+  const first = fs.readFileSync(file, 'utf8');
+  assert.equal(first, '/* coriander-version:' + createHash('sha256').update(css).digest('hex') + ' */\n' + css);
+  fingerprintCss(file);
+  assert.equal(fs.readFileSync(file, 'utf8'), first);
+  fs.utimesSync(file, 1700000000, 1700000000);
+  put('public/assets/css/output.css', css.replace('red', 'blue'));
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('../fingerprint-css.js', import.meta.url)), file], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  fs.utimesSync(file, 1700000000, 1700000000);
+  assert.notEqual(fs.readFileSync(file, 'utf8'), first);
+  assert.equal(fs.readFileSync(file, 'utf8').split('\n').slice(1).join('\n'), css.replace('red', 'blue'));
+});
 
 test('builds nested entries and preserves manual assets', async t => {
   const { root, put } = fixture(t);
