@@ -37,6 +37,8 @@ performance, and a low dependency count.
   Do not compile or scan TypeScript in requests. See `docs/page-scripts.md`.
 - Use ordinary imports for shared scripts and types; no metadata registration.
   Preserve forced module detection so plain entries keep independent scopes.
+  Preserve ESM splitting so shared imports retain module identity across entries;
+  deploy generated chunks with entries and include them in asset byte measurements.
   Preserve manual JS and last good builds; cleanup owns only recorded generated files.
 - Run `npm test` and relevant asset builds from `nodejs/` when changing tooling.
   Keep Tailwind source declarations aligned with Views and Scripts.

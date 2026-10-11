@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, watch, checkTypes } from '../build.js';
 
 function fixture(t) {
@@ -98,13 +98,11 @@ test('multiple views import reusable values and types without separate helper bu
   const source = 'import type { PageState } from "../../Scripts/types"; import { menu } from "../../Scripts/menu"; import { endpoint } from "../../Scripts/http"; const page: PageState = { title: "shared" }; console.log(menu(page.title), endpoint(42));';
   for (const page of ['about', 'products']) put('src/Views/' + page + '/index.ts', source);
   const files = await build(root);
-  assert.equal(files.length, 2);
-  for (const file of files) {
-    const text = Buffer.from(file.contents).toString();
-    assert.match(text, /menu:/);
-    assert.match(text, /\/users\//);
-    assert.doesNotMatch(text, /PageState|types\.ts/);
-  }
+  const text = files.map(file => Buffer.from(file.contents).toString()).join('\n');
+  assert.match(text, /menu:/);
+  assert.match(text, /\/users\//);
+  assert.doesNotMatch(text, /PageState|types\.ts/);
+  for (const page of ['about', 'products']) assert.ok(files.some(file => file.path === path.join(root, 'public/assets/js/pages', page, 'index.js')));
   const compiler = fileURLToPath(new URL('../node_modules/typescript/bin/tsc', import.meta.url));
   const args = [compiler, '--noEmit', '--strict', '--skipLibCheck', path.join(root, 'src/Views/about/index.ts'), path.join(root, 'src/Views/products/index.ts')];
   assert.equal(spawnSync(process.execPath, args, { encoding: 'utf8' }).status, 0);
@@ -114,6 +112,36 @@ test('multiple views import reusable values and types without separate helper bu
   assert.match(invalid.stdout, /not assignable/);
   assert.equal(fs.existsSync(path.join(root, 'src/Scripts/types.js')), false);
   assert.equal(fs.existsSync(path.join(root, 'public/assets/js/pages/Scripts')), false);
+});
+
+test('directory and page entries share one module instance and clean obsolete chunks', async t => {
+  const { root, put } = fixture(t);
+  put('package.json', '{"type":"module"}');
+  put('src/Scripts/state.ts', 'globalThis.moduleRuns = (globalThis.moduleRuns ?? 0) + 1; export const state = { value: 42 };');
+  put('src/Views/_script.ts', 'import { state } from "../Scripts/state"; globalThis.rootState = state;');
+  put('src/Views/shop/_script.ts', 'import { state } from "../../Scripts/state"; globalThis.directoryState = state;');
+  put('src/Views/shop/index.ts', 'import { state } from "../../Scripts/state"; globalThis.pageState = state; export const loaded = import("../../Scripts/state");');
+  put('public/assets/js/pages/_chunks/manual.js', 'manual');
+  const files = await build(root);
+  const chunk = files.find(file => path.dirname(file.path).endsWith('_chunks'));
+  assert.ok(chunk);
+  globalThis.moduleRuns = 0;
+  try {
+    await import(pathToFileURL(path.join(root, 'public/assets/js/pages/_script.js')));
+    await import(pathToFileURL(path.join(root, 'public/assets/js/pages/shop/_script.js')));
+    const page = await import(pathToFileURL(path.join(root, 'public/assets/js/pages/shop/index.js')));
+    assert.equal(globalThis.moduleRuns, 1);
+    assert.equal(globalThis.rootState, globalThis.directoryState);
+    assert.equal(globalThis.rootState, globalThis.pageState);
+    assert.equal(globalThis.pageState, (await page.loaded).state);
+    assert.equal(globalThis.pageState.value, 42);
+    put('src/Scripts/state.ts', 'export const state = { value: 99 };');
+    await build(root, true);
+    assert.equal(fs.existsSync(chunk.path), false);
+    assert.equal(fs.readFileSync(path.join(root, 'public/assets/js/pages/_chunks/manual.js'), 'utf8'), 'manual');
+  } finally {
+    for (const key of ['moduleRuns', 'rootState', 'directoryState', 'pageState']) delete globalThis[key];
+  }
 });
 
 test('page entries without imports have independent TypeScript module scopes', async t => {

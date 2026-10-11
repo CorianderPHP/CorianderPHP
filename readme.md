@@ -21,6 +21,8 @@ Optional page scripts live beside their GET files: `about/index.ts` pairs with `
 
 Use ordinary imports from `src/Scripts` for code shared by several views. `import type` shares interfaces without browser output. Helpers require no registration in metadata.
 
+Shared imports use generated ESM chunks and initialize once across directory and page entries. Deploy all of `public/assets/js/pages`, including `_chunks`.
+
 Each TypeScript entry has an independent module scope, even without imports; pages can reuse local variable names.
 
 Rendered pages automatically include existing compiled `_script.js` modules from root to leaf, followed by their page module, before the footer. Missing assets are omitted. Fragments (`layout: false`) and explicit JSON/redirect responses keep their existing behavior. PHP never builds assets or scans TypeScript.
