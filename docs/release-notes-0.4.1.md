@@ -8,6 +8,7 @@ Framework metadata now uses `$metadata`, leaving `$page` available for applicati
 - `Responses::view()` accepts explicit metadata overrides through `['metadata' => [...]]`. This key must be an array and replaces inherited keys shallowly before one HTML-escaping pass.
 - The `page` data key accepts ordinary application values, including objects, arrays, scalars and null. It does not override metadata. Objects retain their identity and properties; encode their values when displaying them.
 - The starter header and 404 middleware use the new contract. Current view and security guides include the updated names and escaping rules.
+- Request URIs now include scheme, host and port while preserving encoded paths and queries. Host headers take precedence over server fallback values; HTTPS uses the existing trusted-proxy policy. Forwarded hosts and proxy listener ports are ignored, malformed hosts produce 400, and hostless injected requests retain relative URIs.
 
 Metadata inheritance, optional files, layouts and scripts keep their existing behavior. PHP 8.2 remains the minimum; runtime dependencies are unchanged. The renderer uses the same loading and escaping path with renamed variables and keys.
 
@@ -41,3 +42,4 @@ The template can use `$page` as its application document. Strings inside view-da
 - Public contracts: `Responses::view()` and `ViewRenderer::response()` use the `metadata` data key; `ViewRenderer::dispatch()` exposes `$metadata` to direct GET files and layouts.
 - Framework and starter files: `CorianderCore/core/Router/ViewRenderer.php`, `CorianderCore/core/Http/Responses.php`, `src/Views/_header.php`, `src/Middleware/NotFoundMiddleware.php`.
 - Updated guides: `docs/views.md`, `docs/security.md` and `readme.md`. Historical 0.4.0 guides link to this migration.
+- HTTP: `RequestFactory::fromGlobals()` in `CorianderCore/core/Http/RequestFactory.php` now populates the URI authority and scheme. See `docs/http.md`; applications that reconstruct absolute URLs can use `getUri()` directly.
