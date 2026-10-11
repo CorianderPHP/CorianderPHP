@@ -144,6 +144,17 @@ $activeUsers = SQLManager::findWhere(
 ```
 Fetches the ID and email for every user marked as active.
 
+Array conditions in `findWhere()`, `updateWhere()` and `deleteWhere()` combine with `AND`. A null value generates `IS NULL` without a parameter; other values use bound equality, including zero and empty strings:
+
+```php
+$users = SQLManager::findWhere(['id', 'email'], 'users', [
+    'tenant_id' => 10,
+    'deleted_at' => null,
+]);
+```
+
+This selects tenant 10's users whose `deleted_at` is SQL NULL. Empty condition arrays remain rejected. In 0.4.1, updates and deletes using null conditions now affect matching rows; review existing calls that previously matched none.
+
 ### Inserting Records
 
 ```php

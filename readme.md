@@ -111,4 +111,6 @@ vendor/bin/phpunit --testdox
 
 Runtime dependencies remain Nyholm PSR-7 and PSR HTTP/logging interfaces. PHPUnit is a development dependency. Database, session, migration, logging and asset helpers remain available; keep business logic in ordinary application services.
 
+Database array conditions support SQL NULL: `['deleted_at' => null]` generates `IS NULL` in `findWhere`, `updateWhere` and `deleteWhere`. See [database examples](docs/database.md).
+
 For framework development, follow [the contributor guide](docs/contributing.md): native types first, useful PHPDoc contracts and comments explaining constraints.
