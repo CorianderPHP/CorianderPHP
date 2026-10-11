@@ -22,6 +22,7 @@ CorianderPHP now uses one `src/Views` tree for pages and HTTP handlers. Simple w
 - Reuse helpers such as `src/Scripts/menu.ts` and shared types through ordinary imports. No metadata registration or separate helper bundles are required.
 - Plain TypeScript entries have independent module scopes, so local variable names can be reused across pages without boilerplate exports. Former implicit shared globals need explicit imports or intentional ambient declarations.
 - Watch handles new, renamed and removed entries, shared edits and type-error recovery. Type checks emit no JavaScript; failed checks preserve last good output. Cleanup removes only previously recorded generated bundles, preserving manual JS.
+- The PHP `nodejs run watch-all` wrapper keeps watcher input open, preventing immediate successful exit before watching begins.
 - Tailwind explicitly scans Views and Scripts. Asset CI uses Node 24 and current Node 24 action runtimes; Node 22 remains supported locally. The audited lockfile updates TypeScript/esbuild and retains a safe Tailwind/watcher combination.
 
 GET metadata is evaluated before the selected file, including callable GET handlers. Keep declarations free of side effects. Explicit responses are not decorated; non-GET dispatch skips metadata unless its handler explicitly renders a view.
